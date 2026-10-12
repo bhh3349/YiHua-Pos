@@ -23,14 +23,14 @@
 
   <!--
     说明：每个任务的测试放在自己的子目录下
-      Hardware/EscPos/   ← T-102
-      Hardware/Scales/   ← T-105
-      Hardware/Linux/    ← T-103
-      Hardware/Windows/  ← T-104
-      Hardware/Devices/  ← T-106
-      Hardware/Templates/← T-107
-      Data/              ← T-003
-      UI/                ← T-005
+      Hardware/EscPos/    ← T-102
+      Hardware/Scales/    ← T-105
+      Hardware/Linux/     ← T-103
+      Hardware/Windows/   ← T-104
+      Hardware/Devices/   ← T-106
+      Hardware/Templates/ ← T-107
+      Data/               ← T-003
+      UI/                 ← T-005
   -->
 
 </Project>
