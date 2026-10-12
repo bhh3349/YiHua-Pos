@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Report"
+             xmlns:svc="clr-namespace:YiHua.Pos.UI.Services.Report"
+             x:Class="YiHua.Pos.UI.Views.Report.ReportDeskRankView"
+             x:DataType="vm:ReportDeskRankViewModel">
+  <ScrollViewer Margin="16">
+    <StackPanel Spacing="8" MaxWidth="800">
+      <TextBlock Text="桌台使用统计" FontSize="20" FontWeight="Bold" Margin="0,0,0,8" />
+      <ItemsControl ItemsSource="{Binding Items}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="svc:RankItem">
+            <Border Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="8" Padding="12,10" Margin="0,0,0,4">
+              <Grid ColumnDefinitions="*,80,100,100" ColumnSpacing="8">
+                <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold"
+                           VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Text="{Binding Quantity, StringFormat='{}{0:F0} 桌次'}"
+                           FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                <TextBlock Grid.Column="2" Text="{Binding Amount, StringFormat='¥{0:F2}'}"
+                           FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                <TextBlock Grid.Column="3" Text="{Binding Amount, StringFormat='均¥{0:F0}'}"
+                           FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Right"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <TextBlock Text="桌次少、金额低的桌台利用率低，可调整排班"
+                 FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             x:Class="YiHua.Pos.UI.Views.Report.ReportExportView">
+  <StackPanel Spacing="12" MinWidth="300">
+    <TextBlock Text="导出报表" FontSize="18" FontWeight="Bold" />
+    <TextBlock Text="导出当前筛选条件下的数据" FontSize="14"
+               Foreground="{DynamicResource TextSecondaryBrush}" />
+    <btn:PosButton Content="导出 CSV（Excel 可打开）" Variant="Primary"
+                   HorizontalAlignment="Stretch" MinHeight="48" />
+    <btn:PosButton Content="打印报表" Variant="Secondary"
+                   HorizontalAlignment="Stretch" MinHeight="48" />
+    <TextBlock Text="CSV 带中文表头，Excel 打开不乱码"
+               FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" />
+  </StackPanel>
+</UserControl>

@@ -1,0 +1,40 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:disp="clr-namespace:YiHua.Pos.UI.Controls.Display"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Report"
+             xmlns:svc="clr-namespace:YiHua.Pos.UI.Services.Report"
+             x:Class="YiHua.Pos.UI.Views.Report.ReportDetailView"
+             x:DataType="vm:ReportDetailViewModel">
+  <Grid RowDefinitions="Auto,*" Margin="16">
+    <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,12">
+      <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="Bold" />
+      <StackPanel Orientation="Horizontal" Spacing="16">
+        <TextBlock Text="{Binding Turnover, StringFormat='营业额 ¥{0:F2}'}" FontSize="16" />
+        <TextBlock Text="{Binding OrderCount, StringFormat='{}{0} 笔'}" FontSize="16" />
+      </StackPanel>
+    </StackPanel>
+    <ScrollViewer Grid.Row="1">
+      <ItemsControl ItemsSource="{Binding Orders}" MaxWidth="800">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="svc:ReportOrderDto">
+            <Border Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1"
+                    Padding="0,10">
+              <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+                <StackPanel>
+                  <TextBlock Text="{Binding OrderNo}" FontSize="16" FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding SettleTime, StringFormat='{}{0:HH:mm}'}"
+                             FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" />
+                </StackPanel>
+                <TextBlock Grid.Column="1" Text="{Binding DeskName}" FontSize="14"
+                           VerticalAlignment="Center" />
+                <TextBlock Grid.Column="2" Text="{Binding AmountPay, StringFormat='¥{0:F2}'}"
+                           FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Right" />
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+  </Grid>
+</UserControl>
