@@ -17,6 +17,43 @@ router = APIRouter(prefix="/api/v1/order", tags=["order"])
 
 STATUS_PENDING, STATUS_SETTLED, STATUS_REFUNDED, STATUS_VOID = 0, 1, 2, 3
 
+# 落库前的硬性上限：t_order.client_order_no 是 VARCHAR(64)、remark 是 VARCHAR(255)。
+# SQLite 不校验长度，MySQL 会直接报错/截断，所以在入口就统一卡住。
+MAX_CLIENT_NO = 64
+MAX_REMARK = 255
+
+
+def _check_client_no(raw: str) -> str:
+    """幂等键：空、纯空白、超长都不许落单。"""
+    v = (raw or "").strip()
+    if not v:
+        raise BizError("400", "clientOrderNo 不能为空")
+    if len(v) > MAX_CLIENT_NO:
+        raise BizError("400", "clientOrderNo 超长（%d > %d 字符）"
+                              % (len(v), MAX_CLIENT_NO))
+    return v
+
+
+def _trunc_remark(raw: str) -> str:
+    """备注超长按 255 截断 —— 为一条备注把整单打回，收银端要重来一遍。"""
+    return (raw or "")[:MAX_REMARK]
+
+
+def _check_items(db: Session, items: List["ItemIn"], tenant_id: int) -> None:
+    """明细的金额/数量/商品存在性校验。"""
+    for idx, it in enumerate(items or [], 1):
+        if float(it.price) < 0:
+            raise BizError("400", "第 %d 个明细的单价不能为负数" % idx)
+        if float(it.discountAmount or 0) < 0:
+            raise BizError("400", "第 %d 个明细的折扣不能为负数" % idx)
+        if float(it.qty) <= 0:
+            raise BizError("400", "第 %d 个明细的数量必须大于 0（当前 %s）"
+                                  % (idx, it.qty))
+        if it.productId:
+            p = db.get(Product, it.productId)
+            if p is None or p.tenant_id != tenant_id:
+                raise BizError("404", "商品不存在: productId=%s" % it.productId)
+
 
 class ItemIn(BaseModel):
     productId: Optional[int] = None
@@ -78,16 +115,35 @@ def _order_dto(db: Session, o: Order) -> dict:
     }
 
 
+def _desk_occupied(db: Session, d: Desk, o: Order) -> dict:
+    """桌台占用信息：收银端据此提示「这台已经开着单」，而不是干巴巴一个 409。"""
+    return {"deskId": d.id, "deskName": d.name, "deskStatus": d.status,
+            "orderId": o.id, "orderNo": o.order_no,
+            "amountTotal": float(o.amount_total or 0),
+            "openTime": o.created_at.strftime("%Y-%m-%d %H:%M:%S") if o.created_at else ""}
+
+
 @router.post("/create")
 def create(req: CreateReq, ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db)):
+    client_no = _check_client_no(req.clientOrderNo)
+    _check_items(db, req.items, ctx.tenant_id)
+
     # 幂等键必须带 store_id 过滤：不同门店可能出现相同的 clientOrderNo，
     # 不隔离会把别家门店的单据当成「重复提交」返回出去。
     exist = (db.query(Order)
-               .filter(Order.client_order_no == req.clientOrderNo,
+               .filter(Order.client_order_no == client_no,
                        Order.store_id == ctx.store_id)
                .first())
     if exist:
         raise BizError("409", "单据已存在", _order_dto(db, exist))
+
+    # 桌台已被别的在途单占着时不许再往上挂，否则结账会清错台
+    if req.deskId:
+        d = db.get(Desk, req.deskId)
+        if d is not None and d.store_id == ctx.store_id and d.current_order_id:
+            other = db.get(Order, d.current_order_id)
+            if other is not None and other.status == STATUS_PENDING:
+                raise BizError("409", "桌台已被占用", _desk_occupied(db, d, other))
 
     total, disc = _calc(req.items)
     shift = (db.query(Shift)
@@ -95,13 +151,13 @@ def create(req: CreateReq, ctx: Ctx = Depends(get_ctx), db: Session = Depends(ge
                .order_by(Shift.id.desc()).first())
 
     o = Order(tenant_id=ctx.tenant_id, store_id=ctx.store_id,
-              order_no=gen_order_no(ctx.store_id), client_order_no=req.clientOrderNo,
+              order_no=gen_order_no(ctx.store_id), client_order_no=client_no,
               desk_id=req.deskId, order_type=req.orderType, source=1,
               status=STATUS_PENDING, member_id=req.memberId,
               amount_total=total, amount_discount=disc,
               amount_pay=round(total - disc, 2),
               shift_id=shift.id if shift else 0, operator_id=ctx.user_id,
-              remark=req.remark)
+              remark=_trunc_remark(req.remark))
     try:
         db.add(o)
         db.flush()
@@ -127,12 +183,13 @@ def create(req: CreateReq, ctx: Ctx = Depends(get_ctx), db: Session = Depends(ge
         _add_flow(db, o.id, "create", -1, STATUS_PENDING, ctx.user_id)
         db.commit()
     except IntegrityError:
-        # t_order.client_order_no 是「全局」唯一索引（不带 store_id，见 models.py），
-        # 上面按门店过滤的查询挡不住跨门店撞号。真撞上时与其漏出 500 让客户端
-        # 卡死，不如按「单据已存在」回 409 —— 客户端本来就把它当重复提交处理。
+        # 唯一索引兜底：上面按门店过滤的查询挡不住并发插入同一 clientOrderNo
+        # （两个请求同时过了存在性检查）。真撞上时与其漏出 500 让客户端卡死，
+        # 不如按「单据已存在」回 409 —— 客户端本来就把它当重复提交处理。
         db.rollback()
         other = (db.query(Order)
-                   .filter(Order.client_order_no == req.clientOrderNo)
+                   .filter(Order.client_order_no == client_no,
+                           Order.store_id == ctx.store_id)
                    .first())
         raise BizError("409", "单据已存在",
                        _order_dto(db, other) if other else None)
@@ -151,6 +208,7 @@ def change(req: ChangeReq, ctx: Ctx = Depends(get_ctx), db: Session = Depends(ge
         raise BizError("404", "订单不存在")
     if o.status != STATUS_PENDING:
         raise BizError("409", "订单已结账，不能改单")
+    _check_items(db, req.items, ctx.tenant_id)
     # 简化策略：整单替换明细（真实场景应做增量 diff，保留已下单菜品状态）
     db.query(OrderItem).filter(OrderItem.order_id == o.id).delete(synchronize_session=False)
     for it in req.items:
@@ -192,6 +250,8 @@ def discount(req: DiscountReq, ctx: Ctx = Depends(get_ctx), db: Session = Depend
         raise BizError("404", "订单不存在")
     if o.status != STATUS_PENDING:
         raise BizError("409", "订单已结账，不能改折扣")
+    if float(req.value) < 0:
+        raise BizError("400", "折扣金额不能为负数")
     if req.target == "item" and req.itemId:
         it = db.get(OrderItem, req.itemId)
         if it and it.order_id == o.id:
@@ -248,14 +308,35 @@ def settle(req: SettleReq, ctx: Ctx = Depends(get_ctx), db: Session = Depends(ge
         raise BizError("404", "订单不存在")
     if o.status == STATUS_SETTLED:
         raise BizError("409", "订单已结账", _order_dto(db, o))
+    if o.status != STATUS_PENDING:
+        raise BizError("409", "订单状态不允许结账", _order_dto(db, o))
+    for p in req.payments:
+        if float(p.amount) < 0:
+            raise BizError("400", "支付金额不能为负数")
+
+    # 并发结账：先用「条件更新」抢占这张单。
+    # UPDATE ... WHERE status=0 在 SQLite 和 MySQL 上都是原子的：两个请求同时到，
+    # 只有一个能把行从 0 改成 1，另一个受影响行数为 0 —— 直接回 409。
+    # 后面任何一步失败都会 rollback，把状态还原成待结，不会把单卡死。
+    claimed = (db.query(Order)
+                 .filter(Order.id == o.id, Order.status == STATUS_PENDING)
+                 .update({"status": STATUS_SETTLED, "settle_time": datetime.now()},
+                         synchronize_session=False))
+    if not claimed:
+        db.rollback()
+        other = db.get(Order, req.orderId)
+        raise BizError("409", "订单已结账", _order_dto(db, other) if other else None)
+    db.expire(o)   # 让内存对象重新读库，看到刚写进去的 status/settle_time
 
     paid = 0.0
     for p in req.payments:
         if p.payType == "MEMBER" and p.memberId:
             m = db.get(Member, p.memberId)
             if not m:
+                db.rollback()   # 撤回上面的抢占，订单回到待结
                 raise BizError("404", "会员不存在")
             if float(m.balance or 0) < p.amount:
+                db.rollback()
                 raise BizError("409", "会员余额不足")
             before = float(m.balance)
             m.balance = round(before - p.amount, 2)
@@ -272,9 +353,7 @@ def settle(req: SettleReq, ctx: Ctx = Depends(get_ctx), db: Session = Depends(ge
         db.rollback()
         raise BizError("409", "支付金额不足：应付 %.2f，实付 %.2f" % (float(o.amount_pay), paid))
 
-    o.status = STATUS_SETTLED
-    o.settle_time = datetime.now()
-    o.remark = req.remark or o.remark
+    o.remark = _trunc_remark(req.remark or o.remark)
     _add_flow(db, o.id, "settle", STATUS_PENDING, STATUS_SETTLED, ctx.user_id)
 
     if o.desk_id:

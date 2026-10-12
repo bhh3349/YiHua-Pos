@@ -9,7 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from .config import APP_NAME, OSS_DIR
+from .config import (APP_NAME, IS_PROD, JWT_SECRET_SOURCE, JWT_SECRET_WARNING,
+                     OSS_DIR)
 from .db import init_db
 from .routers import (auth, catalog, desk, legacy, legacy_order, legacy_print,
                       member, order, pay, report, shift)
@@ -80,8 +81,26 @@ async def _unhandled(request: Request, exc: Exception):
     })
 
 
+def _check_jwt_secret() -> None:
+    """启动时把 JWT 密钥的来路讲清楚。
+
+    密钥本身在 config 导入时就已经校验过（生产环境不合格会直接抛错、
+    服务端起不来），这里只负责把开发环境的提示打到控制台上 ——
+    控制台里藏着一条「这是开发密钥」比出事后再查强得多。
+    """
+    if IS_PROD:
+        print("[安全] JWT 密钥来源: %s（生产模式）" % JWT_SECRET_SOURCE)
+        return
+    if JWT_SECRET_WARNING:
+        line = "!" * 68
+        print(line)
+        print("[安全警告] %s" % JWT_SECRET_WARNING)
+        print(line)
+
+
 @app.on_event("startup")
 def _startup():
+    _check_jwt_secret()
     os.makedirs(OSS_DIR, exist_ok=True)
     init_db()
     from .seed_data import seed_if_empty

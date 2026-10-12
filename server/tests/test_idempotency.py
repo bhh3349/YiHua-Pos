@@ -69,7 +69,7 @@ def test_missing_client_order_no_falls_back_to_order_no(client):
 
 def test_submit_without_any_no_is_rejected(client):
     b = post(client, "/pos/order/submit", {"products": _products()}).json()
-    assert b["code"] == 500
+    assert b["code"] == 400
     assert b["success"] is False
 
 
@@ -125,6 +125,33 @@ def test_settled_order_cannot_be_modified(client):
     b = post(client, "/pos/order/submit",
              {"orderNo": o["orderNo"], "products": _products()}).json()
     assert b["code"] == 409
+
+
+@pytest.mark.parametrize("products, expected_code", [
+    ([{"productId": 1001, "prodPrice": -1, "quantity": 1}], 400),
+    ([{"productId": 1001, "prodPrice": 1, "quantity": 0}], 400),
+    ([{"productId": 999999, "prodPrice": 1, "quantity": 1}], 404),
+    ([{"productId": 1001, "prodPrice": 1, "prodSalesAmt": -1, "quantity": 1}], 400),
+])
+def test_submit_rejects_invalid_products(client, products, expected_code):
+    response = post(client, "/pos/order/submit",
+                    {"clientOrderNo": new_client_no("IDEM-INVALID"), "products": products})
+    assert response.json()["code"] == expected_code
+
+
+def test_submit_rejects_empty_and_overlong_client_no(client):
+    for client_no in ("", "x" * 65):
+        response = post(client, "/pos/order/submit",
+                        {"clientOrderNo": client_no, "products": _products()})
+        assert response.json()["code"] == 400
+
+
+def test_submit_truncates_overlong_remark(client):
+    cno = new_client_no("IDEM-REMARK")
+    detail = envelope(post(client, "/pos/order/submit",
+                           {"clientOrderNo": cno, "memo": "x" * 300,
+                            "products": _products()}))
+    assert len(detail["memo"]) <= 255
 
 
 def test_payment_shortfall_rejected(client):

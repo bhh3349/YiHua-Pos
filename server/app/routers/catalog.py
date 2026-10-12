@@ -1,9 +1,11 @@
 """catalog —— 商品域（含 CSV 同步通道）。"""
 import os
-from typing import List, Optional
+from datetime import datetime
+from typing import Dict, List, Optional
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Body, Depends, Request
 from pydantic import BaseModel
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from ..db import get_db
@@ -43,30 +45,43 @@ def _rows_for(db: Session, tenant_id: int, key: str):
 
 @router.post("/version")
 def version(ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db)):
-    out = []
-    for key, (table, _fname, _cols) in SYNC_TABLES.items():
-        out.append({"table": key, "version": _max_version(db, ctx.tenant_id, key)})
-    return ok({"tables": out})
+    versions = {key: _max_version(db, ctx.tenant_id, key) for key in SYNC_TABLES}
+    return ok({"versions": versions, "tables": [
+        {"table": key, "version": value} for key, value in versions.items()],
+        "serverTime": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
 
 
 def _max_version(db: Session, tenant_id: int, key: str) -> int:
     model = {"Product": Product, "ProductCategory": ProductCategory, "ProductUnit": ProductUnit}[key]
-    row = db.query(model).filter(model.tenant_id == tenant_id).order_by(model.version.desc()).first()
-    return int(row.version) if row else 0
+    value = db.query(func.max(model.version)).filter(model.tenant_id == tenant_id).scalar()
+    return int(value or 0)
+
+
+def _next_product_version(db: Session, tenant_id: int) -> int:
+    return _max_version(db, tenant_id, "Product") + 1
+
+
+class SyncUrlReq(BaseModel):
+    knownVersions: Optional[Dict[str, int]] = None
 
 
 @router.post("/syncUrl")
-def sync_url(request: Request, ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db)):
-    """把各表导出成 CSV 放到对象存储目录，返回下载地址。"""
+def sync_url(request: Request, req: Optional[SyncUrlReq] = Body(None),
+             ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db)):
+    """按客户端已知版本生成需要下载的 CSV 地址；不传版本时保持全量行为。"""
+    known_versions = req.knownVersions if req is not None else None
     base_dir = oss_dir_for(ctx.tenant_id, ctx.store_id)
     oss_base = resolve_oss_base(request)
-    urls = []
+    urls, unchanged = [], []
     for key, (_table, fname, cols) in SYNC_TABLES.items():
         ver = _max_version(db, ctx.tenant_id, key)
+        if known_versions is not None and known_versions.get(key) == ver:
+            unchanged.append(key)
+            continue
         path = os.path.join(base_dir, "%s_%d.csv" % (fname, ver))
         write_csv(path, cols, _rows_for(db, ctx.tenant_id, key))
         urls.append({"table": key, "version": ver, "url": oss_url(path, oss_base)})
-    return ok({"urls": urls, "ossBase": oss_base})
+    return ok({"urls": urls, "unchanged": unchanged, "ossBase": oss_base})
 
 
 class PageReq(BaseModel):
@@ -140,9 +155,9 @@ def save(req: SaveReq, ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db
         p = db.get(Product, req.id)
         if not p or p.tenant_id != ctx.tenant_id:
             return ok(None)
-        p.version = (p.version or 1) + 1
+        p.version = _next_product_version(db, ctx.tenant_id)
     else:
-        p = Product(tenant_id=ctx.tenant_id)
+        p = Product(tenant_id=ctx.tenant_id, version=_next_product_version(db, ctx.tenant_id))
         db.add(p)
     p.name, p.code, p.barcode = req.name, req.code, req.barcode
     p.unit_name, p.spec_group = req.unitName, req.specGroup
@@ -161,9 +176,13 @@ class BatchStatusReq(BaseModel):
 
 @router.post("/batchUpdateStatus")
 def batch_update_status(req: BatchStatusReq, ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db)):
-    n = (db.query(Product)
-           .filter(Product.tenant_id == ctx.tenant_id, Product.id.in_(req.ids))
-           .update({Product.status: req.status}, synchronize_session=False))
+    rows = (db.query(Product)
+              .filter(Product.tenant_id == ctx.tenant_id, Product.id.in_(req.ids)).all())
+    version = _next_product_version(db, ctx.tenant_id)
+    for p in rows:
+        p.status = req.status
+        p.version = version
+    n = len(rows)
     db.commit()
     return ok({"updated": n})
 
@@ -175,9 +194,13 @@ class BatchPriceReq(BaseModel):
 
 @router.post("/batchUpdatePrice")
 def batch_update_price(req: BatchPriceReq, ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db)):
-    n = (db.query(Product)
-           .filter(Product.tenant_id == ctx.tenant_id, Product.id.in_(req.ids))
-           .update({Product.price: req.price}, synchronize_session=False))
+    rows = (db.query(Product)
+              .filter(Product.tenant_id == ctx.tenant_id, Product.id.in_(req.ids)).all())
+    version = _next_product_version(db, ctx.tenant_id)
+    for p in rows:
+        p.price = req.price
+        p.version = version
+    n = len(rows)
     db.commit()
     return ok({"updated": n})
 

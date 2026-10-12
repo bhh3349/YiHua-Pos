@@ -120,6 +120,29 @@ def test_catalog_sync_url(client, auth_headers):
     assert {f["table"] for f in d["urls"]} == {"Product", "ProductCategory", "ProductUnit"}
 
 
+def test_catalog_incremental_sync_returns_only_changed_table(client, auth_headers):
+    before = _v1(client, "/catalog/version", {}, auth_headers)
+    versions = before["versions"]
+    assert versions == {row["table"]: row["version"] for row in before["tables"]}
+    assert before["serverTime"]
+
+    unchanged = _v1(client, "/catalog/syncUrl", {"knownVersions": versions}, auth_headers)
+    assert unchanged["urls"] == []
+    assert set(unchanged["unchanged"]) == set(versions)
+
+    _v1(client, "/catalog/batchUpdatePrice", {"ids": [1001], "price": 39.0}, auth_headers)
+    after = _v1(client, "/catalog/version", {}, auth_headers)["versions"]
+    assert after["Product"] > versions["Product"]
+    assert after["ProductCategory"] == versions["ProductCategory"]
+    assert after["ProductUnit"] == versions["ProductUnit"]
+
+    changed = _v1(client, "/catalog/syncUrl", {"knownVersions": versions}, auth_headers)
+    assert [row["table"] for row in changed["urls"]] == ["Product"]
+    assert changed["urls"][0]["version"] == after["Product"]
+    assert changed["urls"][0]["url"].endswith("Product_%d.csv" % after["Product"])
+    _v1(client, "/catalog/batchUpdatePrice", {"ids": [1001], "price": 38.0}, auth_headers)
+
+
 def test_catalog_save_and_batch(client, auth_headers):
     d = _v1(client, "/catalog/save",
             {"id": 1001, "name": "宫保鸡丁(大份)", "price": 42.0}, auth_headers)

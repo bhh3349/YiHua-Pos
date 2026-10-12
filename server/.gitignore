@@ -2,3 +2,7 @@
 .coverage
 .coverage.*
 htmlcov/
+
+# 开发环境自动生成的 JWT 密钥（见 app/config.py）—— 绝不能进仓库
+dev_jwt_secret.key
+data/dev_jwt_secret.key
