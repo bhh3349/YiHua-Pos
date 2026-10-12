@@ -1,0 +1,63 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.SoldOut"
+             xmlns:buttons="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             x:Class="YiHua.Pos.UI.Views.SoldOut.SoldOutBatchView"
+             x:DataType="vm:SoldOutBatchViewModel"
+             Background="{DynamicResource SurfaceBrush}">
+  <StackPanel Spacing="16" Margin="24">
+    <TextBlock Text="批量沽清" FontSize="20" FontWeight="Bold"
+               Foreground="{DynamicResource TextPrimaryBrush}"/>
+
+    <!-- 按档口 -->
+    <StackPanel Spacing="8">
+      <TextBlock Text="按档口沽清" FontSize="16"
+                 Foreground="{DynamicResource TextPrimaryBrush}"/>
+      <TextBlock Text="选择档口后点「确认沽清」（档口列表由宿主传入）"
+                 FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
+    </StackPanel>
+
+    <!-- 按关键字 -->
+    <StackPanel Spacing="8">
+      <TextBlock Text="按关键字沽清" FontSize="16"
+                 Foreground="{DynamicResource TextPrimaryBrush}"/>
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <TextBox Text="{Binding Keyword}" Watermark="如：面"
+                 FontSize="16" MinHeight="44" MinWidth="200"/>
+        <buttons:PosButton Variant="Secondary" Content="搜索选中"
+                           Click="OnSearch" Padding="20,10" FontSize="15"/>
+      </StackPanel>
+    </StackPanel>
+
+    <!-- 确认范围 -->
+    <Border Background="{DynamicResource BackgroundBrush}"
+            BorderBrush="{DynamicResource DividerBrush}"
+            BorderThickness="1" CornerRadius="6" Padding="12,8"
+            IsVisible="{Binding ConfirmText, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <TextBlock Text="{Binding ConfirmText}" FontSize="15"
+                 Foreground="{DynamicResource TextPrimaryBrush}"
+                 TextWrapping="Wrap"/>
+    </Border>
+
+    <StackPanel Spacing="8">
+      <TextBlock Text="操作人" FontSize="14"
+                 Foreground="{DynamicResource TextSecondaryBrush}"/>
+      <TextBox Text="{Binding OperatorName}" Watermark="如：张三"
+               FontSize="16" MinHeight="40"/>
+    </StackPanel>
+
+    <TextBlock Text="{Binding ErrorMessage}" FontSize="14"
+               Foreground="{DynamicResource DangerBrush}"
+               IsVisible="{Binding ErrorMessage, Converter={x:Static ObjectConverters.IsNotNull}}"
+               TextWrapping="Wrap"/>
+
+    <!-- 大按钮（后厨手上有油） -->
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <buttons:PosButton Variant="Primary" Content="确认沽清"
+                         Click="OnConfirm" FontSize="20" Padding="48,16"
+                         IsEnabled="{Binding !IsWorking}"/>
+      <buttons:PosButton Variant="Secondary" Content="取消"
+                         Click="OnCancel" FontSize="16" Padding="32,16"/>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

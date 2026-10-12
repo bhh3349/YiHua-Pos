@@ -1,0 +1,25 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:svc="clr-namespace:YiHua.Pos.UI.Services.SoldOut"
+             xmlns:buttons="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             x:Class="YiHua.Pos.UI.Views.SoldOut.SoldOutPrintView"
+             Background="White">
+  <!-- 沽清打印：贴在出餐口，大字 -->
+  <StackPanel Spacing="12" Margin="24">
+    <TextBlock Text="沽清通知" FontSize="36" FontWeight="Bold"
+               HorizontalAlignment="Center"/>
+    <TextBlock x:Name="PrintTime" FontSize="16" HorizontalAlignment="Center"/>
+    <ItemsControl x:Name="PrintItems">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="svc:SoldOutRecord">
+          <TextBlock FontSize="28" Margin="0,4">
+            <Run Text="{Binding ProductName}"/><Run Text="  售罄"/>
+          </TextBlock>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+    <buttons:PosButton Variant="Primary" Content="打印"
+                       Click="OnPrint" FontSize="18" Padding="48,14"
+                       HorizontalAlignment="Center"/>
+  </StackPanel>
+</UserControl>

@@ -1,0 +1,97 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.SoldOut"
+             xmlns:buttons="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:feedback="clr-namespace:YiHua.Pos.UI.Controls.Feedback"
+             xmlns:display="clr-namespace:YiHua.Pos.UI.Controls.Display"
+             x:Class="YiHua.Pos.UI.Views.SoldOut.SoldOutListView"
+             x:DataType="vm:SoldOutListViewModel"
+             Background="{DynamicResource BackgroundBrush}">
+  <Grid RowDefinitions="Auto,*,Auto">
+
+    <!-- 标题栏 -->
+    <Border Grid.Row="0"
+            Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource DividerBrush}"
+            BorderThickness="0,0,0,1"
+            Padding="16,12">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+        <TextBlock Grid.Column="0" Text="沽清管理" FontSize="20" FontWeight="Bold"
+                   Foreground="{DynamicResource TextPrimaryBrush}"
+                   VerticalAlignment="Center"/>
+        <buttons:PosButton Grid.Column="2" Variant="Secondary" Content="批量沽清"
+                           Margin="8,0" Padding="24,12" FontSize="16"
+                           Click="OnBatch"/>
+        <buttons:PosButton Grid.Column="3" Variant="Secondary" Content="全部恢复"
+                           Padding="24,12" FontSize="16"
+                           Click="OnRestoreAll"/>
+      </Grid>
+    </Border>
+
+    <!-- 按档口分组 -->
+    <ScrollViewer Grid.Row="1" Padding="12">
+      <ItemsControl ItemsSource="{Binding Groups}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <StackPanel Margin="0,0,0,16">
+              <TextBlock Text="{Binding CategoryName}" FontSize="18" FontWeight="Bold"
+                         Foreground="{DynamicResource TextPrimaryBrush}"
+                         Margin="0,0,0,8"/>
+              <ItemsControl ItemsSource="{Binding Records}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <!-- 已沽清：置灰 + 售罄标签（不用鲜红） -->
+                    <Border Background="{DynamicResource BackgroundBrush}"
+                            BorderBrush="{DynamicResource DividerBrush}"
+                            BorderThickness="1" CornerRadius="8"
+                            Padding="16,12" Margin="0,0,0,8"
+                            Opacity="0.6">
+                      <Grid ColumnDefinitions="*,Auto,Auto">
+                        <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
+                          <TextBlock Text="{Binding ProductName}" FontSize="18"
+                                     Foreground="{DynamicResource TextSecondaryBrush}"/>
+                          <TextBlock FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}">
+                            <Run Text="{Binding SoldOutTime, StringFormat='{}{0:HH:mm}'}"/>
+                            <Run Text=" 沽清 · "/><Run Text="{Binding OperatorName}"/>
+                          </TextBlock>
+                        </StackPanel>
+                        <!-- 售罄标签 -->
+                        <Border Grid.Column="1"
+                                Background="{DynamicResource TextSecondaryBrush}"
+                                CornerRadius="4" Padding="12,4" Margin="0,0,12,0"
+                                VerticalAlignment="Center">
+                          <TextBlock Text="售罄" FontSize="14" Foreground="White"/>
+                        </Border>
+                        <buttons:PosButton Grid.Column="2" Variant="Primary"
+                                           Content="恢复供应" Tag="{Binding ProductId}"
+                                           Padding="20,12" FontSize="15"
+                                           Click="OnRestore"
+                                           VerticalAlignment="Center"/>
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <!-- 空状态 -->
+    <feedback:EmptyState Grid.Row="1"
+                         Title="暂无沽清"
+                         Description="所有菜品正常供应。如需沽清，点「批量沽清」或在商品上操作"
+                         IsVisible="{Binding IsEmpty}"/>
+
+    <!-- 底栏 -->
+    <Border Grid.Row="2"
+            Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource DividerBrush}"
+            BorderThickness="0,1,0,0"
+            Padding="16,8">
+      <buttons:PosButton Variant="Secondary" Content="定时设置"
+                         Click="OnSchedule" Padding="20,10"/>
+    </Border>
+  </Grid>
+</UserControl>

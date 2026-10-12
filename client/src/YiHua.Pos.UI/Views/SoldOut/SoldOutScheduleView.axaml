@@ -1,0 +1,62 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.SoldOut"
+             xmlns:buttons="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             x:Class="YiHua.Pos.UI.Views.SoldOut.SoldOutScheduleView"
+             x:DataType="vm:SoldOutScheduleViewModel"
+             Background="{DynamicResource SurfaceBrush}">
+  <StackPanel Spacing="20" Margin="24">
+    <TextBlock Text="定时设置" FontSize="20" FontWeight="Bold"
+               Foreground="{DynamicResource TextPrimaryBrush}"/>
+
+    <!-- 说人话的定时 -->
+    <StackPanel Spacing="8">
+      <TextBlock Text="{Binding HumanText}" FontSize="18"
+                 Foreground="{DynamicResource TextPrimaryBrush}"/>
+      <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+        <TextBlock Text="每天" FontSize="16" VerticalAlignment="Center"
+                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+        <NumericUpDown Value="{Binding ResetHour}" Minimum="0" Maximum="23"
+                       FontSize="18" MinWidth="80"/>
+        <TextBlock Text=":" FontSize="18" VerticalAlignment="Center"/>
+        <NumericUpDown Value="{Binding ResetMinute}" Minimum="0" Maximum="59"
+                       FontSize="18" MinWidth="80"/>
+        <TextBlock Text="恢复供应" FontSize="16" VerticalAlignment="Center"
+                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+      </StackPanel>
+      <TextBlock Text="手工沽清的菜品会在这个时间自动恢复供应"
+                 FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
+                 TextWrapping="Wrap"/>
+    </StackPanel>
+
+    <!-- 平台同步状态 -->
+    <StackPanel Spacing="8">
+      <TextBlock Text="外卖平台同步" FontSize="16"
+                 Foreground="{DynamicResource TextPrimaryBrush}"/>
+      <ItemsControl ItemsSource="{Binding Platforms}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Background="{DynamicResource BackgroundBrush}"
+                    BorderBrush="{DynamicResource DividerBrush}"
+                    BorderThickness="1" CornerRadius="6"
+                    Padding="12,8" Margin="0,0,0,6">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0" Text="{Binding DisplayName}" FontSize="16"
+                           Foreground="{DynamicResource TextPrimaryBrush}"
+                           VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="{Binding StatusText}" FontSize="14"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           VerticalAlignment="Center"/>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <TextBlock Text="未接入的平台显示「未接入」并置灰"
+                 FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
+    </StackPanel>
+
+    <buttons:PosButton Variant="Primary" Content="保存"
+                       Click="OnSave" FontSize="18" Padding="48,14"/>
+  </StackPanel>
+</UserControl>
