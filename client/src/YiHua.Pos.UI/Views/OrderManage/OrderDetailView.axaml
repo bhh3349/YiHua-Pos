@@ -1,0 +1,74 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.OrderManage"
+             x:Class="YiHua.Pos.UI.Views.OrderManage.OrderDetailView"
+             x:DataType="vm:OrderDetailViewModel">
+  <ScrollViewer Margin="24">
+    <StackPanel Spacing="16">
+      <TextBlock Text="{Binding Order.OrderNo, StringFormat='订单 {0}'}"
+                 FontSize="{DynamicResource FontSizeTitle}"
+                 FontWeight="Bold" />
+      <TextBlock Text="{Binding Status}"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+
+      <!-- 明细 -->
+      <ItemsControl ItemsSource="{Binding Order.Items}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,6">
+              <StackPanel Grid.Column="0" Spacing="2">
+                <TextBlock Text="{Binding ProductName}" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding SpecText}"
+                           FontSize="{DynamicResource FontSizeSmall}"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+              </StackPanel>
+              <TextBlock Grid.Column="1"
+                         Text="{Binding Qty, StringFormat='×{0}'}"
+                         VerticalAlignment="Center" Margin="12,0" />
+              <TextBlock Grid.Column="2"
+                         Text="{Binding Amount, StringFormat='¥{0:F2}'}"
+                         FontFamily="{DynamicResource MonospaceFont}"
+                         HorizontalAlignment="Right"
+                         VerticalAlignment="Center" MinWidth="90" />
+            </Grid>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <!-- 金额汇总 -->
+      <StackPanel Spacing="4">
+        <TextBlock Text="{Binding Order.AmountTotal, StringFormat='原价 ¥{0:F2}'}" />
+        <TextBlock Text="{Binding Order.AmountDiscount, StringFormat='折扣 -¥{0:F2}'}" />
+        <TextBlock Text="{Binding Order.AmountPay, StringFormat='应收 ¥{0:F2}'}"
+                   FontWeight="Bold" FontSize="{DynamicResource FontSizeSubtitle}" />
+      </StackPanel>
+
+      <!-- 操作按钮：已结账 vs 待结明显区分 -->
+      <StackPanel Spacing="12">
+        <TextBlock Text="待结订单操作"
+                   IsVisible="{Binding CanSkip}"
+                   FontWeight="SemiBold" />
+        <StackPanel Orientation="Horizontal" Spacing="12" IsVisible="{Binding CanSkip}">
+          <Button Content="退菜" Click="OnRefund" MinHeight="44" MinWidth="100" />
+          <Button Content="跳单" Click="OnSkip" MinHeight="44" MinWidth="100" />
+        </StackPanel>
+        <TextBlock Text="已结账订单操作"
+                   IsVisible="{Binding CanReverse}"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource WarningBrush}" />
+        <StackPanel Orientation="Horizontal" Spacing="12" IsVisible="{Binding CanReverse}">
+          <Button Content="退菜" Click="OnRefund" MinHeight="44" MinWidth="100" />
+          <Button Content="反结账" Click="OnReverse" MinHeight="44" MinWidth="100" />
+        </StackPanel>
+        <Button Content="重打小票"
+                IsVisible="{Binding CanReprint}"
+                Click="OnReprint" MinHeight="44" MinWidth="140" />
+      </StackPanel>
+
+      <TextBlock Text="{Binding ErrorMessage}"
+                 IsVisible="{Binding !!ErrorMessage}"
+                 Foreground="{DynamicResource DangerBrush}"
+                 TextWrapping="Wrap" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

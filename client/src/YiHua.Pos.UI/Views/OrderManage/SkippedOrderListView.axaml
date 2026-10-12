@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.OrderManage"
+             x:Class="YiHua.Pos.UI.Views.OrderManage.SkippedOrderListView"
+             x:DataType="vm:OrderListViewModel">
+  <Grid RowDefinitions="Auto,*">
+    <TextBlock Grid.Row="0" Text="跳单列表"
+               FontSize="{DynamicResource FontSizeTitle}"
+               FontWeight="Bold" Margin="16,12" />
+    <ListBox Grid.Row="1" Margin="16,0"
+             ItemsSource="{Binding Orders}"
+             SelectionChanged="OnOrderSelected">
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,8">
+            <StackPanel Grid.Column="0" Spacing="4">
+              <TextBlock Text="{Binding OrderNo}" FontWeight="SemiBold" />
+              <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:HH:mm}'}"
+                         FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextSecondaryBrush}" />
+            </StackPanel>
+            <TextBlock Grid.Column="1"
+                       Text="{Binding AmountPay, StringFormat='¥{0:F2}'}"
+                       VerticalAlignment="Center" Margin="12,0" />
+            <Button Grid.Column="2" Content="恢复"
+                    Click="OnRestore" MinHeight="44" MinWidth="80" />
+          </Grid>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+  </Grid>
+</UserControl>

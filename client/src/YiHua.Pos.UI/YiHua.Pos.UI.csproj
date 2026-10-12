@@ -15,7 +15,8 @@
 
 <!-- ViewModel 通过 Domain 仓储接口访问数据（任务卡要求复用既有接口，不自造数据层）
        - T-306 桌台管理：IDeskRepository
-       - T-303 正餐点单：IOrderRepository -->
+       - T-303 正餐点单：IOrderRepository
+       - T-308 订单管理：IOrderRepository -->
   <ItemGroup>
     <ProjectReference Include="..\YiHua.Pos.Domain\YiHua.Pos.Domain.csproj" />
   </ItemGroup>

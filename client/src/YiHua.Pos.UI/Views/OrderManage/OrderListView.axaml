@@ -1,0 +1,85 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.OrderManage"
+             x:Class="YiHua.Pos.UI.Views.OrderManage.OrderListView"
+             x:DataType="vm:OrderListViewModel">
+  <Grid RowDefinitions="Auto,*,Auto">
+    <!-- 筛选栏 -->
+    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12" Margin="16,12">
+      <CalendarDatePicker SelectedDate="{Binding SelectedDate}" MinHeight="44" />
+      <ComboBox x:Name="StatusCombo" MinHeight="44" MinWidth="140"
+                PlaceholderText="全部状态"
+                SelectionChanged="OnStatusChanged">
+        <ComboBoxItem Content="全部" />
+        <ComboBoxItem Content="待结" Tag="Pending" />
+        <ComboBoxItem Content="已结" Tag="Settled" />
+        <ComboBoxItem Content="已退" Tag="Refunded" />
+        <ComboBoxItem Content="已冲正" Tag="Reversed" />
+      </ComboBox>
+      <TextBox Text="{Binding Keyword}"
+               Watermark="搜索订单号/金额"
+               MinHeight="44" MinWidth="200" />
+      <Button Content="金额排序" Click="OnToggleSort" MinHeight="44" />
+      <Button Content="清除筛选"
+              IsVisible="{Binding HasActiveFilter}"
+              Click="OnClearFilter" MinHeight="44" />
+    </StackPanel>
+
+    <!-- 订单列表（ListBox 默认启用虚拟化） -->
+    <ListBox Grid.Row="1" Margin="16,0"
+             ItemsSource="{Binding Orders}"
+             SelectionChanged="OnOrderSelected">
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,8">
+            <StackPanel Grid.Column="0" Spacing="4" MinWidth="180">
+              <TextBlock Text="{Binding OrderNo}" FontWeight="SemiBold" />
+              <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:HH:mm}'}"
+                         FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextSecondaryBrush}" />
+            </StackPanel>
+            <TextBlock Grid.Column="1"
+                       Text="{Binding Status}"
+                       VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextSecondaryBrush}" />
+            <TextBlock Grid.Column="2"
+                       Text="{Binding AmountPay, StringFormat='¥{0:F2}'}"
+                       FontFamily="{DynamicResource MonospaceFont}"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Center"
+                       MinWidth="100" />
+            <TextBlock Grid.Column="3" Text="›" FontSize="20"
+                       VerticalAlignment="Center" Margin="12,0,0,0"
+                       Foreground="{DynamicResource TextDisabledBrush}" />
+          </Grid>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+
+    <!-- 空状态 -->
+    <StackPanel Grid.Row="1"
+                IsVisible="{Binding IsEmpty}"
+                VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
+      <TextBlock Text="没有找到订单"
+                 FontSize="{DynamicResource FontSizeTitle}"
+                 HorizontalAlignment="Center" />
+      <Button Content="清除筛选"
+              IsVisible="{Binding HasActiveFilter}"
+              Click="OnClearFilter"
+              MinHeight="44" HorizontalAlignment="Center" />
+    </StackPanel>
+
+    <TextBlock Grid.Row="1" Text="正在加载…"
+               IsVisible="{Binding IsLoading}"
+               VerticalAlignment="Center" HorizontalAlignment="Center" />
+    <TextBlock Grid.Row="1" Text="{Binding ErrorMessage}"
+               IsVisible="{Binding !!ErrorMessage}"
+               VerticalAlignment="Center" HorizontalAlignment="Center"
+               Foreground="{DynamicResource DangerBrush}" />
+
+    <TextBlock Grid.Row="2" Margin="16,8"
+               FontSize="{DynamicResource FontSizeSmall}"
+               Foreground="{DynamicResource TextSecondaryBrush}"
+               Text="{Binding Orders.Count, StringFormat='共 {0} 单'}" />
+  </Grid>
+</UserControl>
