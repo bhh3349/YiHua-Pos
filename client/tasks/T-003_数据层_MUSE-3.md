@@ -1,6 +1,6 @@
 # 任务卡 T-003 · 本地 SQLite 数据层
 
-> **收件人：MUSE-3** · 项目：逸华餐饮收银 · 工作区：`（略）
+> **收件人：MUSE-3** · 项目：逸华餐饮收银 · 工作区：`C:\WorkSpace\purge\client`
 
 ---
 
@@ -32,13 +32,13 @@
 
 ```
 ✅ 你只能修改这个目录下的文件：
-      src/YiHua.Pos.Data/**
-      tests/YiHua.Pos.Tests/Data/**
+      client/src/YiHua.Pos.Data/**
+      client/tests/YiHua.Pos.Tests/Data/**
 
 ❌ 禁止修改以下任何文件（已冻结）：
       YiHua.Pos.sln / Directory.Build.props
-      src/YiHua.Pos.Domain/**          ← 实体与接口在这里，只能读
-      src/YiHua.Pos.Hardware/**
+      client/src/YiHua.Pos.Domain/**          ← 实体与接口在这里，只能读
+      client/src/YiHua.Pos.Hardware/**
       其他任何模块
 
 ❌ 禁止引入 SqlSugar / EF Core 之外的重型 ORM
@@ -54,7 +54,7 @@
 
 ## 3. 已冻结的接口
 
-`src/YiHua.Pos.Domain/Interfaces/IRepositories.cs`：
+`client/src/YiHua.Pos.Domain/Interfaces/IRepositories.cs`：
 
 ```csharp
 IOrderRepository        订单（增删改查 + 按日期/桌台/班次查询 + 未同步查询）
@@ -68,14 +68,14 @@ IDictionaryRepository   通用键值配置
 IDbInitializer          建表 / 备份
 ```
 
-实体定义在 `src/YiHua.Pos.Domain/Entities/`（Order / Product / Desk / Shift / OutboxItem）。
+实体定义在 `client/src/YiHua.Pos.Domain/Entities/`（Order / Product / Desk / Shift / OutboxItem）。
 
 ---
 
 ## 4. 交付物
 
 ```
-src/YiHua.Pos.Data/
+client/src/YiHua.Pos.Data/
 ├── YiHua.Pos.Data.csproj
 ├── PosDbContext.cs                 数据库上下文
 ├── DbInitializer.cs                建表 + 索引
@@ -92,7 +92,7 @@ src/YiHua.Pos.Data/
 └── Migrations/
     └── V001_Init.sql               建表脚本
 
-tests/YiHua.Pos.Tests/Data/
+client/tests/YiHua.Pos.Tests/Data/
 ├── OrderRepositoryTests.cs
 ├── OutboxRepositoryTests.cs
 └── DbInitializerTests.cs
@@ -148,28 +148,15 @@ tests/YiHua.Pos.Tests/Data/
 
 ---
 
-## 8. 参考
+## 8. 参考（只看不抄）
 
-**实体定义**（已冻结，直接读）：
+参考实现的本地表结构（**仅供理解字段含义**）：
 ```
-client/src/YiHua.Pos.Domain/Entities/
-  ├── Order.cs        订单 + 明细 + 支付
-  ├── Product.cs      商品 + 分类 + 单位
-  └── Desk.cs         桌台 + 区域 + 交班 + outbox
-```
-
-**接口定义**（已冻结，你要实现它们）：
-```
-client/src/YiHua.Pos.Domain/Interfaces/IRepositories.cs
-```
-
-**服务端数据模型**（参考字段设计）：
-```
-docs/09-技术方案.md
+C:\WorkSpace\purge\work\decomp\Cashier.Domain\Cashier.Domain.Entities\**  实体定义
+C:\WorkSpace\purge\pos\docs\02-API契约与数据模型.md                       表结构文档
 ```
 
 ---
-
 
 ## 9. 完成后
 

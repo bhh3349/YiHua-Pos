@@ -1,6 +1,6 @@
 # 任务卡 T-105 · 电子秤串口协议（首批 3 品牌）
 
-> **收件人：MUSE-2** · 项目：逸华餐饮收银 · 工作区：`（略）
+> **收件人：MUSE-2** · 项目：逸华餐饮收银 · 工作区：`C:\WorkSpace\purge\client`
 
 ---
 
@@ -23,17 +23,17 @@
 
 ```
 ✅ 你只能修改这个目录下的文件：
-      src/YiHua.Pos.Hardware/Scales/**
-      tests/YiHua.Pos.Tests/Hardware/Scales/**
+      client/src/YiHua.Pos.Hardware/Scales/**
+      client/tests/YiHua.Pos.Tests/Hardware/Scales/**
 
 ❌ 禁止修改以下任何文件（已冻结）：
       YiHua.Pos.sln / Directory.Build.props
-      src/YiHua.Pos.Domain/**
-      src/YiHua.Pos.Hardware/Abstractions/**   ← 接口在这里，只能读
-      src/YiHua.Pos.Hardware/YiHua.Pos.Hardware.csproj
+      client/src/YiHua.Pos.Domain/**
+      client/src/YiHua.Pos.Hardware/Abstractions/**   ← 接口在这里，只能读
+      client/src/YiHua.Pos.Hardware/YiHua.Pos.Hardware.csproj
       其他任何模块
 
-❌ 禁止复制行业通行的代码（可以看协议细节，代码自己写）
+❌ 禁止复制参考实现的代码（可以看协议细节，代码自己写）
 ❌ 禁止引入任何第三方串口库
 ```
 
@@ -77,7 +77,7 @@ public interface IScaleProtocol
 ## 4. 交付物
 
 ```
-src/YiHua.Pos.Hardware/Scales/
+client/src/YiHua.Pos.Hardware/Scales/
 ├── Protocols/
 │   ├── DaHuaOs2xProtocol.cs
 │   ├── DaHuaPs1xProtocol.cs
@@ -87,7 +87,7 @@ src/YiHua.Pos.Hardware/Scales/
 ├── ScaleManager.cs               连接管理 + 自动探测
 └── SerialScale.cs                IScale 的串口实现
 
-tests/YiHua.Pos.Tests/Hardware/Scales/
+client/tests/YiHua.Pos.Tests/Hardware/Scales/
 ├── DaHuaProtocolTests.cs
 ├── ToledoProtocolTests.cs
 └── KssProtocolTests.cs
@@ -136,33 +136,25 @@ tests/YiHua.Pos.Tests/Hardware/Scales/
 ```
 1. 改动文件清单
 2. dotnet build + dotnet test 输出
-3. 每个协议的「帧格式说明」（你从行业通行做法里读出来的）
+3. 每个协议的「帧格式说明」（你从参考实现里读出来的）
 ```
 
 ---
 
-## 8. 参考
-
-**协议规范已整理成独立文档**：
+## 8. 参考（只看不抄）
 
 ```
-client/docs/协议规范-电子秤.md
+C:\WorkSpace\purge\work\decomp\HardwareDevice\HardwareDevice.EleScale.*
+  ├── Contract.AclasOs2xScale.cs
+  ├── Contract.AclasPS1XScale.cs
+  ├── Contract.BLSScale.cs
+  ├── Contract.Cas216Scale.cs
+  └── ScaleManager.cs
 ```
 
-里面包含 3 个品牌的完整协议事实：
-
-| 品牌 | 帧长 | 帧头/帧尾 | 指令 |
-|---|---|---|---|
-| 大华 OS2X | 15 字节 | `01 02` / `03 04` | 初始化/取重/置零/去皮 |
-| 托利多 ArivaS | 31 字节 | `02` / `03` | 取重/置零/去皮 |
-| 凯士 CAS216 | 12 字节 | 无 | 被动接收 |
-
-文档里还有：串口默认参数、帧结构逐字节说明、解析算法步骤、单位换算规则。
-
-**你只需要按这份文档实现，不需要其他参考资料。**
+**注意**：只读协议格式（波特率、帧结构、字节含义），代码要自己重新组织。
 
 ---
-
 
 ## 9. 完成后
 

@@ -1,6 +1,6 @@
 # 任务卡 T-201 · 服务端 P0 接口补齐
 
-> **收件人：Hermes** · 项目：逸华餐饮收银 · 工作区：`（略）
+> **收件人：Hermes** · 项目：逸华餐饮收银 · 工作区：`C:\WorkSpace\purge\pos\server`
 
 ---
 
@@ -48,8 +48,10 @@
 
 ## 3. 已有资产（**这是你的最大优势**）
 
+`reference/contract/` 里有 **52 个真实接口的完整请求 + 响应**（已脱敏）：
 
 ```
+reference/contract/
 ├── calls.json           132 条完整调用记录
 ├── endpoints.json        52 个唯一接口
 └── by_endpoint/          每个接口一份，含请求体+响应体
@@ -170,6 +172,7 @@
 
 ```
 □ smoke_test.py 从 47 项扩展到 ≥ 80 项，全部通过
+□ 每个接口有对应的请求/响应示例（对照 reference/contract/）
 □ 幂等测试：同一 clientOrderNo 提交 10 次，数据库只有 1 条
 □ 二次编码格式正确（用真实抓包的格式验证）
 □ pytest 单元测试覆盖率 ≥ 70%
@@ -189,22 +192,13 @@
 
 ## 8. 参考
 
-**接口契约规范**（52 个接口的字段名与类型，你的主要参考）：
 ```
-client/docs/协议规范-服务端接口.md
+pos/harvest/contract/by_endpoint/    真实接口契约（你的主要参考）
+pos/docs/02-API契约与数据模型.md      数据模型与接口规范
+pos/server/README.md                 服务端现状说明
 ```
-
-**服务端现状**：
-```
-server/README.md      服务端说明
-server/app/models.py  数据模型
-server/smoke_test.py  现有测试
-```
-
-**注意**：契约文档里只有字段名和类型，具体业务值需要你自己设计合理的测试数据。
 
 ---
-
 
 ## 9. 完成后
 

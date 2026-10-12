@@ -11,6 +11,7 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+.pytest_cache/
 
 # 运行时数据
 *.db
@@ -18,6 +19,8 @@ venv/
 *.db-shm
 logs/
 *.log
+*.out
+server/data/
 
 # 密钥与配置
 .env

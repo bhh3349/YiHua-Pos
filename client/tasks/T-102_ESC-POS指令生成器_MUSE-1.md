@@ -1,6 +1,6 @@
 # 任务卡 T-102 · ESC/POS 指令生成器
 
-> **收件人：MUSE-1** · 项目：逸华餐饮收银 · 工作区：`（略）
+> **收件人：MUSE-1** · 项目：逸华餐饮收银 · 工作区：`C:\WorkSpace\purge\client`
 
 ---
 
@@ -24,18 +24,18 @@
 
 ```
 ✅ 你只能修改这个目录下的文件：
-      src/YiHua.Pos.Hardware/Printing/EscPos/**
-      tests/YiHua.Pos.Tests/Hardware/EscPos/**
+      client/src/YiHua.Pos.Hardware/Printing/EscPos/**
+      client/tests/YiHua.Pos.Tests/Hardware/EscPos/**
 
 ❌ 禁止修改以下任何文件（已冻结，由 Lead 维护）：
       YiHua.Pos.sln
       Directory.Build.props
-      src/YiHua.Pos.Domain/**
-      src/YiHua.Pos.Hardware/Abstractions/**
-      src/YiHua.Pos.Hardware/YiHua.Pos.Hardware.csproj
+      client/src/YiHua.Pos.Domain/**
+      client/src/YiHua.Pos.Hardware/Abstractions/**
+      client/src/YiHua.Pos.Hardware/YiHua.Pos.Hardware.csproj
       其他任何模块
 
-❌ 禁止复制行业通行的代码（可以看，但要自己写）
+❌ 禁止复制参考实现的代码（可以看，但要自己写）
 ❌ 禁止引入任何第三方打印库（自己实现指令）
 ```
 
@@ -52,13 +52,13 @@
 ## 3. 交付物
 
 ```
-src/YiHua.Pos.Hardware/Printing/EscPos/
+client/src/YiHua.Pos.Hardware/Printing/EscPos/
 ├── EscPosBuilder.cs        Fluent API 构建器
 ├── EscPosCommands.cs       指令常量表
 ├── EscPosConstants.cs      字符编码/对齐/字号等枚举
 └── EscPosImageConverter.cs 位图转 ESC/POS 点阵
 
-tests/YiHua.Pos.Tests/Hardware/EscPos/
+client/tests/YiHua.Pos.Tests/Hardware/EscPos/
 └── EscPosBuilderTests.cs   单元测试
 ```
 
@@ -146,30 +146,16 @@ GS k         一维码
 
 ---
 
-## 7. 参考
+## 7. 参考（只看不抄）
 
-**ESC/POS 是爱普生公开的行业标准**，指令集可以自行查证。关键指令速查：
-
+ESC/POS 是公开标准，可自行查证。参考实现位置（**仅供理解，禁止复制代码**）：
 ```
-ESC @        初始化打印机          1B 40
-ESC a n      对齐（0左 1中 2右）   1B 61 n
-ESC E n      加粗                  1B 45 n
-ESC - n      下划线                1B 2D n
-GS  ! n      字号（高4位宽 低4位高） 1D 21 n
-ESC d n      走纸 n 行             1B 64 n
-GS  V m      切纸                  1D 56 m
-ESC p m t    开钱箱                1B 70 m t
-GS  ( k      二维码                1D 28 6B ...
-GS  k        一维码                1D 6B ...
-ESC * m nL nH 位图（1-bit 点阵）    1B 2A m nL nH <data>
+C:\WorkSpace\purge\work\decomp\Printer.Main\
+  ├── Printer.Template.Command.EscPosCommand.cs
+  └── Printer.Template.Command.EscPosInstruction.cs
 ```
-
-**中文编码**：使用 GB18030（`Encoding.GetEncoding("GB18030")`）。
-
-**注意**：只依据公开标准实现，不要照搬任何第三方代码。
 
 ---
-
 
 ## 8. 完成后
 

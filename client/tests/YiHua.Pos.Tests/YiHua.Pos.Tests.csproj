@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net6.0</TargetFrameworks>
+    <RootNamespace>YiHua.Pos.Tests</RootNamespace>
+    <AssemblyName>YiHua.Pos.Tests</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <NoWarn>$(NoWarn);CS1591;CS8618;CS8625;xUnit1041</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageReference Include="FluentAssertions" Version="6.12.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\YiHua.Pos.Domain\YiHua.Pos.Domain.csproj" />
+    <ProjectReference Include="..\..\src\YiHua.Pos.Hardware\YiHua.Pos.Hardware.csproj" />
+  </ItemGroup>
+
+  <!--
+    说明：每个任务的测试放在自己的子目录下
+      Hardware/EscPos/   ← T-102
+      Hardware/Scales/   ← T-105
+      Hardware/Linux/    ← T-103
+      Hardware/Windows/  ← T-104
+      Hardware/Devices/  ← T-106
+      Hardware/Templates/← T-107
+      Data/              ← T-003
+      UI/                ← T-005
+  -->
+
+</Project>
