@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Refund"
+             x:Class="YiHua.Pos.UI.Views.Refund.RefundConfirmView"
+             x:DataType="vm:RefundConfirmViewModel">
+  <StackPanel Spacing="16" Margin="24" MaxWidth="440">
+    <TextBlock Text="确认退款" FontSize="{DynamicResource FontSizeTitle}"
+               FontWeight="Bold" Foreground="{DynamicResource WarningBrush}" />
+
+    <!-- 大字金额 -->
+    <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="8" Padding="24">
+      <TextBlock Text="{Binding BigAmountText}"
+                 FontSize="48" FontWeight="Bold"
+                 Foreground="{DynamicResource WarningBrush}"
+                 HorizontalAlignment="Center" />
+    </Border>
+
+    <!-- 具体影响（不是简单的"确定吗"） -->
+    <Border Background="{DynamicResource BackgroundBrush}" CornerRadius="6" Padding="12">
+      <TextBlock Text="{Binding ImpactText}" TextWrapping="Wrap"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+    </Border>
+
+    <TextBlock Text="{Binding ReasonText, StringFormat='原因：{0}'}"
+               TextWrapping="Wrap" />
+
+    <TextBlock Text="{Binding Error}"
+               IsVisible="{Binding !!Error}"
+               Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap" />
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <Button Content="取消" Click="OnCancel" MinHeight="48" MinWidth="120" />
+      <Button Content="确认退款" Click="OnConfirm" MinHeight="48" MinWidth="160" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>

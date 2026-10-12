@@ -1,0 +1,82 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Refund"
+             xmlns:views="clr-namespace:YiHua.Pos.UI.Views.Refund"
+             x:Class="YiHua.Pos.UI.Views.Refund.RefundOrderView"
+             x:DataType="vm:RefundOrderViewModel">
+  <StackPanel Spacing="16" Margin="24" MaxWidth="520">
+    <!-- 订单摘要 -->
+    <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="8" Padding="16">
+      <StackPanel Spacing="8">
+        <TextBlock Text="{Binding Order.OrderNo, StringFormat='订单 {0}'}"
+                   FontSize="{DynamicResource FontSizeLarge}" FontWeight="Bold" />
+        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="实收" Foreground="{DynamicResource TextSecondaryBrush}" />
+          <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Order.AmountReceived, StringFormat='¥{0:F2}'}" />
+          <TextBlock Grid.Row="1" Grid.Column="0" Text="已退" Foreground="{DynamicResource TextSecondaryBrush}" />
+          <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding AlreadyRefunded, StringFormat='¥{0:F2}'}" />
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="还可退" FontWeight="Bold" />
+          <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Refundable, StringFormat='¥{0:F2}'}"
+                     FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}" />
+        </Grid>
+      </StackPanel>
+    </Border>
+
+    <!-- 三个操作：颜色明确区分 -->
+    <TextBlock Text="选择操作" FontSize="{DynamicResource FontSizeLarge}" FontWeight="Bold" />
+
+    <!-- 退菜：蓝色系 -->
+    <Button x:Name="ItemRefundBtn" Click="OnItemRefund"
+            IsEnabled="{Binding ItemRefundAccess.Enabled}"
+            Background="{DynamicResource PrimaryLightBrush}" MinHeight="64">
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <TextBlock Text="退菜" FontSize="{DynamicResource FontSizeLarge}" FontWeight="Bold"
+                   Foreground="{DynamicResource PrimaryBrush}" />
+        <TextBlock Text="退其中几个菜，钱退一部分" VerticalAlignment="Center"
+                   Foreground="{DynamicResource TextSecondaryBrush}" />
+      </StackPanel>
+    </Button>
+    <TextBlock Text="{Binding ItemRefundAccess.DenyReason}"
+               IsVisible="{Binding ItemRefundAccess.DenyReason, Converter={x:Static views:RefundOrderView.NotEmpty}}"
+               Foreground="{DynamicResource TextSecondaryBrush}"
+               FontSize="{DynamicResource FontSizeSmall}" />
+
+    <!-- 整单退：橙色系 -->
+    <Button x:Name="OrderRefundBtn" Click="OnOrderRefund"
+            IsEnabled="{Binding OrderRefundAccess.Enabled}"
+            Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource WarningBrush}" BorderThickness="2" MinHeight="64">
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <TextBlock Text="整单退" FontSize="{DynamicResource FontSizeLarge}" FontWeight="Bold"
+                   Foreground="{DynamicResource WarningBrush}" />
+        <TextBlock Text="整单退款，已付的钱退回" VerticalAlignment="Center"
+                   Foreground="{DynamicResource TextSecondaryBrush}" />
+      </StackPanel>
+    </Button>
+    <TextBlock Text="{Binding OrderRefundAccess.DenyReason}"
+               IsVisible="{Binding OrderRefundAccess.DenyReason, Converter={x:Static views:RefundOrderView.NotEmpty}}"
+               Foreground="{DynamicResource TextSecondaryBrush}"
+               FontSize="{DynamicResource FontSizeSmall}" />
+
+    <!-- 冲正：红色系（破坏性最强） -->
+    <Button x:Name="VoidBtn" Click="OnVoid"
+            IsEnabled="{Binding VoidAccess.Enabled}"
+            Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource DangerBrush}" BorderThickness="2" MinHeight="64">
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <TextBlock Text="冲正" FontSize="{DynamicResource FontSizeLarge}" FontWeight="Bold"
+                   Foreground="{DynamicResource DangerBrush}" />
+        <TextBlock Text="作废订单，不退钱（仅未结账）" VerticalAlignment="Center"
+                   Foreground="{DynamicResource TextSecondaryBrush}" />
+      </StackPanel>
+    </Button>
+    <TextBlock Text="{Binding VoidAccess.DenyReason}"
+               IsVisible="{Binding VoidAccess.DenyReason, Converter={x:Static views:RefundOrderView.NotEmpty}}"
+               Foreground="{DynamicResource TextSecondaryBrush}"
+               FontSize="{DynamicResource FontSizeSmall}" />
+
+    <TextBlock Text="{Binding Error}"
+               IsVisible="{Binding !!Error}"
+               Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap" />
+  </StackPanel>
+</UserControl>
