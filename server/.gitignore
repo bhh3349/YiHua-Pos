@@ -1,0 +1,4 @@
+# 测试覆盖率产物（根 .gitignore 只覆盖了 __pycache__ / *.pyc / .pytest_cache）
+.coverage
+.coverage.*
+htmlcov/

@@ -5,13 +5,14 @@ FastAPI + SQLAlchemy + SQLite（可一键切 MySQL）实现的后端，含**新�
 ## 快速开始
 
 ```powershell
-cd pos\server
+cd server
 pip install -r requirements.txt
 
 python seed.py --reset      # 建库 + 演示数据（租户/门店/商品/桌台/会员）
 python run.py --port 8000   # 启动
 
-python smoke_test.py        # 端到端冒烟测试（47 项）
+python smoke_test.py        # 端到端冒烟测试（157 项，需服务端已启动）
+python -m pytest            # 单元测试 + 覆盖率（144 项）
 python export_legacy_csv.py # 导出参考系统格式商品 CSV（供 Windows 客户端拉取）
 ```
 
@@ -34,6 +35,8 @@ server/
 │   ├── models.py      18 张表（SQLAlchemy）
 │   ├── security.py    bcrypt + JWT
 │   ├── util.py        响应封装 / 上下文 / CSV
+│   ├── legacy_core.py 兼容层公共件（信封 / scope 解析 / 报文解析 / DTO）
+│   ├── legacy_csv.py  兼容层商品 CSV 导出
 │   ├── main.py        应用装配
 │   └── routers/
 │       ├── auth.py    登录 / 续期 / 资料
@@ -44,7 +47,11 @@ server/
 │       ├── shift.py   开班 / 交班 / 交接记录
 │       ├── member.py  会员 / 储值 / 积分
 │       ├── report.py  汇总 / 趋势 / 支付方式 / 商品排行
-│       └── legacy.py  参考系统客户端兼容层
+│       ├── legacy.py      兼容层：登录 / 门店配置 / 商品增量 / 字典 / 兜底
+│       ├── legacy_order.py 兼容层：桌台 / 订单 / 交班
+│       └── legacy_print.py 兼容层：打印模板 / 设备 / 策略 / 功能开关
+├── tests/             pytest 用例（契约 / 幂等 / 隔离 / 格式 / 打印 / 交班）
+├── pytest.ini
 ├── seed.py            演示数据
 ├── smoke_test.py      端到端测试
 ├── export_legacy_csv.py
@@ -79,17 +86,33 @@ pip install pymysql
 ```
 模型层用 `BigInteger().with_variant(Integer,"sqlite")` 处理主键，两边都能自增。
 
-## 冒烟测试覆盖（47 项）
+## 测试
+
+**端到端冒烟测试**（`python smoke_test.py`，需服务端已启动）
 
 健康检查 · 登录成功/密码错误/无 token · 商品分类/列表/搜索/版本/CSV 导出与下载 ·
 区域/桌台/开台 · 下单金额计算 · **幂等重复提交** · 折扣 · 预结 ·
 **支付金额不足拒绝** · 现金结账与找零 · 结账后自动清台 · **重复结账拒绝** ·
 会员余额支付与扣减 · 充值送额 · 开班/当前班次/交班/应有现金核对 ·
-报表汇总/支付方式/商品排行 · 兼容层登录与增量同步与兜底
+报表汇总/支付方式/商品排行 · 兼容层登录与增量同步与兜底 · 打印模板/设备/策略 ·
+功能开关 · **多租户隔离**
 
 ```
-通过 47 项，失败 0 项
+通过 157 项，失败 0 项
 ```
+
+**单元测试**（`python -m pytest`）
+
+契约接口、幂等、多租户隔离、响应格式（含二次编码）、打印配置、交班。
+覆盖率 89%（`--cov=app`）。
+
+## 已知限制
+
+`t_order.client_order_no` 是**全局**唯一索引（`uk_client_no`，不带 `store_id`），
+因此两个门店使用同一个 `clientOrderNo` 时数据库一定会拦。`/api/v1/order/create`
+用 `IntegrityError` 兜底回 `409` + 原单据，不会漏出 500，但这意味着**跨门店的
+同一幂等键无法各建一单**。建议改为 `(store_id, client_order_no)` 复合唯一索引
+（需改 `models.py`，已上报 Lead）。
 
 ## 尚未实现（后续里程碑）
 
