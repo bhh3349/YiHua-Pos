@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net6.0</TargetFrameworks>
+    <RootNamespace>YiHua.Pos.Data</RootNamespace>
+    <AssemblyName>YiHua.Pos.Data</AssemblyName>
+    <Description>逸华餐饮收银 · 本地 SQLite 数据层（T-003）</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ORM：只允许 SqlSugar（协作规范铁律） -->
+    <PackageReference Include="SqlSugarCore" Version="$(SqlSugarVersion)" />
+    <ProjectReference Include="..\YiHua.Pos.Domain\YiHua.Pos.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations/V001_Init.sql" />
+  </ItemGroup>
+
+</Project>
