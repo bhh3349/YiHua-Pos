@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="YiHua.Pos.UI.Views.Member.MemberComplianceView">
+  <ScrollViewer Margin="16">
+    <StackPanel Spacing="12" MaxWidth="700">
+      <TextBlock Text="合规提示" FontSize="20" FontWeight="Bold" />
+      <TextBlock Text="依据《单用途商业预付卡管理办法（试行）》（商务部令第 9 号）" FontSize="14"
+                 Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" />
+
+      <Border Background="{DynamicResource BackgroundBrush}" CornerRadius="8" Padding="12">
+        <StackPanel Spacing="8">
+          <TextBlock Text="第十八条：单张记名卡限额" FontWeight="SemiBold" FontSize="14" />
+          <TextBlock Text="单张记名卡资金限额不超过 5000 元。本软件默认充值上限 5000 元，不可调高。"
+                     FontSize="14" TextWrapping="Wrap" />
+        </StackPanel>
+      </Border>
+
+      <Border Background="{DynamicResource BackgroundBrush}" CornerRadius="8" Padding="12">
+        <StackPanel Spacing="8">
+          <TextBlock Text="第十九条：记名卡不得设有效期" FontWeight="SemiBold" FontSize="14" />
+          <TextBlock Text="会员卡不设有效期，余额长期有效。"
+                     FontSize="14" TextWrapping="Wrap" />
+        </StackPanel>
+      </Border>
+
+      <Border Background="{DynamicResource BackgroundBrush}" CornerRadius="8" Padding="12">
+        <StackPanel Spacing="8">
+          <TextBlock Text="第二十一条：退卡留存" FontWeight="SemiBold" FontSize="14" />
+          <TextBlock Text="退卡须留存姓名、证件号、卡号、金额。余额不足 100 元可用现金退款。"
+                     FontSize="14" TextWrapping="Wrap" />
+        </StackPanel>
+      </Border>
+
+      <TextBlock Text="地方规定可能更严（如上海），请咨询当地商务部门。备案责任在商家（发卡企业），不在本软件。"
+                 FontSize="14" Foreground="{DynamicResource WarningBrush}" TextWrapping="Wrap" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

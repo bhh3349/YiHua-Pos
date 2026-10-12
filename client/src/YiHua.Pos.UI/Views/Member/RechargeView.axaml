@@ -1,0 +1,28 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Member"
+             x:Class="YiHua.Pos.UI.Views.Member.RechargeView"
+             x:DataType="vm:RechargeViewModel">
+  <StackPanel Spacing="12" MaxWidth="480" Margin="16">
+    <TextBlock Text="充值" FontSize="20" FontWeight="Bold" />
+    <TextBlock Text="{Binding Member.Balance, StringFormat='当前余额 ¥{0:F2}'}"
+               FontSize="18" />
+
+    <TextBlock Text="充值金额" FontSize="14" />
+    <input:TouchTextBox Text="{Binding Amount}" Watermark="比如：500" />
+
+    <!-- 合规提示 -->
+    <Border CornerRadius="8" Padding="12">
+      <Border.Background>
+        <SolidColorBrush Color="{DynamicResource WarningColor}" Opacity="0.12" />
+      </Border.Background>
+      <TextBlock Text="{Binding ComplianceTip}" FontSize="13" TextWrapping="Wrap" />
+    </Border>
+
+    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}"
+               FontSize="14" TextWrapping="Wrap" />
+    <btn:PosButton Content="确认充值" Variant="Primary" MinHeight="52" HorizontalAlignment="Stretch" />
+  </StackPanel>
+</UserControl>

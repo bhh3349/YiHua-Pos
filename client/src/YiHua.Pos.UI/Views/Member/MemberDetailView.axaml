@@ -1,0 +1,68 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:disp="clr-namespace:YiHua.Pos.UI.Controls.Display"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Member"
+             xmlns:svc="clr-namespace:YiHua.Pos.UI.Services.Member"
+             x:Class="YiHua.Pos.UI.Views.Member.MemberDetailView"
+             x:DataType="vm:MemberDetailViewModel">
+  <ScrollViewer Margin="16">
+    <StackPanel Spacing="12" MaxWidth="700">
+      <!-- 会员信息一眼看清 -->
+      <Border Background="{DynamicResource SurfaceBrush}"
+              BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+              CornerRadius="10" Padding="16">
+        <StackPanel Spacing="8">
+          <StackPanel Orientation="Horizontal" Spacing="12">
+            <TextBlock Text="{Binding Member.Name}" FontSize="22" FontWeight="Bold" />
+            <TextBlock Text="{Binding Member.Level}" FontSize="14"
+                       Foreground="{DynamicResource TextSecondaryBrush}"
+                       VerticalAlignment="Center" />
+          </StackPanel>
+          <TextBlock Text="{Binding MaskedPhone}" FontSize="16"
+                     FontFamily="Consolas,Monospace" />
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="余额" FontSize="14"
+                       Foreground="{DynamicResource TextSecondaryBrush}"
+                       VerticalAlignment="Center" />
+            <TextBlock Text="{Binding Member.Balance, StringFormat='¥{0:F2}'}"
+                       FontSize="28" FontWeight="Bold" />
+          </StackPanel>
+          <TextBlock Text="{Binding Member.TotalSpent, StringFormat='累计消费 ¥{0:F2}'}"
+                     FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" />
+        </StackPanel>
+      </Border>
+
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <btn:PosButton Content="充值" Variant="Primary" />
+        <btn:PosButton Content="调整余额" Variant="Secondary" />
+        <btn:PosButton Content="挂失" Variant="Secondary" />
+        <btn:PosButton Content="退卡" Variant="Danger" />
+      </StackPanel>
+
+      <!-- 余额流水 -->
+      <TextBlock Text="余额流水" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,0" />
+      <ItemsControl ItemsSource="{Binding Records}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="svc:BalanceRecordDto">
+            <Border Background="{DynamicResource BackgroundBrush}" CornerRadius="6"
+                    Padding="10" Margin="0,0,0,4">
+              <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                <StackPanel>
+                  <TextBlock Text="{Binding ReasonText}" FontSize="14" FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:MM-dd HH:mm}'}"
+                             FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" />
+                </StackPanel>
+                <TextBlock Grid.Column="1" Text="{Binding Amount, StringFormat='¥{0:F2}'}"
+                           FontSize="14" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="2" Text="{Binding BalanceAfter, StringFormat='余¥{0:F2}'}"
+                           FontSize="12" VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

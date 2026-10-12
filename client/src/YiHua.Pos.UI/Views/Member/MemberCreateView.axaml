@@ -1,0 +1,18 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Member"
+             x:Class="YiHua.Pos.UI.Views.Member.MemberCreateView"
+             x:DataType="vm:MemberCreateViewModel">
+  <StackPanel Spacing="12" MaxWidth="480" Margin="16">
+    <TextBlock Text="开卡" FontSize="20" FontWeight="Bold" />
+    <TextBlock Text="姓名" FontSize="14" />
+    <input:TouchTextBox Text="{Binding Name}" Watermark="比如：张三" />
+    <TextBlock Text="手机号（必填，实名 + 去重，一个手机号只能一张卡）" FontSize="14" />
+    <input:TouchTextBox Text="{Binding Phone}" Watermark="11 位手机号" />
+    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}"
+               FontSize="14" TextWrapping="Wrap" />
+    <btn:PosButton Content="开卡" Variant="Primary" MinHeight="52" HorizontalAlignment="Stretch" />
+  </StackPanel>
+</UserControl>

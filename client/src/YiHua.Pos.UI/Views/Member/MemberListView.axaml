@@ -1,0 +1,51 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Member"
+             xmlns:svc="clr-namespace:YiHua.Pos.UI.Services.Member"
+             x:Class="YiHua.Pos.UI.Views.Member.MemberListView"
+             x:DataType="vm:MemberListViewModel">
+  <Grid RowDefinitions="Auto,*" Margin="16">
+    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
+      <TextBlock Text="会员" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" />
+      <input:TouchTextBox Watermark="搜索姓名/手机/卡号" MinWidth="240" />
+      <btn:PosButton Content="开卡" Variant="Primary" />
+    </StackPanel>
+    <ScrollViewer Grid.Row="1">
+      <ItemsControl ItemsSource="{Binding Members}" MaxWidth="800">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="svc:MemberDto">
+            <Border Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="8" Padding="12" Margin="0,0,0,8">
+              <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+                <StackPanel Spacing="2">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding Level}" FontSize="13"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               VerticalAlignment="Center" />
+                  </StackPanel>
+                  <!-- 手机号右对齐，脱敏显示 -->
+                  <TextBlock Text="{Binding Phone}" FontSize="14"
+                             Foreground="{DynamicResource TextSecondaryBrush}"
+                             HorizontalAlignment="Right" FontFamily="Consolas,Monospace" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                  <TextBlock Text="余额" FontSize="12"
+                             Foreground="{DynamicResource TextSecondaryBrush}" />
+                  <TextBlock Text="{Binding Balance, StringFormat='¥{0:F2}'}"
+                             FontSize="20" FontWeight="Bold" />
+                </StackPanel>
+                <TextBlock Grid.Column="2" Text="{Binding TotalSpent, StringFormat='累计¥{0:F0}'}"
+                           FontSize="13" VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+  </Grid>
+</UserControl>
