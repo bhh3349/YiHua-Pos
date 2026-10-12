@@ -12,8 +12,8 @@ from fastapi.staticfiles import StaticFiles
 from .config import (APP_NAME, IS_PROD, JWT_SECRET_SOURCE, JWT_SECRET_WARNING,
                      OSS_DIR)
 from .db import init_db
-from .routers import (auth, catalog, desk, legacy, legacy_order, legacy_print,
-                      member, order, pay, report, shift)
+from .routers import (auth, catalog, desk, groupbuy, legacy, legacy_order,
+                      legacy_print, member, order, pay, report, shift)
 from .util import BizError, biz_error_handler
 
 app = FastAPI(title=APP_NAME, version="0.1.0")
@@ -123,7 +123,8 @@ def health():
 
 # ---- 业务路由（新契约）----
 for r in (auth.router, catalog.router, desk.router, order.router,
-          pay.router, shift.router, member.router, report.router):
+          pay.router, shift.router, member.router, report.router,
+          groupbuy.router):
     app.include_router(r)
 
 # ---- 静态资源（商品 CSV，等价于对象存储）----
