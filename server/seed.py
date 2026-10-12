@@ -15,14 +15,18 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app.db import SessionLocal, init_db  # noqa: E402
-from app.models import (Desk, DeskArea, Member, Product, ProductCategory,  # noqa: E402
-                        ProductUnit, Store, SysRole, SysUser, Tenant, Terminal)
+from app.models import (Desk, DeskArea, Dictionary, Member,  # noqa: E402
+                        MemberBalanceLog, Order, OrderFlow, OrderItem, Payment,
+                        Product, ProductCategory, ProductUnit, Shift, Store,
+                        SysRole, SysUser, Tenant, Terminal)
 from app.seed_data import seed            # noqa: E402
 
 
 def reset(db):
-    for m in (Desk, DeskArea, Member, Product, ProductCategory, ProductUnit,
-              Terminal, SysUser, SysRole, Store, Tenant):
+    """清空全部业务数据（含订单/流水），让 smoke_test 可以反复跑。"""
+    for m in (OrderItem, OrderFlow, Payment, MemberBalanceLog, Order, Shift,
+              Dictionary, Desk, DeskArea, Member, Product, ProductCategory,
+              ProductUnit, Terminal, SysUser, SysRole, Store, Tenant):
         db.query(m).delete()
     db.commit()
 

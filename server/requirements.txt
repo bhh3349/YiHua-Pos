@@ -6,3 +6,7 @@ bcrypt>=4.0
 # 生产（MySQL）
 pymysql>=1.1
 gunicorn>=22.0
+# 测试（smoke_test.py 只用标准库 urllib；pytest 需要 httpx 才能驱动 TestClient）
+pytest>=8.0
+pytest-cov>=5.0
+httpx>=0.27
