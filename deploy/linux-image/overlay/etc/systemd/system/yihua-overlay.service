@@ -1,0 +1,28 @@
+[Unit]
+Description=逸华收银 —— 只读根文件系统 + overlayfs 可写层
+DefaultDependencies=no
+Before=local-fs.target
+After=systemd-remount-fs.service
+Requires=systemd-remount-fs.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+
+# 在 tmpfs 上建立可写层，合并到根目录。
+# 根分区本身保持只读 —— 断电、误操作都不会损坏系统。
+ExecStart=/bin/bash -c '\
+    mkdir -p /overlay/upper /overlay/work && \
+    mount -t tmpfs -o size=512M,mode=0755 tmpfs /overlay && \
+    mkdir -p /overlay/upper /overlay/work && \
+    mount -t overlay overlay \
+        -o lowerdir=/,upperdir=/overlay/upper,workdir=/overlay/work \
+        /mnt/overlay-merged \
+'
+
+# 说明：完整的 overlayfs 根切换需要在 initramfs 阶段做，
+# 这里提供的是运行期方案：根只读 + /tmp、/var 等目录挂 tmpfs。
+# 具体实现见 usr/local/bin/yihua-start.sh 里的 prepare_writable_dirs()
+
+[Install]
+WantedBy=sysinit.target

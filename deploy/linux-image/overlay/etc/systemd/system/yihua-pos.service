@@ -1,0 +1,47 @@
+[Unit]
+Description=逸华餐饮收银客户端
+Documentation=https://github.com/bhh3349/YiHua-Pos
+After=graphical.target yihua-overlay.service
+Wants=yihua-overlay.service
+Conflicts=getty@tty1.service
+
+[Service]
+Type=simple
+User=yihua
+Group=yihua
+SupplementaryGroups=video audio input plugdev
+
+# 工作目录与数据目录
+WorkingDirectory=/opt/yihua/app
+Environment=HOME=/home/yihua
+Environment=DOTNET_ROOT=/opt/dotnet
+Environment=DSH_POS_DATA=/data
+Environment=DSH_POS_LOG=/data/logs
+Environment=LANG=zh_CN.UTF-8
+Environment=DOTNET_CLI_TELEMETRY_OPTOUT=1
+Environment=DOTNET_NOLOGO=1
+# 关闭 .NET 的诊断端口（收银机不需要远程调试）
+Environment=DOTNET_EnableDiagnostics=0
+
+ExecStart=/usr/local/bin/yihua-start.sh
+
+# 崩溃自动重启（最多 5 次，间隔 3 秒）
+Restart=on-failure
+RestartSec=3
+StartLimitBurst=5
+StartLimitIntervalSec=60
+
+# 退出时不杀掉图形会话
+KillMode=mixed
+TimeoutStopSec=10
+
+# 资源限制（低配一体机，防止跑飞）
+MemoryMax=1G
+CPUQuota=180%
+
+# 日志
+StandardOutput=append:/data/logs/stdout.log
+StandardError=append:/data/logs/stderr.log
+
+[Install]
+WantedBy=graphical.target

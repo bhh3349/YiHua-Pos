@@ -1,0 +1,52 @@
+# 逸华餐饮收银 —— 外设权限规则
+#
+# Linux 下普通用户默认无权访问 USB/串口设备。
+# 这份规则让收银程序（yihua 组）无需 root 就能用打印机/电子秤/客显/钱箱。
+#
+# 安装位置：/etc/udev/rules.d/99-yihua-pos.rules
+# 生效：sudo udevadm control --reload-rules && sudo udevadm trigger
+
+# ============================================================================
+#  小票 / 标签打印机
+# ============================================================================
+
+# USB 打印类设备（bInterfaceClass=07 = Printer）
+SUBSYSTEM=="usb", ATTRS{bInterfaceClass}=="07", MODE="0666", GROUP="yihua"
+
+# 内核 usblp 驱动创建的设备节点
+SUBSYSTEM=="usbmisc", KERNEL=="usb/lp[0-9]*", MODE="0666", GROUP="yihua"
+KERNEL=="lp[0-9]*", MODE="0666", GROUP="yihua"
+
+# ============================================================================
+#  串口（电子秤 / 客显 / 老式打印机）
+# ============================================================================
+
+# USB 转串口芯片：CH340 / PL2303 / CP210x / FT232 / Prolific
+# 内核自带这些驱动，只需要给权限
+KERNEL=="ttyUSB*", MODE="0666", GROUP="yihua"
+KERNEL=="ttyACM*", MODE="0666", GROUP="yihua"
+
+# 板载串口（一体机常见 COM1-COM4）
+KERNEL=="ttyS[0-9]*", MODE="0666", GROUP="yihua"
+
+# ============================================================================
+#  触摸屏
+# ============================================================================
+
+# 触摸屏走 USB HID 时，内核 hid-multitouch 会创建 input 设备
+# 需要 input 组权限（用户已加入 input 组，这里兜底）
+SUBSYSTEM=="input", KERNEL=="event*", MODE="0660", GROUP="input"
+
+# ============================================================================
+#  已知品牌的打印机（按 VID/PID 精确匹配，可扩展）
+# ============================================================================
+# 格式：SUBSYSTEM=="usb", ATTRS{idVendor}=="xxxx", ATTRS{idProduct}=="yyyy", MODE="0666", GROUP="yihua"
+#
+# 常见小票机芯片：
+#   芯烨 (XPrinter)  1FC9 / 0483
+#   佳博 (Gprinter)  1FC9 / 0FE6
+#   映美 (Jolimark)  1FC9
+#   爱普生 (Epson)   04B8
+#
+# 说明：这些设备都走 ESC/POS 标准协议，通用规则（Printer class）已经覆盖，
+# 这里列出只是为了将来需要精确控制时参考。
