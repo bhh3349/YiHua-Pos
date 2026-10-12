@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Shift"
+             x:Class="YiHua.Pos.UI.Views.Shift.UnclosedShiftPrompt"
+             x:DataType="vm:UnclosedShiftViewModel">
+  <StackPanel Spacing="16" Margin="24" MaxWidth="440">
+    <TextBlock Text="上一班未交班" FontSize="{DynamicResource FontSizeTitle}"
+               FontWeight="Bold" Foreground="{DynamicResource WarningBrush}" />
+    <Border Background="{DynamicResource WarningBrush}" Opacity="0.12"
+            CornerRadius="6" Padding="12">
+      <TextBlock Text="{Binding Message}"
+                 TextWrapping="Wrap" />
+    </Border>
+    <TextBlock Text="不能开新班。请先完成交班，或联系店长强制交班。"
+               Foreground="{DynamicResource TextSecondaryBrush}"
+               TextWrapping="Wrap" />
+    <!-- 阻塞级：必须勾选已知晓才能继续 -->
+    <CheckBox Content="我已知晓（必须勾选）"
+              IsChecked="{Binding Acknowledged}"
+              MinHeight="44" />
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <Button Content="去交班" Click="OnGoClose"
+              IsEnabled="{Binding CanProceed}"
+              MinHeight="48" MinWidth="140" />
+      <Button Content="联系店长" Click="OnContactManager"
+              IsEnabled="{Binding CanProceed}"
+              MinHeight="48" MinWidth="140" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>

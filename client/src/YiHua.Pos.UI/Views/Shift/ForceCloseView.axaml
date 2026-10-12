@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Shift"
+             x:Class="YiHua.Pos.UI.Views.Shift.ForceCloseView"
+             x:DataType="vm:ForceCloseViewModel">
+  <StackPanel Spacing="16" Margin="24" MaxWidth="440">
+    <TextBlock Text="强制交班" FontSize="{DynamicResource FontSizeTitle}"
+               FontWeight="Bold" Foreground="{DynamicResource DangerBrush}" />
+    <Border Background="{DynamicResource DangerBrush}" Opacity="0.12"
+            CornerRadius="6" Padding="12">
+      <TextBlock Text="{Binding Shift.OperatorName, StringFormat='将强制关闭 {0} 的班次，此操作会被记录。仅店长可操作。'}"
+                 TextWrapping="Wrap"
+                 Foreground="{DynamicResource DangerBrush}" />
+    </Border>
+    <StackPanel Spacing="8">
+      <TextBlock Text="钱箱实点" Foreground="{DynamicResource TextSecondaryBrush}" />
+      <NumericUpDown Value="{Binding ActualCash}" Minimum="0" Maximum="999999"
+                     MinHeight="48" />
+    </StackPanel>
+    <StackPanel Spacing="8">
+      <TextBlock Text="差额原因" Foreground="{DynamicResource TextSecondaryBrush}" />
+      <ComboBox x:Name="ReasonCombo" MinHeight="44"
+                SelectionChanged="OnReasonChanged">
+        <ComboBoxItem Content="数错了" Tag="Miscounted" IsSelected="True" />
+        <ComboBoxItem Content="找错零了" Tag="WrongChange" />
+        <ComboBoxItem Content="收了私单" Tag="PrivateOrder" />
+        <ComboBoxItem Content="抹零没记" Tag="NoRecord" />
+        <ComboBoxItem Content="现金被盗" Tag="Stolen" />
+        <ComboBoxItem Content="其他" Tag="Other" />
+      </ComboBox>
+    </StackPanel>
+    <CheckBox Content="我确认要强制交班（二次确认）"
+              IsChecked="{Binding Confirmed}"
+              MinHeight="44" />
+    <TextBlock Text="{Binding ErrorMessage}"
+               IsVisible="{Binding !!ErrorMessage}"
+               Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap" />
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <Button Content="取消" Click="OnCancel" MinHeight="48" MinWidth="120" />
+      <Button Content="确认强制交班" Click="OnConfirm" MinHeight="48" MinWidth="160" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>

@@ -1,0 +1,29 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Shift"
+             x:Class="YiHua.Pos.UI.Views.Shift.ShiftDifferenceDialog"
+             x:DataType="vm:ShiftDifferenceViewModel">
+  <StackPanel Spacing="16" Margin="24">
+    <TextBlock Text="差异原因" FontSize="{DynamicResource FontSizeTitle}" FontWeight="Bold" />
+    <TextBlock Text="{Binding DifferenceText}"
+               FontSize="24" FontWeight="Bold"
+               HorizontalAlignment="Center" />
+    <ComboBox x:Name="ReasonCombo" MinHeight="44"
+              SelectionChanged="OnReasonChanged">
+      <ComboBoxItem Content="数错了" Tag="Miscounted" IsSelected="True" />
+      <ComboBoxItem Content="找错零了" Tag="WrongChange" />
+      <ComboBoxItem Content="收了私单" Tag="PrivateOrder" />
+      <ComboBoxItem Content="抹零没记" Tag="NoRecord" />
+      <ComboBoxItem Content="现金被盗" Tag="Stolen" />
+      <ComboBoxItem Content="其他" Tag="Other" />
+    </ComboBox>
+    <TextBox Text="{Binding Note}"
+             Watermark="补充说明"
+             IsVisible="{Binding NeedsNote}"
+             MinHeight="44" />
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <Button Content="取消" Click="OnCancel" MinHeight="48" MinWidth="120" />
+      <Button Content="确认" Click="OnConfirm" MinHeight="48" MinWidth="120" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>

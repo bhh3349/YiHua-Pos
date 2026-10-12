@@ -1,0 +1,49 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Shift"
+             x:Class="YiHua.Pos.UI.Views.Shift.ShiftCurrentView"
+             x:DataType="vm:ShiftCurrentViewModel">
+  <ScrollViewer Margin="24">
+    <StackPanel Spacing="16">
+      <TextBlock Text="{Binding CurrentShift.OperatorName, StringFormat='本班 · {0}'}"
+                 FontSize="{DynamicResource FontSizeTitle}" FontWeight="Bold" />
+      <TextBlock Text="{Binding CurrentShift.StartAt, StringFormat='开班时间 {0:HH:mm}'}"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+
+      <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto">
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="本班订单" Foreground="{DynamicResource TextSecondaryBrush}" />
+        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+          <TextBlock Text="{Binding OrderCount}" />
+          <TextBlock Text=" 笔" />
+        </StackPanel>
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="现金" Foreground="{DynamicResource TextSecondaryBrush}" />
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding CashAmount, StringFormat='¥{0:F2}'}" HorizontalAlignment="Right" />
+
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="自定义收款" Foreground="{DynamicResource TextSecondaryBrush}" />
+        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding CustomAmount, StringFormat='¥{0:F2}'}" HorizontalAlignment="Right" />
+
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="本班优惠" Foreground="{DynamicResource TextSecondaryBrush}" />
+        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding TotalDiscount, StringFormat='¥{0:F2}'}" HorizontalAlignment="Right" />
+      </Grid>
+
+      <StackPanel Spacing="4">
+        <TextBlock Text="{Binding RefundCount, StringFormat='本班退菜 {0} 笔'}" Foreground="{DynamicResource TextSecondaryBrush}" />
+        <TextBlock Text="{Binding RefundAmount, StringFormat='退菜金额 ¥{0:F2}'}" Foreground="{DynamicResource TextSecondaryBrush}" />
+        <TextBlock Text="{Binding ReversalCount, StringFormat='本班冲正 {0} 笔'}" Foreground="{DynamicResource TextSecondaryBrush}" />
+      </StackPanel>
+
+      <Border Background="{DynamicResource PrimaryLightBrush}" CornerRadius="10" Padding="16">
+        <StackPanel Spacing="4">
+          <TextBlock Text="钱箱应有" Foreground="{DynamicResource TextSecondaryBrush}" />
+          <TextBlock Text="{Binding ExpectedCash, StringFormat='¥{0:F2}'}"
+                     FontSize="{DynamicResource FontSizeTitle}" FontWeight="Bold" />
+        </StackPanel>
+      </Border>
+
+      <TextBlock Text="{Binding ErrorMessage}"
+                 IsVisible="{Binding !!ErrorMessage}"
+                 Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

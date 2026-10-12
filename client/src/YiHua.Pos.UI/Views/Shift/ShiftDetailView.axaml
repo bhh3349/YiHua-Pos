@@ -1,0 +1,31 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Shift"
+             x:Class="YiHua.Pos.UI.Views.Shift.ShiftDetailView"
+             x:DataType="vm:ShiftHistoryRow">
+  <ScrollViewer Margin="24">
+    <StackPanel Spacing="16">
+      <TextBlock Text="{Binding OperatorName, StringFormat='班次明细 · {0}'}"
+                 FontSize="{DynamicResource FontSizeTitle}" FontWeight="Bold" />
+      <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="开班时间" Foreground="{DynamicResource TextSecondaryBrush}" />
+        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding StartAt, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" HorizontalAlignment="Right" />
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="交班时间" Foreground="{DynamicResource TextSecondaryBrush}" />
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding EndAt, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" HorizontalAlignment="Right" />
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="订单数" Foreground="{DynamicResource TextSecondaryBrush}" />
+        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+          <TextBlock Text="{Binding OrderCount}" />
+          <TextBlock Text=" 笔" />
+        </StackPanel>
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="营业额" Foreground="{DynamicResource TextSecondaryBrush}" />
+        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding AmountTotal, StringFormat='¥{0:F2}'}" HorizontalAlignment="Right" />
+        <TextBlock Grid.Row="4" Grid.Column="0" Text="差额" Foreground="{DynamicResource TextSecondaryBrush}" />
+        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding DifferenceText}" HorizontalAlignment="Right" FontWeight="SemiBold" />
+      </Grid>
+      <TextBlock Text="已关闭的班次不允许修改（财务凭证）"
+                 Foreground="{DynamicResource TextSecondaryBrush}"
+                 FontSize="{DynamicResource FontSizeSmall}"
+                 TextWrapping="Wrap" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

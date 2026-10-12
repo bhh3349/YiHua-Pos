@@ -1,0 +1,94 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Shift"
+             xmlns:views="clr-namespace:YiHua.Pos.UI.Views.Shift"
+             x:Class="YiHua.Pos.UI.Views.Shift.ShiftCloseView"
+             x:DataType="vm:ShiftCloseViewModel">
+  <UserControl.Resources>
+    <views:DiffKindToBrushConverter x:Key="DiffKindToBrush" />
+  </UserControl.Resources>
+  <ScrollViewer Margin="24">
+    <StackPanel Spacing="20">
+      <TextBlock Text="交班对账" FontSize="{DynamicResource FontSizeTitle}" FontWeight="Bold" />
+
+      <!-- 左右分栏：系统数据 vs 实点数据 -->
+      <Grid ColumnDefinitions="*,*">
+        <!-- 左：系统数据 -->
+        <StackPanel Grid.Column="0" Spacing="12" Margin="0,0,12,0">
+          <TextBlock Text="系统数据" FontWeight="SemiBold" />
+          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="现金应收" Foreground="{DynamicResource TextSecondaryBrush}" />
+            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding CashShould, StringFormat='¥{0:F2}'}"
+                       HorizontalAlignment="Right" />
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="记账" Foreground="{DynamicResource TextSecondaryBrush}" />
+            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding CreditAmount, StringFormat='¥{0:F2}'}"
+                       HorizontalAlignment="Right" />
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="自定义收款" Foreground="{DynamicResource TextSecondaryBrush}" />
+            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding CustomAmount, StringFormat='¥{0:F2}'}"
+                       HorizontalAlignment="Right" />
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="合计" FontWeight="SemiBold" />
+            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SystemTotal, StringFormat='¥{0:F2}'}"
+                       FontWeight="SemiBold" HorizontalAlignment="Right" />
+          </Grid>
+        </StackPanel>
+
+        <!-- 右：实点数据 -->
+        <StackPanel Grid.Column="1" Spacing="12" Margin="12,0,0,0">
+          <TextBlock Text="清点数据" FontWeight="SemiBold" />
+          <StackPanel Spacing="8">
+            <TextBlock Text="钱箱实点" Foreground="{DynamicResource TextSecondaryBrush}" />
+            <NumericUpDown Value="{Binding ActualCash}" Minimum="0" Maximum="999999"
+                           MinHeight="48" />
+          </StackPanel>
+          <StackPanel Spacing="8">
+            <TextBlock Text="下一班备用金" Foreground="{DynamicResource TextSecondaryBrush}" />
+            <NumericUpDown Value="{Binding OpeningFloatForNext}" Minimum="0" Maximum="99999"
+                           MinHeight="48" />
+          </StackPanel>
+        </StackPanel>
+      </Grid>
+
+      <!-- 差额：最醒目 -->
+      <Border CornerRadius="10" Padding="20"
+              Background="{Binding DifferenceKind, Converter={StaticResource DiffKindToBrush}}">
+        <StackPanel Spacing="4" HorizontalAlignment="Center">
+          <TextBlock Text="差额" HorizontalAlignment="Center"
+                     Foreground="{DynamicResource TextSecondaryBrush}" />
+          <TextBlock Text="{Binding DifferenceText}"
+                     FontSize="36" FontWeight="Bold"
+                     HorizontalAlignment="Center" />
+          <TextBlock Text="短款需店长确认"
+                     IsVisible="{Binding RequiresManager}"
+                     Foreground="{DynamicResource DangerBrush}"
+                     HorizontalAlignment="Center" />
+        </StackPanel>
+      </Border>
+
+      <!-- 差异原因：下拉选择 -->
+      <StackPanel Spacing="8">
+        <TextBlock Text="差额原因（必填）" FontWeight="SemiBold" />
+        <ComboBox x:Name="ReasonCombo" MinHeight="44"
+                  SelectionChanged="OnReasonChanged">
+          <ComboBoxItem Content="数错了" Tag="Miscounted" IsSelected="True" />
+          <ComboBoxItem Content="找错零了" Tag="WrongChange" />
+          <ComboBoxItem Content="收了私单" Tag="PrivateOrder" />
+          <ComboBoxItem Content="抹零没记" Tag="NoRecord" />
+          <ComboBoxItem Content="现金被盗" Tag="Stolen" />
+          <ComboBoxItem Content="其他" Tag="Other" />
+        </ComboBox>
+        <TextBox Text="{Binding ReasonNote}"
+                 Watermark="补充说明（选其他时填写）"
+                 MinHeight="44" />
+      </StackPanel>
+
+      <TextBlock Text="{Binding ErrorMessage}"
+                 IsVisible="{Binding !!ErrorMessage}"
+                 Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap" />
+
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <Button Content="取消" Click="OnCancel" MinHeight="48" MinWidth="120" />
+        <Button Content="确认交班" Click="OnConfirm" MinHeight="48" MinWidth="140" />
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
