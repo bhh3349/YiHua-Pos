@@ -70,4 +70,24 @@ public class GroupBuyCalculatorTests
         var order = new YiHua.Pos.Domain.Entities.Order { AmountGroupBuy = 30m };
         Assert.Equal(30m, GroupBuyCalculator.GetGroupBuyDiscount(order));
     }
+
+    [Fact]
+    public void ApplyGroupBuy_Sums_Four_Parts()
+    {
+        var totals = new YiHua.Pos.UI.Services.Ordering.OrderTotals
+        {
+            LineDiscountTotal = 10m,
+            OrderDiscount = 5m,
+            WipeZeroAmount = 2m,
+        };
+        // 四项：10 + 5 + 2 + 30 = 47
+        Assert.Equal(47m, GroupBuyCalculator.ApplyGroupBuy(totals, 30m));
+    }
+
+    [Fact]
+    public void ApplyGroupBuy_Rounds_AwayFromZero()
+    {
+        var totals = new YiHua.Pos.UI.Services.Ordering.OrderTotals();
+        Assert.Equal(10.00m, GroupBuyCalculator.ApplyGroupBuy(totals, 9.995m));
+    }
 }

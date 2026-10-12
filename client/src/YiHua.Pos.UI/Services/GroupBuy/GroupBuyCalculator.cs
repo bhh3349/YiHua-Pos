@@ -45,14 +45,33 @@ public static class GroupBuyCalculator
 
     /// <summary>
     /// 接入 Ordering 的钩子：计算团购抵扣额。
-    /// OrderEntryViewModel 第 537 行：
+    /// OrderEntryViewModel 第 537 行 / FastFoodEntryViewModel 第 295 行：
     ///   AmountDiscount = totals.LineDiscountTotal + totals.OrderDiscount + totals.WipeZeroAmount
-    /// 合并时加第四项：
-    ///   AmountDiscount = ... + GroupBuyCalculator.GetGroupBuyDiscount(order)
+    /// 两处都要加第四项，见 ApplyGroupBuy。
     /// 本卡不改 Ordering/ 目录，计算放这里，报告里说明。
     /// </summary>
     public static decimal GetGroupBuyDiscount(YiHua.Pos.Domain.Entities.Order order) =>
         Round(order.AmountGroupBuy);
+
+    /// <summary>
+    /// 团购抵扣接入 OrderTotals。
+    /// Bo 需要做的三处（都在他的目录）：
+    /// 1. OrderCalculator.cs 的 OrderTotals 类里加：
+    ///      public decimal GroupBuyDiscount { get; set; }   // 放在 WipeZeroAmount 之后
+    ///    然后把下面 TODO 那行取消注释。
+    /// 2. OrderEntryViewModel.cs:537 改成：
+    ///      AmountDiscount = GroupBuyCalculator.ApplyGroupBuy(totals, order.AmountGroupBuy),
+    /// 3. FastFoodEntryViewModel.cs:295 改成：
+    ///      AmountDiscount = GroupBuyCalculator.ApplyGroupBuy(totals, order.AmountGroupBuy),
+    /// 返回新的 AmountDiscount（四项之和）。
+    /// </summary>
+    public static decimal ApplyGroupBuy(YiHua.Pos.UI.Services.Ordering.OrderTotals t, decimal groupBuyDiscount)
+    {
+        decimal g = Round(groupBuyDiscount);
+        // TODO(Bo): 加 GroupBuyDiscount 字段后取消注释：
+        // t.GroupBuyDiscount = g;
+        return Round(t.LineDiscountTotal + t.OrderDiscount + t.WipeZeroAmount + g);
+    }
 
     private static decimal Round(decimal value) =>
         Math.Round(value, 2, MidpointRounding.AwayFromZero);
