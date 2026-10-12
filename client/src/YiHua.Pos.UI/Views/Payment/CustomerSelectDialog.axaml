@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Payment"
+             x:Class="YiHua.Pos.UI.Views.Payment.CustomerSelectDialog"
+             x:DataType="vm:CustomerSelectViewModel">
+  <StackPanel Spacing="12" MinWidth="320">
+    <TextBlock Text="选择客户" FontSize="20" FontWeight="Bold" />
+    <input:TouchTextBox Watermark="搜索姓名/电话" />
+    <ItemsControl ItemsSource="{Binding Customers}">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="vm:CustomerDto">
+          <Border Background="{DynamicResource SurfaceBrush}"
+                  BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1"
+                  Padding="0,12">
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel>
+                <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding Phone}" FontSize="14"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+              </StackPanel>
+              <TextBlock Grid.Column="1" Text="{Binding TotalDebt, StringFormat='欠¥{0:F2}'}"
+                         FontSize="14" VerticalAlignment="Center"
+                         Foreground="{DynamicResource WarningBrush}" />
+            </Grid>
+          </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+    <btn:PosButton Content="+ 新建临时客户" Variant="Secondary" HorizontalAlignment="Stretch" />
+  </StackPanel>
+</UserControl>

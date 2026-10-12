@@ -1,0 +1,72 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:disp="clr-namespace:YiHua.Pos.UI.Controls.Display"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Payment"
+             x:Class="YiHua.Pos.UI.Views.Payment.PaymentView"
+             x:DataType="vm:PaymentViewModel">
+  <Grid RowDefinitions="Auto,*,Auto">
+    <!-- 桌台信息 -->
+    <TextBlock Grid.Row="0" Text="{Binding DeskInfo}" FontSize="20" FontWeight="Bold"
+               Margin="16,16,16,8" />
+
+    <!-- 明细（只读） -->
+    <ScrollViewer Grid.Row="1" Margin="16,0,16,0">
+      <StackPanel Spacing="8">
+        <ItemsControl ItemsSource="{Binding Items}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:PaymentOrderItemDto">
+              <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                <StackPanel>
+                  <TextBlock Text="{Binding ProductName}" FontSize="16" />
+                  <TextBlock Text="{Binding SpecText}" FontSize="14"
+                             Foreground="{DynamicResource TextSecondaryBrush}" />
+                </StackPanel>
+                <TextBlock Grid.Column="1" Text="{Binding Quantity, StringFormat='×{0}'}"
+                           FontSize="16" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="2" Text="{Binding Amount, StringFormat='¥{0:F2}'}"
+                           FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- 金额区：应收最大字号 -->
+        <Border Background="{DynamicResource BackgroundBrush}" CornerRadius="6"
+                Padding="16" Margin="0,8,0,0">
+          <StackPanel Spacing="4">
+            <disp:KeyValueRow Key="原价" Value="{Binding TotalAmount, StringFormat='¥{0:F2}'}" />
+            <disp:KeyValueRow Key="折扣" Value="{Binding DiscountAmount, StringFormat='-¥{0:F2}'}" />
+            <TextBlock Text="{Binding PayableAmount, StringFormat='应收 ¥{0:F2}'}"
+                       FontSize="32" FontWeight="Bold" HorizontalAlignment="Right" Margin="0,8,0,0" />
+          </StackPanel>
+        </Border>
+
+        <!-- 支付方式：大按钮 -->
+        <TextBlock Text="支付方式" FontSize="16" Foreground="{DynamicResource TextSecondaryBrush}"
+                   Margin="0,8,0,4" />
+        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+          <btn:PosButton Grid.Column="0" Content="现金" Variant="Secondary" MinHeight="56" />
+          <btn:PosButton Grid.Column="1" Content="记账" Variant="Secondary" MinHeight="56" />
+          <btn:PosButton Grid.Column="2" Content="自定义收款" Variant="Secondary" MinHeight="56" />
+        </Grid>
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="8" Margin="0,8,0,0">
+          <btn:PosButton Grid.Column="0" Content="微信支付" Variant="Secondary" MinHeight="48" />
+          <btn:PosButton Grid.Column="1" Content="支付宝" Variant="Secondary" MinHeight="48" />
+        </Grid>
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- 底部：折扣入口（次要）+ 确认结账（固定大按钮） -->
+    <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
+            Padding="16,12">
+      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+        <btn:PosButton Grid.Column="0" Content="折扣/抹零" Variant="Secondary" />
+        <Border Grid.Column="1" />
+        <btn:PosButton Grid.Column="2" Content="确认结账" Variant="Primary"
+                       MinWidth="200" MinHeight="56" FontSize="20" />
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>
