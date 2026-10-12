@@ -108,13 +108,11 @@ def test_order_page_scoped(client, iso_store):
     assert iso_nos.isdisjoint(main_nos)
 
 
-def test_cross_store_client_order_no_collision_is_handled(client, db, iso_store):
-    """跨门店撞 clientOrderNo：t_order 上是全局唯一索引，不能漏 500。
+def test_cross_store_client_order_no_allows_separate_orders(client, db, iso_store):
+    """跨门店可以用同一个 clientOrderNo 各建一单。
 
-    models.py:166 的 uk_client_no 不带 store_id，所以两家门店用同一个
-    clientOrderNo 时数据库一定会拦。幂等查询按门店隔离挡不住这种情况，
-    /api/v1/order/create 里用 IntegrityError 兜底回 409 + 原单据。
-    「改成 (store_id, client_order_no) 复合唯一」已作为 schema 建议上报 Lead。
+    约束是复合唯一 (store_id, client_order_no)：
+    幂等键的作用域是「单个门店」，不同门店之间互不干扰。
     """
     cno = new_client_no("ISO-COLLIDE")
     body = {"clientOrderNo": cno, "orderType": 1,
@@ -123,19 +121,43 @@ def test_cross_store_client_order_no_collision_is_handled(client, db, iso_store)
     tok = post(client, "/api/v1/auth/login",
                {"account": "admin", "password": "123456"}).json()["data"]["token"]
     h = dict(ISO_HEADERS, Authorization="Bearer " + tok)
+
     first = post(client, "/api/v1/order/create", body, h).json()
     assert first["code"] == "200", first
 
-    # 主门店用同一个号建单：必须回标准 409，不能是 500，也不能多落一张单
-    b = post(client, "/api/v1/order/create", body,
-             {"X-Store-Id": str(MAIN_STORE), "Authorization": "Bearer " + tok}).json()
-    assert b["code"] == "409", b
-    assert b["data"] and b["data"]["orderId"] == first["data"]["orderId"]
+    # 主门店用同一个号建单：应当成功，且是另一张单
+    second = post(client, "/api/v1/order/create", body,
+                  {"X-Store-Id": str(MAIN_STORE),
+                   "Authorization": "Bearer " + tok}).json()
+    assert second["code"] == "200", second
+    assert second["data"]["orderId"] != first["data"]["orderId"]
 
-    from app.models import Order
     db.expire_all()
     rows = db.query(Order).filter(Order.client_order_no == cno).all()
-    assert len(rows) == 1 and rows[0].store_id == ISO_STORE
+    assert len(rows) == 2, "两个门店应各自落一单"
+    assert {r.store_id for r in rows} == {ISO_STORE, MAIN_STORE}
+
+
+def test_same_store_client_order_no_still_idempotent(client, db, iso_store):
+    """同一个门店重复提交同一个 clientOrderNo，仍然必须幂等（回 409 + 原单据）。"""
+    cno = new_client_no("ISO-IDEM")
+    body = {"clientOrderNo": cno, "orderType": 1,
+            "items": [{"productId": 1003, "productName": "麻婆豆腐",
+                       "price": 26.0, "qty": 1}]}
+    tok = post(client, "/api/v1/auth/login",
+               {"account": "admin", "password": "123456"}).json()["data"]["token"]
+    h = dict(ISO_HEADERS, Authorization="Bearer " + tok)
+
+    first = post(client, "/api/v1/order/create", body, h).json()
+    assert first["code"] == "200", first
+
+    again = post(client, "/api/v1/order/create", body, h).json()
+    assert again["code"] == "409", again
+    assert again["data"]["orderId"] == first["data"]["orderId"]
+
+    db.expire_all()
+    rows = db.query(Order).filter(Order.client_order_no == cno).all()
+    assert len(rows) == 1
 
 
 

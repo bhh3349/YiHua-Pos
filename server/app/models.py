@@ -163,7 +163,9 @@ class Order(Base):
     remark = Column(String(255))
     created_at = Column(DateTime, default=datetime.now)
     __table_args__ = (
-        UniqueConstraint("client_order_no", name="uk_client_no"),
+        # 幂等键必须按门店隔离：两个门店可以用同一个 clientOrderNo 各建一单。
+        # 原来只有 client_order_no 全局唯一，跨门店同号会被数据库拦下。
+        UniqueConstraint("store_id", "client_order_no", name="uk_store_client_no"),
         UniqueConstraint("tenant_id", "order_no", name="uk_order_no"),
         Index("idx_store_time", "store_id", "created_at"),
         Index("idx_status", "store_id", "status"),
