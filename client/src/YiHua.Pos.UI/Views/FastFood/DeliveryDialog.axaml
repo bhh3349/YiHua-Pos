@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.FastFood"
+             xmlns:buttons="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             x:Class="YiHua.Pos.UI.Views.FastFood.DeliveryDialog"
+             x:DataType="vm:DeliveryViewModel"
+             Background="{DynamicResource SurfaceBrush}">
+  <StackPanel Spacing="16" Margin="24">
+    <TextBlock Text="配送信息" FontSize="20" FontWeight="Bold"
+               Foreground="{DynamicResource TextPrimaryBrush}"/>
+    <TextBlock Text="配送地址电话用于团购平台对接，请准确填写"
+               FontSize="13"
+               Foreground="{DynamicResource TextSecondaryBrush}"
+               TextWrapping="Wrap"/>
+
+    <StackPanel Spacing="8">
+      <TextBlock Text="配送地址 *" FontSize="16"
+                 Foreground="{DynamicResource TextPrimaryBrush}"/>
+      <TextBox Text="{Binding Address}" Watermark="如：中山路 123 号 3 栋 502"
+               FontSize="16" MinHeight="44"/>
+    </StackPanel>
+
+    <StackPanel Spacing="8">
+      <TextBlock Text="联系电话 *" FontSize="16"
+                 Foreground="{DynamicResource TextPrimaryBrush}"/>
+      <TextBox Text="{Binding Phone}" Watermark="如：13800138000"
+               FontSize="16" MinHeight="44"/>
+    </StackPanel>
+
+    <StackPanel Spacing="8">
+      <TextBlock Text="备注" FontSize="16"
+                 Foreground="{DynamicResource TextPrimaryBrush}"/>
+      <TextBox Text="{Binding Remark}" Watermark="如：放门口、电话联系"
+               FontSize="16" MinHeight="40"/>
+    </StackPanel>
+
+    <buttons:PosButton Variant="Primary" Content="确定" Click="OnConfirm"
+                           FontSize="18" Padding="0,12"
+                           IsEnabled="{Binding IsValid}"/>
+  </StackPanel>
+</UserControl>
