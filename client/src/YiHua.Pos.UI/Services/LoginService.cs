@@ -81,6 +81,12 @@ public interface ILoginService
     Task<IReadOnlyList<StoreInfo>> GetStoresAsync(CancellationToken ct = default);
     Task SaveLastStoreIdAsync(string storeId);
     Task<LoginResult> LoginAsync(string storeId, string username, string password, CancellationToken ct = default);
+
+    /// <summary>账号是否处于锁定期。登录页据此禁用输入并显示剩余锁定时间。</summary>
+    bool IsLocked(string username);
+
+    /// <summary>锁定期剩余秒数；未锁定返回 0。</summary>
+    int GetRemainingLockSeconds(string username);
 }
 
 /// <summary>
@@ -100,6 +106,11 @@ public class LoginService : ILoginService
     }
 
     public string? LastStoreId => _cache.GetLastStoreIdAsync().GetAwaiter().GetResult();
+
+    public bool IsLocked(string username) => _tracker.IsLocked(username);
+
+    public int GetRemainingLockSeconds(string username) =>
+        (int)Math.Ceiling(_tracker.GetRemainingLock(username).TotalSeconds);
 
     public async Task<IReadOnlyList<StoreInfo>> GetStoresAsync(CancellationToken ct = default)
     {

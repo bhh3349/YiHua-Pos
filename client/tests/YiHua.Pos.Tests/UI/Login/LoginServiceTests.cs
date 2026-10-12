@@ -69,12 +69,15 @@ public class LoginServiceTests
     public async Task Login_Success_Resets_Failure_Count()
     {
         int calls = 0;
+        // 桩按「第 3 次调用成功」而不是按密码判断：
+        // 之后所有调用一律返回密码错误，否则断言「再错 4 次不锁」拿到的是
+        // 成功结果（ErrorKind 为 None），测不到失败计数是否清零。
         var service = Create((u, p) =>
         {
             calls++;
-            return calls <= 2
-                ? LoginResult.Fail(LoginErrorKind.WrongPassword, "密码错误")
-                : LoginResult.Ok("token", new UserInfo { Username = u });
+            return calls == 3
+                ? LoginResult.Ok("token", new UserInfo { Username = u })
+                : LoginResult.Fail(LoginErrorKind.WrongPassword, "密码错误");
         });
 
         await service.LoginAsync("S1", "001", "wrong");
@@ -82,10 +85,12 @@ public class LoginServiceTests
         var ok = await service.LoginAsync("S1", "001", "right");
 
         Assert.True(ok.Success);
-        // 成功后计数清零，再错 4 次也不会锁
+        // 成功后计数清零，再错 4 次也不该锁（阈值是 5 次）。
+        // 桩此时已越过第 3 次，一律返回密码错误。
+        LoginResult? last = null;
         for (int i = 0; i < 4; i++)
-            await service.LoginAsync("S1", "001", "wrong");
-        var notLocked = await service.LoginAsync("S1", "001", "wrong");
-        Assert.Equal(LoginErrorKind.WrongPassword, notLocked.ErrorKind); // 第 5 次才锁
+            last = await service.LoginAsync("S1", "001", "wrong");
+        Assert.Equal(LoginErrorKind.WrongPassword, last!.ErrorKind);
+        Assert.False(service.IsLocked("001"));
     }
 }
