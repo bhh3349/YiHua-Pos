@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Refund"
+             x:Class="YiHua.Pos.UI.Views.Refund.RefundReasonView"
+             x:DataType="vm:RefundReasonViewModel">
+  <StackPanel Spacing="12" Margin="24" MaxWidth="440">
+    <TextBlock Text="选择退款原因" FontSize="{DynamicResource FontSizeTitle}"
+               FontWeight="Bold" />
+    <TextBlock Text="原因必填" Foreground="{DynamicResource DangerBrush}"
+               FontSize="{DynamicResource FontSizeSmall}" />
+
+    <ListBox x:Name="ReasonList" MinHeight="200">
+      <ListBox.ItemTemplate>
+        <DataTemplate x:DataType="vm:RefundReasonOption">
+          <TextBlock Text="{Binding Text}"
+                     MinHeight="44" VerticalAlignment="Center" />
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+
+    <!-- 选"其他"时必填补充说明 -->
+    <TextBox Text="{Binding Note}" Watermark="补充说明（选「其他」时必填）"
+             MinHeight="44" TextWrapping="Wrap" />
+
+    <TextBlock Text="{Binding Error}"
+               IsVisible="{Binding !!Error}"
+               Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap" />
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <Button Content="取消" Click="OnCancel" MinHeight="48" MinWidth="120" />
+      <Button Content="确定" Click="OnConfirm" MinHeight="48" MinWidth="120" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>

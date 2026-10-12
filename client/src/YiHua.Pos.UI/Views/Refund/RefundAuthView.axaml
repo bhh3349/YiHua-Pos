@@ -1,0 +1,28 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Refund"
+             x:Class="YiHua.Pos.UI.Views.Refund.RefundAuthView"
+             x:DataType="vm:RefundAuthViewModel">
+  <StackPanel Spacing="16" Margin="24" MaxWidth="440">
+    <TextBlock Text="店长授权" FontSize="{DynamicResource FontSizeTitle}"
+               FontWeight="Bold" Foreground="{DynamicResource WarningBrush}" />
+    <TextBlock Text="{Binding PromptText}" TextWrapping="Wrap"
+               FontSize="{DynamicResource FontSizeLarge}" />
+
+    <StackPanel Spacing="8">
+      <TextBlock Text="授权店长姓名" Foreground="{DynamicResource TextSecondaryBrush}" />
+      <TextBox Text="{Binding ManagerName}" Watermark="请输入店长姓名"
+               MinHeight="48" />
+    </StackPanel>
+    <TextBlock Text="{Binding OperatorName, StringFormat='申请人：{0}'}"
+               Foreground="{DynamicResource TextSecondaryBrush}" />
+
+    <TextBlock Text="{Binding Error}"
+               IsVisible="{Binding !!Error}"
+               Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap" />
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <Button Content="取消" Click="OnCancel" MinHeight="48" MinWidth="120" />
+      <Button Content="授权通过" Click="OnConfirm" MinHeight="48" MinWidth="140" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>

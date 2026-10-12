@@ -1,0 +1,50 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Refund"
+             x:Class="YiHua.Pos.UI.Views.Refund.RefundItemSelectView"
+             x:DataType="vm:RefundItemSelectViewModel">
+  <StackPanel Spacing="12" Margin="24" MaxWidth="520">
+    <TextBlock Text="退菜（多选）" FontSize="{DynamicResource FontSizeTitle}"
+               FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}" />
+    <TextBlock Text="{Binding TotalSelected, StringFormat='已选退菜 ¥{0:F2}'}"
+               FontSize="{DynamicResource FontSizeLarge}" FontWeight="Bold" />
+
+    <!-- 明细行：左侧 checkbox；已退的行标灰加"已退"标记 -->
+    <ListBox ItemsSource="{Binding Items}" MinHeight="200" MaxHeight="400">
+      <ListBox.ItemTemplate>
+        <DataTemplate x:DataType="vm:RefundableItem">
+          <Border Padding="12" CornerRadius="6"
+                  Background="{DynamicResource SurfaceBrush}">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+              <CheckBox Grid.Column="0" IsChecked="{Binding Selected}"
+                        IsEnabled="{Binding !AlreadyRefunded}"
+                        VerticalAlignment="Center" Margin="0,0,12,0" />
+              <StackPanel Grid.Column="1" Spacing="4">
+                <TextBlock Text="{Binding Item.ProductName}" FontWeight="Bold" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <TextBlock Text="{Binding LineAmount, StringFormat='¥{0:F2}'}"
+                             Foreground="{DynamicResource TextSecondaryBrush}"
+                             FontSize="{DynamicResource FontSizeSmall}" />
+                  <TextBlock Text="已退" IsVisible="{Binding AlreadyRefunded}"
+                             Foreground="{DynamicResource WarningBrush}"
+                             FontSize="{DynamicResource FontSizeSmall}" FontWeight="Bold" />
+                </StackPanel>
+              </StackPanel>
+              <TextBlock Grid.Column="2"
+                         Text="{Binding Item.Qty, StringFormat='×{0}'}"
+                         VerticalAlignment="Center" />
+            </Grid>
+          </Border>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+
+    <TextBlock Text="{Binding Error}"
+               IsVisible="{Binding !!Error}"
+               Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap" />
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <Button Content="取消" Click="OnCancel" MinHeight="48" MinWidth="120" />
+      <Button Content="下一步：填原因" Click="OnNext" MinHeight="48" MinWidth="160" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>

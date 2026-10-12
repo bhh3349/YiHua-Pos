@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Refund"
+             x:Class="YiHua.Pos.UI.Views.Refund.VoidConfirmView"
+             x:DataType="vm:VoidConfirmViewModel">
+  <StackPanel Spacing="16" Margin="24" MaxWidth="440">
+    <TextBlock Text="冲正（作废）" FontSize="{DynamicResource FontSizeTitle}"
+               FontWeight="Bold" Foreground="{DynamicResource DangerBrush}" />
+    <Border Background="{DynamicResource DangerBrush}" Opacity="0.12"
+            CornerRadius="6" Padding="12">
+      <TextBlock Text="作废后不产生退款。仅未结账订单可冲正。"
+                 Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap" />
+    </Border>
+
+    <!-- 具体影响：桌台释放是重点 -->
+    <Border Background="{DynamicResource BackgroundBrush}" CornerRadius="6" Padding="12">
+      <TextBlock Text="{Binding ImpactText}" TextWrapping="Wrap"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+    </Border>
+
+    <TextBlock Text="{Binding ReasonText, StringFormat='原因：{0}'}"
+               TextWrapping="Wrap" />
+
+    <TextBlock Text="{Binding BlockReason}"
+               IsVisible="{Binding !CanVoid}"
+               Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap" />
+    <TextBlock Text="{Binding Error}"
+               IsVisible="{Binding !!Error}"
+               Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap" />
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <Button Content="取消" Click="OnCancel" MinHeight="48" MinWidth="120" />
+      <Button Content="确认作废" Click="OnConfirm"
+              IsEnabled="{Binding CanVoid}"
+              MinHeight="48" MinWidth="160" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>
