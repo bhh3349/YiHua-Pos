@@ -13,4 +13,9 @@
     <PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
   </ItemGroup>
 
+  <!-- T-308 需要：ViewModel 通过 IOrderRepository 访问数据（任务卡要求复用 Domain 接口） -->
+  <ItemGroup>
+    <ProjectReference Include="..\YiHua.Pos.Domain\YiHua.Pos.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

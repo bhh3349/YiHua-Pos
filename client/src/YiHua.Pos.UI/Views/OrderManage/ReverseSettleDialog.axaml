@@ -1,0 +1,28 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.OrderManage"
+             x:Class="YiHua.Pos.UI.Views.OrderManage.ReverseSettleDialog"
+             x:DataType="vm:ReverseSettleViewModel">
+  <StackPanel Spacing="16" Margin="24">
+    <TextBlock Text="反结账" FontSize="{DynamicResource FontSizeTitle}" FontWeight="Bold" />
+    <!-- 确认弹窗显示具体影响，不是"确定吗？" -->
+    <Border Background="{DynamicResource WarningBrush}" Opacity="0.15"
+            CornerRadius="6" Padding="12">
+      <TextBlock Text="{Binding ImpactText}"
+                 TextWrapping="Wrap"
+                 Foreground="{DynamicResource TextPrimaryBrush}" />
+    </Border>
+    <StackPanel Spacing="8">
+      <TextBlock Text="反结账原因（必填）" Foreground="{DynamicResource TextSecondaryBrush}" />
+      <TextBox Text="{Binding Reason}" Watermark="请填写原因"
+               MinHeight="44" TextWrapping="Wrap" />
+    </StackPanel>
+    <TextBlock Text="{Binding ErrorMessage}"
+               IsVisible="{Binding !!ErrorMessage}"
+               Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap" />
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <Button Content="取消" Click="OnCancel" MinHeight="48" MinWidth="120" />
+      <Button Content="确认反结账" Click="OnConfirm" MinHeight="48" MinWidth="140" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>

@@ -1,0 +1,25 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.OrderManage"
+             x:Class="YiHua.Pos.UI.Views.OrderManage.SkipOrderDialog"
+             x:DataType="vm:SkipOrderViewModel">
+  <StackPanel Spacing="16" Margin="24">
+    <TextBlock Text="{Binding Order.OrderNo, StringFormat='跳单 · {0}'}"
+               FontSize="{DynamicResource FontSizeTitle}" FontWeight="Bold" />
+    <TextBlock Text="跳单后订单退出待结队列，可从跳单列表恢复"
+               Foreground="{DynamicResource TextSecondaryBrush}"
+               TextWrapping="Wrap" />
+    <StackPanel Spacing="8">
+      <TextBlock Text="跳单原因（必填）" Foreground="{DynamicResource TextSecondaryBrush}" />
+      <TextBox Text="{Binding Reason}" Watermark="例如：客人说先不算这桌"
+               MinHeight="44" TextWrapping="Wrap" />
+    </StackPanel>
+    <TextBlock Text="{Binding ErrorMessage}"
+               IsVisible="{Binding !!ErrorMessage}"
+               Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap" />
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <Button Content="取消" Click="OnCancel" MinHeight="48" MinWidth="120" />
+      <Button Content="确认跳单" Click="OnConfirm" MinHeight="48" MinWidth="120" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>

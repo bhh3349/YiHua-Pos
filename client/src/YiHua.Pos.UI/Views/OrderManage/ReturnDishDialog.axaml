@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.OrderManage"
+             x:Class="YiHua.Pos.UI.Views.OrderManage.ReturnDishDialog"
+             x:DataType="vm:ReturnDishViewModel">
+  <StackPanel Spacing="16" Margin="24">
+    <TextBlock Text="{Binding Item.ProductName, StringFormat='退菜 · {0}'}"
+               FontSize="{DynamicResource FontSizeTitle}" FontWeight="Bold" />
+    <TextBlock Text="{Binding Item.Qty, StringFormat='已点数量：{0}'}"
+               Foreground="{DynamicResource TextSecondaryBrush}" />
+    <StackPanel Spacing="8">
+      <TextBlock Text="退菜数量" Foreground="{DynamicResource TextSecondaryBrush}" />
+      <NumericUpDown Value="{Binding RefundQty}" Minimum="0.1" Maximum="999"
+                     MinHeight="44" />
+    </StackPanel>
+    <StackPanel Spacing="8">
+      <TextBlock Text="原因（必填）" Foreground="{DynamicResource TextSecondaryBrush}" />
+      <ComboBox x:Name="ReasonCombo" MinHeight="44"
+                SelectionChanged="OnReasonChanged">
+        <ComboBoxItem Content="不要了" Tag="DontWant" />
+        <ComboBoxItem Content="上错了" Tag="WrongDish" />
+        <ComboBoxItem Content="客人不要了" Tag="CustomerLeft" />
+        <ComboBoxItem Content="质量问题" Tag="QualityIssue" />
+        <ComboBoxItem Content="其他" Tag="Other" />
+      </ComboBox>
+      <TextBox Text="{Binding ReasonNote}" Watermark="补充说明（可选）"
+               MinHeight="44" />
+    </StackPanel>
+    <TextBlock Text="{Binding ErrorMessage}"
+               IsVisible="{Binding !!ErrorMessage}"
+               Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap" />
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <Button Content="取消" Click="OnCancel" MinHeight="48" MinWidth="120" />
+      <Button Content="确认退菜" Click="OnConfirm" MinHeight="48" MinWidth="120" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>
