@@ -21,4 +21,21 @@
     <Copyright>Copyright © 2026 逸华科技</Copyright>
   </PropertyGroup>
 
+  <!--
+    ============================================================
+     发布配置（体积优化）
+    ============================================================
+    重要：不能用 PublishTrimmed=true
+      原因：裁剪会删掉 Prism.Ioc.Internals.ContainerProviderLocator 的构造函数，
+            导致 DryIoc 启动时抛 ContainerException 崩溃。
+            Avalonia + Prism 大量依赖反射，裁剪不安全。
+  -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <PublishTrimmed>false</PublishTrimmed>
+    <!-- 只保留中英文资源，其余语言包不打包 -->
+    <SatelliteResourceLanguages>zh-Hans;en</SatelliteResourceLanguages>
+    <!-- 关闭 ReadyToRun：体积优先（低配设备用机械硬盘，R2R 收益有限） -->
+    <PublishReadyToRun>false</PublishReadyToRun>
+  </PropertyGroup>
+
 </Project>

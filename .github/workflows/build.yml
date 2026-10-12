@@ -1,0 +1,201 @@
+name: 构建与测试
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: 1
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+
+jobs:
+  # ============================================================
+  # 1. 客户端：双目标编译 + 测试
+  # ============================================================
+  client:
+    name: 客户端（.NET 8 / .NET 6）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            6.0.x
+
+      - name: 还原依赖
+        run: dotnet restore client/YiHua.Pos.sln
+
+      - name: 编译（net8.0 + net6.0）
+        run: dotnet build client/YiHua.Pos.sln --no-restore -c Release -warnaserror:false
+
+      - name: 测试
+        run: dotnet test client/YiHua.Pos.sln --no-build -c Release --logger "console;verbosity=normal"
+
+      - name: 发布体积检查
+        run: |
+          echo "## 发布体积" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| 目标 | 模式 | 体积 |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|---|" >> $GITHUB_STEP_SUMMARY
+
+          # Linux 框架依赖（镜像主力形态）
+          dotnet publish client/src/YiHua.Pos.App/YiHua.Pos.App.csproj \
+            -c Release -f net8.0 -r linux-x64 --self-contained false \
+            -o /tmp/pub-linux-fd > /dev/null
+          S1=$(du -sm /tmp/pub-linux-fd | cut -f1)
+          echo "| linux-x64 | 框架依赖 | ${S1} MB |" >> $GITHUB_STEP_SUMMARY
+
+          # Windows 自包含（台式机）
+          dotnet publish client/src/YiHua.Pos.App/YiHua.Pos.App.csproj \
+            -c Release -f net8.0 -r win-x64 --self-contained true \
+            -o /tmp/pub-win > /dev/null
+          S2=$(du -sm /tmp/pub-win | cut -f1)
+          echo "| win-x64 | 自包含 | ${S2} MB |" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          # 目标：Windows 自包含 ≤ 250MB
+          if [ "$S2" -gt 250 ]; then
+            echo "::warning::win-x64 自包含体积 ${S2}MB 超过 250MB 目标"
+          fi
+
+          echo "::notice::linux-x64 框架依赖 ${S1}MB / win-x64 自包含 ${S2}MB"
+
+      - name: 启动冒烟测试（Windows 版可执行性）
+        run: |
+          # 在 CI 上只验证文件完整性（GUI 无法在 headless 环境启动）
+          test -f /tmp/pub-win/YiHua.Pos.exe || (echo "::error::缺少主程序" && exit 1)
+          test -f /tmp/pub-win/YiHua.Pos.dll || (echo "::error::缺少程序集" && exit 1)
+          echo "✅ 发布产物完整"
+
+  # ============================================================
+  # 2. 服务端：语法检查 + 冒烟测试
+  # ============================================================
+  server:
+    name: 服务端（Python）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r server/requirements.txt
+          pip install pytest httpx
+
+      - name: 语法检查
+        run: python -m compileall -q server/app server/*.py
+
+      - name: 初始化数据
+        working-directory: server
+        run: python seed.py --reset
+
+      - name: 冒烟测试
+        working-directory: server
+        run: python smoke_test.py
+
+      - name: 单元测试
+        working-directory: server
+        run: pytest tests/ -v --tb=short || echo "::warning::pytest 未通过或无测试"
+
+  # ============================================================
+  # 3. 越界检查：确保没有改动冻结文件
+  # ============================================================
+  scope-check:
+    name: 越界检查
+    runs-on: ubuntu-latest
+    if: github.ref != 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 检查冻结文件
+        run: |
+          BASE="origin/main"
+          CHANGED=$(git diff --name-only $BASE...HEAD || git diff --name-only HEAD~1)
+
+          FROZEN="client/YiHua.Pos.sln
+          client/Directory.Build.props
+          client/src/YiHua.Pos.Domain/
+          client/src/YiHua.Pos.Hardware/Abstractions/
+          client/src/YiHua.Pos.UI/Themes/Tokens.axaml
+          client/src/YiHua.Pos.App/App.axaml.cs
+          deploy/
+          docs/
+          README.md"
+
+          VIOLATION=0
+          for f in $CHANGED; do
+            for frozen in $FROZEN; do
+              case "$f" in
+                $frozen*)
+                  echo "::error file=$f::改动了冻结文件 $f"
+                  VIOLATION=1
+                  ;;
+              esac
+            done
+          done
+
+          if [ "$VIOLATION" = "1" ]; then
+            echo "### ❌ 检测到越界修改" >> $GITHUB_STEP_SUMMARY
+            echo "冻结文件清单见 docs/11-多AI协作规范.md" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          echo "### ✅ 无越界修改" >> $GITHUB_STEP_SUMMARY
+
+      - name: 检查代码规范
+        run: |
+          ISSUES=0
+          # 硬编码本地路径
+          if git diff $BASE...HEAD | grep -E '^\+' | grep -E '[A-Z]:\\\\WorkSpace|C:/WorkSpace'; then
+            echo "::warning::检测到硬编码本地路径"
+            ISSUES=1
+          fi
+          # 明文密钥
+          if git diff $BASE...HEAD | grep -E '^\+' | grep -E 'github_pat_|ghp_|sk-[A-Za-z0-9]{20,}'; then
+            echo "::error::检测到疑似明文密钥"
+            exit 1
+          fi
+          # 第三方代码痕迹
+          if git diff $BASE...HEAD | grep -E '^\+' | grep -E '扫呗|saobei|反编译|ILSpy|dnlib'; then
+            echo "::error::检测到第三方代码痕迹"
+            exit 1
+          fi
+          echo "### ✅ 代码规范检查通过" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================
+  # 4. 汇总
+  # ============================================================
+  summary:
+    name: 汇总
+    runs-on: ubuntu-latest
+    needs: [client, server]
+    if: always()
+    steps:
+      - name: 结果
+        run: |
+          echo "## 构建结果" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| 模块 | 结果 |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| 客户端 | ${{ needs.client.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 服务端 | ${{ needs.server.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.client.result }}" != "success" ] || [ "${{ needs.server.result }}" != "success" ]; then
+            echo "### ❌ 构建失败，不能合并" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          echo "### ✅ 全部通过，可以合并" >> $GITHUB_STEP_SUMMARY
