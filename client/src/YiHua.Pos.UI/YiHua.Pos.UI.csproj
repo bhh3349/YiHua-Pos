@@ -21,4 +21,9 @@
     <ProjectReference Include="..\YiHua.Pos.Domain\YiHua.Pos.Domain.csproj" />
   </ItemGroup>
 
+  <!-- T-304: 叫号屏走 Hardware 的 SecondaryScreenManager（副屏） -->
+  <ItemGroup>
+    <ProjectReference Include="..\YiHua.Pos.Hardware\YiHua.Pos.Hardware.csproj" />
+  </ItemGroup>
+
 </Project>

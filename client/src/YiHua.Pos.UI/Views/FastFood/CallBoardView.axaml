@@ -1,0 +1,66 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.FastFood"
+             xmlns:buttons="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             x:Class="YiHua.Pos.UI.Views.FastFood.CallBoardView"
+             x:DataType="vm:CallBoardViewModel"
+             Background="Black">
+  <!-- 叫号屏：极简，高对比，大字号（3 米外可读） -->
+  <Grid RowDefinitions="Auto,*,Auto,Auto">
+
+    <!-- 降级提示 -->
+    <Border Grid.Row="0"
+            Background="{DynamicResource DangerBrush}" Padding="16,8"
+            IsVisible="{Binding IsDowngraded}">
+      <TextBlock Text="{Binding DowngradeHint}"
+                 FontSize="20" Foreground="White"
+                 HorizontalAlignment="Center"/>
+    </Border>
+
+    <!-- 主叫号：超大字号 -->
+    <StackPanel Grid.Row="1"
+                VerticalAlignment="Center" HorizontalAlignment="Center"
+                Spacing="16">
+      <TextBlock Text="{Binding CurrentNumber}"
+                 FontSize="180" FontWeight="Bold"
+                 Foreground="White"
+                 HorizontalAlignment="Center"/>
+      <TextBlock Text="{Binding CurrentStatus}"
+                 FontSize="48"
+                 Foreground="{DynamicResource WarningBrush}"
+                 HorizontalAlignment="Center"/>
+      <TextBlock Text="{Binding CurrentAmount, StringFormat='¥{0:F2}'}"
+                 FontSize="64" FontWeight="Bold"
+                 Foreground="White"
+                 HorizontalAlignment="Center"
+                 IsVisible="{Binding ShowAmount}"/>
+    </StackPanel>
+
+    <!-- 等待列表 -->
+    <StackPanel Grid.Row="2" Spacing="8" Margin="0,0,0,32">
+      <TextBlock Text="等待叫号" FontSize="28"
+                 Foreground="{DynamicResource TextSecondaryBrush}"
+                 HorizontalAlignment="Center"/>
+      <ItemsControl ItemsSource="{Binding WaitingNumbers}"
+                    HorizontalAlignment="Center">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Orientation="Horizontal" Spacing="24"/>
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <TextBlock Text="{Binding}" FontSize="48" FontWeight="Bold"
+                       Foreground="White"/>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+
+    <!-- 切换显示模式 -->
+    <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="16"
+                HorizontalAlignment="Center" Margin="0,0,0,16">
+      <buttons:PosButton Variant="Secondary" Content="显示金额" Click="OnToggleAmount"/>
+    </StackPanel>
+  </Grid>
+</UserControl>

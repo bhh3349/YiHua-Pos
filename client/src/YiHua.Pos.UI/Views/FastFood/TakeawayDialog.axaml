@@ -1,0 +1,47 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.FastFood"
+             xmlns:buttons="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
+             x:Class="YiHua.Pos.UI.Views.FastFood.TakeawayDialog"
+             x:DataType="vm:TakeawayViewModel"
+             Background="{DynamicResource SurfaceBrush}">
+  <StackPanel Spacing="16" Margin="24">
+    <TextBlock Text="就餐方式" FontSize="20" FontWeight="Bold"
+               Foreground="{DynamicResource TextPrimaryBrush}"/>
+
+    <!-- 三选一 -->
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <buttons:PosButton Variant="Secondary" Content="堂食" Click="OnDineIn"/>
+      <buttons:PosButton Variant="Secondary" Content="外带" Click="OnTakeAway"/>
+      <buttons:PosButton Variant="Secondary" Content="配送" Click="OnDelivery"/>
+    </StackPanel>
+
+    <!-- 餐具数量（外带/配送） -->
+    <StackPanel Spacing="8" IsVisible="{Binding NeedsTableware}">
+      <TextBlock Text="餐具数量" FontSize="16"
+                 Foreground="{DynamicResource TextPrimaryBrush}"/>
+      <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+        <buttons:PosButton Variant="Secondary" Content="−" Click="OnDecTableware" Padding="16,8"/>
+        <TextBlock Text="{Binding TablewareCount}" FontSize="24" FontWeight="Bold"
+                   Foreground="{DynamicResource TextPrimaryBrush}"
+                   VerticalAlignment="Center" MinWidth="40" TextAlignment="Center"/>
+        <buttons:PosButton Variant="Secondary" Content="＋" Click="OnIncTableware" Padding="16,8"/>
+        <TextBlock Text="份" FontSize="14"
+                   Foreground="{DynamicResource TextSecondaryBrush}"
+                   VerticalAlignment="Center"/>
+      </StackPanel>
+    </StackPanel>
+
+    <!-- 备注 -->
+    <StackPanel Spacing="8">
+      <TextBlock Text="备注" FontSize="16"
+                 Foreground="{DynamicResource TextPrimaryBrush}"/>
+      <TextBox Text="{Binding Remark}" Watermark="如：少辣、打包分装"
+               FontSize="16" MinHeight="40"/>
+    </StackPanel>
+
+    <buttons:PosButton Variant="Primary" Content="确定" Click="OnConfirm"
+                           FontSize="18" Padding="0,12"/>
+  </StackPanel>
+</UserControl>

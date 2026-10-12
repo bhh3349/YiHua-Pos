@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:buttons="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             x:Class="YiHua.Pos.UI.Views.FastFood.ModeSwitchView"
+             Background="{DynamicResource SurfaceBrush}">
+  <StackPanel Spacing="24" Margin="48" VerticalAlignment="Center" HorizontalAlignment="Center">
+    <TextBlock Text="选择经营模式" FontSize="28" FontWeight="Bold"
+               Foreground="{DynamicResource TextPrimaryBrush}"
+               HorizontalAlignment="Center"/>
+
+    <buttons:PosButton Variant="Primary" Content="正餐模式（有桌台）"
+                           FontSize="20" Padding="48,20"
+                           Click="OnDineInMode"/>
+    <buttons:PosButton Variant="Primary" Content="快餐模式（取号点单）"
+                           FontSize="20" Padding="48,20"
+                           Click="OnFastFoodMode"/>
+
+    <TextBlock Text="一个店可同时经营两种模式"
+               FontSize="14"
+               Foreground="{DynamicResource TextSecondaryBrush}"
+               HorizontalAlignment="Center"
+               TextWrapping="Wrap"/>
+  </StackPanel>
+</UserControl>
