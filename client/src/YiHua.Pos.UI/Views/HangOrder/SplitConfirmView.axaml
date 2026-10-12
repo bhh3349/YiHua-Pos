@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.HangOrder"
+             xmlns:buttons="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:display="clr-namespace:YiHua.Pos.UI.Controls.Display"
+             x:Class="YiHua.Pos.UI.Views.HangOrder.SplitConfirmView"
+             x:DataType="vm:SplitConfirmViewModel"
+             Background="{DynamicResource SurfaceBrush}">
+  <StackPanel Spacing="16" Margin="24">
+    <TextBlock Text="确认拆单" FontSize="20" FontWeight="Bold"
+               Foreground="{DynamicResource TextPrimaryBrush}"/>
+
+    <TextBlock Text="{Binding SummaryText}" FontSize="16"
+               Foreground="{DynamicResource TextPrimaryBrush}"
+               TextWrapping="Wrap"/>
+
+    <Grid ColumnDefinitions="*,*" Margin="0,8">
+      <StackPanel Grid.Column="0" Spacing="4">
+        <TextBlock Text="本次结账" FontSize="13"
+                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+        <display:AmountDisplay Amount="{Binding SplitAmount}" FontSize="32"/>
+      </StackPanel>
+      <StackPanel Grid.Column="1" Spacing="4">
+        <TextBlock Text="剩余" FontSize="13"
+                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+        <display:AmountDisplay Amount="{Binding RemainingAmount}" FontSize="32"/>
+      </StackPanel>
+    </Grid>
+
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <buttons:PosButton Variant="Primary" Content="确认结账"
+                         Click="OnConfirm" FontSize="18" Padding="32,12"/>
+      <buttons:PosButton Variant="Secondary" Content="返回修改"
+                         Click="OnCancel" FontSize="16" Padding="24,12"/>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

@@ -1,0 +1,97 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.HangOrder"
+             xmlns:buttons="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:display="clr-namespace:YiHua.Pos.UI.Controls.Display"
+             x:Class="YiHua.Pos.UI.Views.HangOrder.SplitOrderView"
+             x:DataType="vm:SplitOrderViewModel"
+             Background="{DynamicResource BackgroundBrush}">
+  <Grid RowDefinitions="Auto,*,Auto,Auto">
+
+    <!-- 标题 -->
+    <Border Grid.Row="0"
+            Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource DividerBrush}"
+            BorderThickness="0,0,0,1"
+            Padding="16,12">
+      <StackPanel Spacing="4">
+        <TextBlock Text="预结账 / 拆单" FontSize="20" FontWeight="Bold"
+                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+        <TextBlock Text="选择要先结账的菜品（可多选），拆出部分立即结账"
+                   FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
+      </StackPanel>
+    </Border>
+
+    <!-- 明细多选 -->
+    <ScrollViewer Grid.Row="1" Padding="12">
+      <ItemsControl ItemsSource="{Binding Splitter.AvailableItems}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource DividerBrush}"
+                    BorderThickness="1" CornerRadius="8"
+                    Padding="12" Margin="0,0,0,8"
+                    Tag="{Binding Id}"
+                    PointerPressed="OnItemToggle">
+              <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding ProductName}" FontSize="16"
+                             Foreground="{DynamicResource TextPrimaryBrush}"/>
+                  <TextBlock Text="{Binding SpecText}" FontSize="13"
+                             Foreground="{DynamicResource TextSecondaryBrush}"
+                             IsVisible="{Binding SpecText, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                </StackPanel>
+                <display:AmountDisplay Grid.Column="1" Amount="{Binding Amount}"
+                                       FontSize="20" VerticalAlignment="Center"/>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <!-- 实时金额 -->
+    <Border Grid.Row="2"
+            Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource DividerBrush}"
+            BorderThickness="0,1,0,0"
+            Padding="16,12">
+      <Grid ColumnDefinitions="*,*,*">
+        <StackPanel Grid.Column="0" Spacing="4">
+          <TextBlock Text="拆出" FontSize="13"
+                     Foreground="{DynamicResource TextSecondaryBrush}"/>
+          <display:AmountDisplay Amount="{Binding Splitter.SplitAmount}" FontSize="28"/>
+        </StackPanel>
+        <StackPanel Grid.Column="1" Spacing="4">
+          <TextBlock Text="剩余" FontSize="13"
+                     Foreground="{DynamicResource TextSecondaryBrush}"/>
+          <display:AmountDisplay Amount="{Binding Splitter.RemainingAmount}" FontSize="28"/>
+        </StackPanel>
+        <StackPanel Grid.Column="2" Spacing="4" VerticalAlignment="Center">
+          <TextBlock Text="{Binding Splitter.ValidationReason}" FontSize="13"
+                     Foreground="{DynamicResource DangerBrush}"
+                     IsVisible="{Binding Splitter.ValidationReason, Converter={x:Static ObjectConverters.IsNotNull}}"
+                     TextWrapping="Wrap"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- 操作 -->
+    <Border Grid.Row="3"
+            Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource DividerBrush}"
+            BorderThickness="0,1,0,0"
+            Padding="16,12">
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <!-- 预结账用次级按钮，视觉区别于"结账" -->
+        <buttons:PosButton Variant="Secondary" Content="预结账"
+                           Click="OnConfirm" FontSize="18" Padding="32,12"
+                           IsEnabled="{Binding Splitter.IsValid}"/>
+        <buttons:PosButton Variant="Secondary" Content="全选"
+                           Click="OnSelectAll" FontSize="14" Padding="20,12"/>
+        <buttons:PosButton Variant="Secondary" Content="取消"
+                           Click="OnCancel" FontSize="14" Padding="20,12"/>
+      </StackPanel>
+    </Border>
+  </Grid>
+</UserControl>
