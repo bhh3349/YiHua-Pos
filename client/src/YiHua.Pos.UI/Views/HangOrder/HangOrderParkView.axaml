@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.HangOrder"
+             xmlns:buttons="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             x:Class="YiHua.Pos.UI.Views.HangOrder.HangOrderParkView"
+             x:DataType="vm:HangOrderParkViewModel"
+             Background="{DynamicResource SurfaceBrush}">
+  <StackPanel Spacing="16" Margin="24">
+    <TextBlock Text="确认挂单" FontSize="20" FontWeight="Bold"
+               Foreground="{DynamicResource TextPrimaryBrush}"/>
+
+    <TextBlock FontSize="15" Foreground="{DynamicResource TextPrimaryBrush}"
+               TextWrapping="Wrap">
+      <Run Text="将桌台 "/><Run Text="{Binding Desk.Name}" FontWeight="Bold"/>
+      <Run Text=" 的订单挂起？挂单后桌台可立即开新单，挂单信息保留在列表中。"/>
+    </TextBlock>
+
+    <StackPanel Spacing="8">
+      <TextBlock Text="挂单人" FontSize="14"
+                 Foreground="{DynamicResource TextSecondaryBrush}"/>
+      <TextBox Text="{Binding OperatorName}" Watermark="如：张三"
+               FontSize="16" MinHeight="40"/>
+    </StackPanel>
+
+    <StackPanel Spacing="8">
+      <TextBlock Text="备注" FontSize="14"
+                 Foreground="{DynamicResource TextSecondaryBrush}"/>
+      <TextBox Text="{Binding Remark}" Watermark="如：等朋友、要发票"
+               FontSize="16" MinHeight="40"/>
+    </StackPanel>
+
+    <TextBlock Text="{Binding ErrorMessage}" FontSize="14"
+               Foreground="{DynamicResource DangerBrush}"
+               IsVisible="{Binding ErrorMessage, Converter={x:Static ObjectConverters.IsNotNull}}"
+               TextWrapping="Wrap"/>
+
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <buttons:PosButton Variant="Primary" Content="确认挂单"
+                         Click="OnConfirm" FontSize="18" Padding="32,12"
+                         IsEnabled="{Binding !IsParking}"/>
+      <buttons:PosButton Variant="Secondary" Content="取消"
+                         Click="OnCancel" FontSize="16" Padding="24,12"/>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

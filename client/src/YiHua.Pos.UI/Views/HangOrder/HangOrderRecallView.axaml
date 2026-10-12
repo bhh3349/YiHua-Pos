@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.HangOrder"
+             xmlns:buttons="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             x:Class="YiHua.Pos.UI.Views.HangOrder.HangOrderRecallView"
+             x:DataType="vm:HangOrderRecallViewModel"
+             Background="{DynamicResource SurfaceBrush}">
+  <StackPanel Spacing="16" Margin="24">
+    <TextBlock Text="取单" FontSize="20" FontWeight="Bold"
+               Foreground="{DynamicResource TextPrimaryBrush}"/>
+
+    <TextBlock FontSize="15" Foreground="{DynamicResource TextPrimaryBrush}">
+      <Run Text="桌号："/><Run Text="{Binding Record.DeskName}" FontWeight="Bold" FontSize="24"/>
+    </TextBlock>
+    <TextBlock FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}">
+      <Run Text="{Binding Record.GuestCount}"/><Run Text=" 人 · ¥"/>
+      <Run Text="{Binding Record.Amount, StringFormat='{}{0:F2}'}"/>
+      <Run Text=" · "/><Run Text="{Binding Record.ParkTime, StringFormat='{}{0:HH:mm}'}"/><Run Text=" 挂单"/>
+    </TextBlock>
+
+    <!-- 冲突提示 -->
+    <Border Background="{DynamicResource WarningBrush}"
+            CornerRadius="6" Padding="12,8"
+            IsVisible="{Binding HasConflict}">
+      <StackPanel Spacing="8">
+        <TextBlock Text="{Binding ConflictMessage}" FontSize="14" Foreground="White"
+                   TextWrapping="Wrap"/>
+        <TextBlock Text="请选择其他空闲桌台：" FontSize="14" Foreground="White"/>
+        <!-- 换桌选择由宿主提供 -->
+      </StackPanel>
+    </Border>
+
+    <TextBlock Text="{Binding ErrorMessage}" FontSize="14"
+               Foreground="{DynamicResource DangerBrush}"
+               IsVisible="{Binding ErrorMessage, Converter={x:Static ObjectConverters.IsNotNull}}"
+               TextWrapping="Wrap"/>
+
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <buttons:PosButton Variant="Primary" Content="确认取单"
+                         Click="OnConfirm" FontSize="18" Padding="32,12"
+                         IsEnabled="{Binding !IsRecalling}"/>
+      <buttons:PosButton Variant="Secondary" Content="取消"
+                         Click="OnCancel" FontSize="16" Padding="24,12"/>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

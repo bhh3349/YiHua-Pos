@@ -1,0 +1,98 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.HangOrder"
+             xmlns:buttons="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:feedback="clr-namespace:YiHua.Pos.UI.Controls.Feedback"
+             xmlns:display="clr-namespace:YiHua.Pos.UI.Controls.Display"
+             x:Class="YiHua.Pos.UI.Views.HangOrder.HangOrderView"
+             x:DataType="vm:HangOrderViewModel"
+             Background="{DynamicResource BackgroundBrush}">
+  <Grid RowDefinitions="Auto,Auto,*,Auto">
+
+    <!-- 标题栏 -->
+    <Border Grid.Row="0"
+            Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource DividerBrush}"
+            BorderThickness="0,0,0,1"
+            Padding="16,12">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <TextBlock Grid.Column="0" Text="挂单列表" FontSize="20" FontWeight="Bold"
+                   Foreground="{DynamicResource TextPrimaryBrush}"
+                   VerticalAlignment="Center"/>
+        <TextBox Grid.Column="1" Text="{Binding SearchText}"
+                 Watermark="搜索桌号 / 人数 / 挂单人"
+                 Margin="16,0" MaxWidth="300"
+                 HorizontalAlignment="Left" VerticalAlignment="Center"/>
+        <buttons:PosButton Grid.Column="2" Variant="Secondary" Content="批量清理"
+                           Click="OnClean"/>
+      </Grid>
+    </Border>
+
+    <!-- 超时提示 -->
+    <Border Grid.Row="1"
+            Background="{DynamicResource WarningBrush}"
+            Padding="16,8"
+            IsVisible="{Binding TimedOutCount}">
+      <TextBlock FontSize="14" Foreground="White">
+        <Run Text="有 "/><Run Text="{Binding TimedOutCount}"/><Run Text=" 单挂单超时，请及时处理"/>
+      </TextBlock>
+    </Border>
+
+    <!-- 挂单列表 -->
+    <ScrollViewer Grid.Row="2" Padding="12">
+      <ItemsControl ItemsSource="{Binding FilteredRecords}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource DividerBrush}"
+                    BorderThickness="1" CornerRadius="8"
+                    Padding="16,12" Margin="0,0,0,8"
+                    Tag="{Binding}"
+                    PointerPressed="OnRecordClick">
+              <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                <!-- 桌号大而醒目 -->
+                <TextBlock Grid.Column="0" Text="{Binding DeskName}"
+                           FontSize="36" FontWeight="Bold"
+                           Foreground="{DynamicResource TextPrimaryBrush}"
+                           VerticalAlignment="Center" Margin="0,0,16,0"/>
+                <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                  <TextBlock FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}">
+                    <Run Text="{Binding GuestCount}"/><Run Text=" 人 · "/>
+                    <Run Text="{Binding ParkTime, StringFormat='{}{0:HH:mm}'}"/><Run Text=" 挂单 · "/>
+                    <Run Text="{Binding OperatorName}"/>
+                  </TextBlock>
+                  <TextBlock Text="{Binding Remark}" FontSize="13"
+                             Foreground="{DynamicResource TextSecondaryBrush}"
+                             IsVisible="{Binding Remark, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                </StackPanel>
+                <display:AmountDisplay Grid.Column="2" Amount="{Binding Amount}"
+                                       FontSize="24" VerticalAlignment="Center"
+                                       Margin="0,0,16,0"/>
+                <buttons:PosButton Grid.Column="3" Variant="Primary" Content="取单"
+                                   Tag="{Binding}" Click="OnRecall"
+                                   VerticalAlignment="Center"/>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <!-- 空状态 -->
+    <feedback:EmptyState Grid.Row="2"
+                         Title="暂无挂单"
+                         Description="客人说「等朋友」时，点「挂单」把单存起来，桌台可继续开新单"
+                         IsVisible="{Binding IsEmpty}"/>
+
+    <!-- 底栏 -->
+    <Border Grid.Row="3"
+            Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource DividerBrush}"
+            BorderThickness="0,1,0,0"
+            Padding="16,8">
+      <TextBlock FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}">
+        <Run Text="单击取单 · 双击看详情"/>
+      </TextBlock>
+    </Border>
+  </Grid>
+</UserControl>

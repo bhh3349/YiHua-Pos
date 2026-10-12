@@ -1,0 +1,66 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.HangOrder"
+             xmlns:buttons="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:display="clr-namespace:YiHua.Pos.UI.Controls.Display"
+             x:Class="YiHua.Pos.UI.Views.HangOrder.HangOrderCleanView"
+             x:DataType="vm:HangOrderCleanViewModel"
+             Background="{DynamicResource SurfaceBrush}">
+  <StackPanel Spacing="16" Margin="24">
+    <TextBlock Text="批量清理挂单" FontSize="20" FontWeight="Bold"
+               Foreground="{DynamicResource TextPrimaryBrush}"/>
+
+    <TextBlock Text="以下为超时未取的挂单，清理后不可恢复。"
+               FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}"
+               TextWrapping="Wrap"/>
+
+    <!-- 待清理列表 -->
+    <ScrollViewer MaxHeight="300">
+      <ItemsControl ItemsSource="{Binding ToClean}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Background="{DynamicResource BackgroundBrush}"
+                    BorderBrush="{DynamicResource DividerBrush}"
+                    BorderThickness="1" CornerRadius="6"
+                    Padding="12,8" Margin="0,0,0,6">
+              <Grid ColumnDefinitions="Auto,*,Auto">
+                <TextBlock Grid.Column="0" Text="{Binding DeskName}"
+                           FontSize="20" FontWeight="Bold"
+                           Foreground="{DynamicResource TextPrimaryBrush}"
+                           Margin="0,0,12,0" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" FontSize="13"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           VerticalAlignment="Center">
+                  <Run Text="{Binding ParkTime, StringFormat='{}{0:MM-dd HH:mm}'}"/>
+                  <Run Text=" · "/><Run Text="{Binding OperatorName}"/>
+                </TextBlock>
+                <display:AmountDisplay Grid.Column="2" Amount="{Binding Amount}"
+                                       FontSize="18" VerticalAlignment="Center"/>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <!-- 二次确认 -->
+    <Border Background="{DynamicResource WarningBrush}"
+            CornerRadius="6" Padding="12,8">
+      <TextBlock Text="{Binding ConfirmText}" FontSize="15" Foreground="White"
+                 TextWrapping="Wrap"/>
+    </Border>
+
+    <TextBlock Text="{Binding ErrorMessage}" FontSize="14"
+               Foreground="{DynamicResource DangerBrush}"
+               IsVisible="{Binding ErrorMessage, Converter={x:Static ObjectConverters.IsNotNull}}"
+               TextWrapping="Wrap"/>
+
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <buttons:PosButton Variant="Primary" Content="确认清理"
+                         Click="OnConfirm" FontSize="18" Padding="32,12"
+                         IsEnabled="{Binding !IsCleaning}"/>
+      <buttons:PosButton Variant="Secondary" Content="取消"
+                         Click="OnCancel" FontSize="16" Padding="24,12"/>
+    </StackPanel>
+  </StackPanel>
+</UserControl>
