@@ -76,14 +76,25 @@ public class DbInitializerTests : TempDbFixture
     [Fact]
     public void SqlitePaths_Linux_ResolvesExpectedLocations()
     {
+        // 注入 isWindows: false，使测试在任意操作系统上都能覆盖 Linux 分支
         // /data 可写时优先 /data
-        var withData = SqlitePaths.GetDatabasePath(_ => true);
+        var withData = SqlitePaths.GetDatabasePath(_ => true, isWindows: false);
         Assert.Equal(Path.Combine("/data", "yihua.db"), withData);
 
         // /data 不可写时走 ~/.local/share/YiHua/
-        var withoutData = SqlitePaths.GetDatabasePath(_ => false);
+        var withoutData = SqlitePaths.GetDatabasePath(_ => false, isWindows: false);
         var home = Environment.GetEnvironmentVariable("HOME")
                    ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         Assert.Equal(Path.Combine(home, ".local", "share", "YiHua", "yihua.db"), withoutData);
+    }
+
+    [Fact]
+    public void SqlitePaths_Windows_ResolvesLocalAppData()
+    {
+        // 注入 isWindows: true，使测试在任意操作系统上都能覆盖 Windows 分支
+        var path = SqlitePaths.GetDatabasePath(_ => true, isWindows: true);
+
+        Assert.EndsWith(Path.Combine("YiHua", "yihua.db"), path);
+        Assert.DoesNotContain("/data", path);
     }
 }

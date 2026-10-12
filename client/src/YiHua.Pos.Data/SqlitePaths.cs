@@ -17,11 +17,18 @@ public static class SqlitePaths
     public static string GetDatabasePath() => GetDatabasePath(ProbeDirectoryWritable);
 
     /// <summary>
-    /// 可测试的纯逻辑版本：调用方注入目录可写性探测，便于单元测试覆盖 Windows / Linux 分支。
+    /// 可测试的纯逻辑版本：调用方注入目录可写性探测，便于单元测试覆盖 Linux 分支。
     /// </summary>
     public static string GetDatabasePath(Func<string, bool> isWritable)
+        => GetDatabasePath(isWritable, OperatingSystem.IsWindows());
+
+    /// <summary>
+    /// 完全可测试的版本：平台与目录可写性都由调用方注入，
+    /// 这样在任意操作系统上都能覆盖 Windows / Linux 两条分支。
+    /// </summary>
+    public static string GetDatabasePath(Func<string, bool> isWritable, bool isWindows)
     {
-        if (OperatingSystem.IsWindows())
+        if (isWindows)
         {
             var baseDir = Environment.GetEnvironmentVariable("LOCALAPPDATA");
             if (string.IsNullOrWhiteSpace(baseDir))
