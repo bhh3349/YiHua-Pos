@@ -136,13 +136,7 @@ POST /api/v1/groupbuy
 - **核销失败不能改订单**
 - 抵扣不是打折：AmountGroupBuy 单独存，报表要分开列
 
-## ⚠️ 断网必须处理（不是可选项）
-小商家网络三天两头断，断网时收银台还得能用：
-  已验券 → 缓存本地，标记「待上传」
-  恢复网络 → 自动补传
-  补传失败 → 界面能看到「还有 N 张券没同步」
-
-待同步的券必须在界面可见，默默吞掉 = 账对不上 = 老板投诉。
+## ⚠️ 断网兜底（验券保留，这是备用路径）
 
 ## 已有东西直接用
 Order.GroupBuyPlatform / GroupBuyCouponCode / AmountGroupBuy 已存在，
@@ -158,7 +152,7 @@ git fetch origin && git rebase origin/main
 git commit -m "T-601: 团购验券与核销"
 git push -u origin task/T-601-groupbuy-verify
 
-报告要含：8 种错误码映射表、断网方案、双层JSON解包方式、Domain 缺口
+报告要含：8 种错误码映射表、**优惠口径怎么接到 Ordering**（我合并时要改哪一行）、双层JSON解包方式、Domain 缺口
 ```
 
 ---
