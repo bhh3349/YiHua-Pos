@@ -10,13 +10,16 @@ public sealed class InMemoryTicketQueue : ITicketQueue
     private readonly object _lock = new();
     private readonly List<Ticket> _tickets = new();
     private readonly string _prefix;
+    /// <summary>时钟注入：日切逻辑必须可测，否则跨零点这条路径永远测不到。</summary>
+    private readonly Func<DateTime> _now;
     private DateTime _currentDate;
     private int _sequence;
 
-    public InMemoryTicketQueue(string prefix = "A")
+    public InMemoryTicketQueue(string prefix = "A", Func<DateTime>? now = null)
     {
         _prefix = string.IsNullOrWhiteSpace(prefix) ? "A" : prefix.Trim();
-        _currentDate = DateTime.Today;
+        _now = now ?? (() => DateTime.Now);
+        _currentDate = _now().Date;
         _sequence = 0;
     }
 
@@ -40,7 +43,7 @@ public sealed class InMemoryTicketQueue : ITicketQueue
             {
                 Number = FormatNumber(_sequence),
                 GuestCount = Math.Max(1, guestCount),
-                IssueTime = DateTime.Now,
+                IssueTime = _now(),
             };
             _tickets.Add(ticket);
             return ticket;
@@ -124,7 +127,7 @@ public sealed class InMemoryTicketQueue : ITicketQueue
             if (t == null) return false;
             if (t.Status != TicketStatus.Called) return false;
             t.Status = TicketStatus.Done;
-            t.DoneTime = DateTime.Now;
+            t.DoneTime = _now();
             return true;
         }
     }
@@ -148,28 +151,46 @@ public sealed class InMemoryTicketQueue : ITicketQueue
     private Ticket CallInternal(Ticket ticket)
     {
         ticket.Status = TicketStatus.Called;
-        ticket.CallTime = DateTime.Now;
+        ticket.CallTime = _now();
         return ticket;
     }
 
     private Ticket? Find(string number)
     {
+        // 号码按日复用：昨天的 A001 和今天的 A001 同号。
+        // 所以查找必须排除所有已终止状态的号（过期/ 退号 / 完成 / 跳号），
+        // 否则过期号会和新号互相干扰 —— 叫号、退号可能作用到错的记录上。
         return _tickets.LastOrDefault(t =>
             t.Number.Equals(number, StringComparison.OrdinalIgnoreCase) &&
             t.Status != TicketStatus.Voided &&
-            t.Status != TicketStatus.Done);
+            t.Status != TicketStatus.Done &&
+    t.Status != TicketStatus.Expired &&
+            t.Status != TicketStatus.Skipped);
     }
 
     private string FormatNumber(int seq) => $"{_prefix}{seq:D3}";
 
-    /// <summary>日切检查：日期变了则序号重置</summary>
+    /// <summary>
+    /// 日切检查：日期变了则序号重置。
+    ///
+    /// 同时把「昨天留下、还没叫到或没完成的号」标记为过期 —— 快餐店通宵营业时，
+    /// 昨天的 A052 会一直挂在等待队列里；序号重置后新客人又从 A001 开始，
+    /// 那个昨天的号就永远等不到叫号了。所以日切必须清理过期待叫的号。
+    /// </summary>
     private void EnsureSameDay()
     {
-        var today = DateTime.Today;
+        var today = _now().Date;
         if (today != _currentDate)
         {
             _currentDate = today;
             _sequence = 0;
+            // 过期的号不能直接丢：叫号屏可能还显示着，客人会来问。
+            // 标记为过期保留在列表里，GetWaiting 不再返回它们。
+            foreach (var t in _tickets)
+            {
+                if (t.Status == TicketStatus.Waiting || t.Status == TicketStatus.Called)
+                    t.Status = TicketStatus.Expired;
+            }
         }
     }
 }

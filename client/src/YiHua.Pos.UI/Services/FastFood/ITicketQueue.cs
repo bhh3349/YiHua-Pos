@@ -13,6 +13,9 @@ public enum TicketStatus
     Skipped,
     /// <summary>已退号</summary>
     Voided,
+    /// <summary>跨日过期：昨天没叫到也没完成的号。</summary>
+    /// <summary>快餐店通宵营业时，日切后昨天的号不能再被叫到，但记录保留供查询。</summary>
+    Expired,
 }
 
 /// <summary>取号记录</summary>
