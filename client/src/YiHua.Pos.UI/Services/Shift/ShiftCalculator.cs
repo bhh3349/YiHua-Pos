@@ -58,11 +58,18 @@ public static class ShiftCalculator
         Round(actualCash - expectedCash);
 
     /// <summary>
-    /// 本班净额 = Σ(已结订单 AmountPay) + Σ(冲正单 AmountPay，负数)。
-    /// 冲正单直接计入，冲减总额。
+    /// 本班净额 = Σ(已结/冲正单 AmountPay) - Σ(AmountRefund)。
+    ///
+    /// 退款必须在这里显式扣减，不能依赖 AmountPay 已被改写：
+    /// 退款流程（T-501）只累加 AmountRefund，不会回写 AmountPay
+    /// —— 保留原始应付是财务追溯的要求（要能看到客人原本付了多少）。
+    /// 早先这里只汇总 AmountPay，导致退过款的单子净额偏高、交班对不上账。
     /// </summary>
-    public static decimal NetAmount(IEnumerable<Order> orders) =>
-        Round(orders.Where(o => o.Status is OrderStatus.Settled or OrderStatus.Void).Sum(o => o.AmountPay));
+    public static decimal NetAmount(IEnumerable<Order> orders)
+    {
+        var relevant = orders.Where(o => o.Status is OrderStatus.Settled or OrderStatus.Void).ToList();
+        return Round(relevant.Sum(o => o.AmountPay) - relevant.Sum(o => o.AmountRefund));
+    }
 
     /// <summary>本班优惠总额（含抹零）</summary>
     public static decimal TotalDiscount(IEnumerable<Order> orders) =>
