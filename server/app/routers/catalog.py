@@ -2,14 +2,14 @@
 import os
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from ..config import OSS_BASE_URL
 from ..db import get_db
 from ..models import Product, ProductCategory, ProductUnit
-from ..util import Ctx, get_ctx, ok, oss_dir_for, oss_url, write_csv
+from ..util import (Ctx, get_ctx, ok, oss_dir_for, oss_url, resolve_oss_base,
+                    write_csv)
 
 router = APIRouter(prefix="/api/v1/catalog", tags=["catalog"])
 
@@ -56,16 +56,17 @@ def _max_version(db: Session, tenant_id: int, key: str) -> int:
 
 
 @router.post("/syncUrl")
-def sync_url(ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db)):
+def sync_url(request: Request, ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db)):
     """把各表导出成 CSV 放到对象存储目录，返回下载地址。"""
-    base = oss_dir_for(ctx.tenant_id, ctx.store_id)
+    base_dir = oss_dir_for(ctx.tenant_id, ctx.store_id)
+    oss_base = resolve_oss_base(request)
     urls = []
     for key, (_table, fname, cols) in SYNC_TABLES.items():
         ver = _max_version(db, ctx.tenant_id, key)
-        path = os.path.join(base, "%s_%d.csv" % (fname, ver))
+        path = os.path.join(base_dir, "%s_%d.csv" % (fname, ver))
         write_csv(path, cols, _rows_for(db, ctx.tenant_id, key))
-        urls.append({"table": key, "version": ver, "url": oss_url(path)})
-    return ok({"urls": urls, "ossBase": OSS_BASE_URL})
+        urls.append({"table": key, "version": ver, "url": oss_url(path, oss_base)})
+    return ok({"urls": urls, "ossBase": oss_base})
 
 
 class PageReq(BaseModel):

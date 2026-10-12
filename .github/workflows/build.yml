@@ -101,13 +101,40 @@ jobs:
         working-directory: server
         run: python seed.py --reset
 
+      - name: 启动服务端
+        working-directory: server
+        run: |
+          nohup python run.py --port 8000 > /tmp/pos-server.log 2>&1 &
+          echo "等待服务端就绪..."
+          for i in $(seq 1 40); do
+            if curl -sf http://127.0.0.1:8000/health > /dev/null 2>&1; then
+              echo "✅ 服务端已就绪（第 ${i} 秒）"
+              curl -s http://127.0.0.1:8000/health
+              echo ""
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::服务端启动超时"
+          tail -50 /tmp/pos-server.log
+          exit 1
+
       - name: 冒烟测试
         working-directory: server
         run: python smoke_test.py
 
       - name: 单元测试
         working-directory: server
-        run: pytest tests/ -v --tb=short || echo "::warning::pytest 未通过或无测试"
+        run: |
+          if [ -d tests ]; then
+            pytest tests/ -v --tb=short
+          else
+            echo "::notice::暂无 tests/ 目录，跳过"
+          fi
+
+      - name: 服务端日志（失败时）
+        if: failure()
+        run: tail -80 /tmp/pos-server.log || true
 
   # ============================================================
   # 3. 越界检查：确保没有改动冻结文件

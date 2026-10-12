@@ -92,6 +92,26 @@ def write_csv(path: str, header: list, rows: list) -> None:
             w.writerow(r)
 
 
-def oss_url(path: str) -> str:
+def resolve_oss_base(request: Optional[Request] = None) -> str:
+    """
+    推导对象存储的访问基地址。
+
+    优先级：
+      1. 环境变量 DSH_POS_OSS_BASE（生产部署时指向 CDN / 域名）
+      2. 请求本身的 host（开发和测试环境，支持任意端口）
+      3. 配置里的默认值
+
+    这样服务端跑在任何端口上，返回的 CSV 下载地址都是可用的。
+    """
+    env = os.getenv("DSH_POS_OSS_BASE")
+    if env:
+        return env.rstrip("/") + "/"
+    if request is not None:
+        return str(request.base_url).rstrip("/") + "/oss/"
+    return OSS_BASE_URL.rstrip("/") + "/"
+
+
+def oss_url(path: str, base: Optional[str] = None) -> str:
     rel = os.path.relpath(path, OSS_DIR).replace("\\", "/")
-    return OSS_BASE_URL.rstrip("/") + "/" + rel
+    root = (base or OSS_BASE_URL).rstrip("/")
+    return root + "/" + rel
