@@ -1,0 +1,25 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Product"
+             x:Class="YiHua.Pos.UI.Views.Product.ProductPreviewCard">
+  <Border Background="{DynamicResource SurfaceBrush}"
+          BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+          CornerRadius="10" Padding="16" MaxWidth="320">
+    <StackPanel Spacing="8">
+      <TextBlock Text="下单预览" FontSize="14"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+      <TextBlock x:Name="ProductName" FontSize="20" FontWeight="Bold" />
+      <ItemsControl x:Name="CombinationList">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:SpecCombination">
+            <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,4">
+              <TextBlock Text="{Binding DisplayText}" FontSize="16" />
+              <TextBlock Grid.Column="1" Text="{Binding PriceAdjustment, StringFormat='+¥{0:F2}'}"
+                         FontSize="16" FontWeight="SemiBold" />
+            </Grid>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+  </Border>
+</UserControl>

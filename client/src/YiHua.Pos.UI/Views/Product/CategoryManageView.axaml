@@ -1,0 +1,29 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Product"
+             x:Class="YiHua.Pos.UI.Views.Product.CategoryManageView">
+  <Grid RowDefinitions="Auto,*">
+    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="16,16,16,8">
+      <input:TouchTextBox x:Name="NewCategoryBox" Watermark="新分类名称" MinWidth="200" />
+      <btn:PosButton Content="+ 新建分类" Variant="Primary" />
+    </StackPanel>
+    <ItemsControl Grid.Row="1" x:Name="CategoryList" Margin="16,0,16,16">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="vm:CategoryDto">
+          <Border Background="{DynamicResource SurfaceBrush}"
+                  BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1"
+                  Padding="0,12">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+              <TextBlock Text="{Binding Name}" FontSize="16" VerticalAlignment="Center" />
+              <btn:PosButton Grid.Column="1" Content="重命名" Variant="Secondary" />
+              <btn:PosButton Grid.Column="2" Content="隐藏" Variant="Secondary" />
+              <btn:PosButton Grid.Column="3" Content="删除" Variant="Danger" />
+            </Grid>
+          </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+  </Grid>
+</UserControl>

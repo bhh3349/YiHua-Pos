@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:layout="clr-namespace:YiHua.Pos.UI.Controls.Layout"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Product"
+             x:Class="YiHua.Pos.UI.Views.Product.SoldOutView">
+  <Grid RowDefinitions="Auto,Auto,*">
+    <layout:SectionHeader Grid.Row="0" Title="今日沽清" Margin="16,16,16,8" />
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" Margin="16,0,16,8">
+      <btn:PosButton Content="全部恢复" Variant="Secondary" />
+      <TextBlock Text="沽清可逆，离线生效，服务端同步" FontSize="14"
+                 Foreground="{DynamicResource TextSecondaryBrush}"
+                 VerticalAlignment="Center" />
+    </StackPanel>
+    <ItemsControl Grid.Row="2" x:Name="SoldOutList" Margin="16,0,16,16">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="vm:SoldOutItemDto">
+          <Border Background="{DynamicResource SurfaceBrush}"
+                  BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1"
+                  Padding="0,12">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+              <StackPanel>
+                <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding SoldOutTime, StringFormat='沽清于 {0:HH:mm}'}" FontSize="14"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+              </StackPanel>
+              <TextBlock Grid.Column="1" Text="沽清" FontSize="14"
+                         Foreground="{DynamicResource DangerBrush}"
+                         VerticalAlignment="Center" FontWeight="Bold" />
+              <btn:PosButton Grid.Column="2" Content="恢复在售" Variant="Primary" />
+            </Grid>
+          </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+  </Grid>
+</UserControl>

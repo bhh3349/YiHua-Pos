@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:cards="clr-namespace:YiHua.Pos.UI.Controls.Cards"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Product"
+             x:Class="YiHua.Pos.UI.Views.Product.ProductListView">
+  <Grid RowDefinitions="Auto,Auto,*">
+    <!-- 工具栏：分类 + 新建 -->
+    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="16,16,16,8">
+      <TextBlock Text="分类：" VerticalAlignment="Center" FontSize="16" />
+      <!-- CategoryTab 由代码动态生成 -->
+      <StackPanel x:Name="CategoryTabs" Orientation="Horizontal" Spacing="8" />
+      <btn:PosButton Content="+ 新建商品" Variant="Primary" HorizontalAlignment="Right" />
+    </StackPanel>
+
+    <!-- 搜索 + 状态筛选 -->
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12" Margin="16,0,16,8">
+      <input:TouchTextBox x:Name="SearchBox" Watermark="搜索商品名/别名/拼音" MinWidth="240" />
+      <ComboBox x:Name="StatusFilter" SelectedIndex="0" MinHeight="48" VerticalAlignment="Center">
+        <ComboBoxItem>全部</ComboBoxItem>
+        <ComboBoxItem>在售</ComboBoxItem>
+        <ComboBoxItem>沽清</ComboBoxItem>
+      </ComboBox>
+    </StackPanel>
+
+    <!-- 商品网格 -->
+    <ScrollViewer Grid.Row="2" Margin="16,0,16,16">
+      <ItemsControl x:Name="ProductGrid">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <WrapPanel Orientation="Horizontal" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:ProductDto">
+            <cards:ProductCard ProductName="{Binding Name}"
+                               Price="{Binding Price}"
+                               UnitName="{Binding UnitName}"
+                               Width="160" Margin="0,0,12,12" />
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

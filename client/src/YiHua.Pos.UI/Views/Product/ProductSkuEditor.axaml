@@ -1,0 +1,52 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Product"
+             x:Class="YiHua.Pos.UI.Views.Product.ProductSkuEditor"
+             x:DataType="vm:ProductSkuEditorViewModel">
+  <StackPanel Spacing="12">
+    <TextBlock Text="规格维度（如大小/温度/糖度），维度间可组合" FontSize="14"
+               Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" />
+    <ItemsControl x:Name="DimensionList">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="vm:SpecDimension">
+          <Border Background="{DynamicResource BackgroundBrush}" CornerRadius="6" Padding="12" Margin="0,0,0,8">
+            <StackPanel Spacing="8">
+              <Grid ColumnDefinitions="*,Auto">
+                <input:TouchTextBox Text="{Binding Name}" Watermark="维度名，如：温度" />
+                <btn:IconButton Grid.Column="1" IconText="×" Margin="8,0,0,0" />
+              </Grid>
+              <ItemsControl ItemsSource="{Binding Options}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:SpecOption">
+                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Margin="0,4,0,0">
+                      <input:TouchTextBox Text="{Binding Name}" Watermark="选项名，如：少冰" />
+                      <input:TouchTextBox Text="{Binding PriceAdjustment}" Watermark="+0" Width="80" />
+                      <btn:IconButton Grid.Column="2" IconText="×" />
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <StackPanel Orientation="Horizontal" Spacing="12">
+                <CheckBox Content="维度内可多选（如加料）" IsChecked="{Binding AllowMultiSelect}" FontSize="14" />
+                <CheckBox Content="参与跨维度组合" IsChecked="{Binding IsCombinable}" FontSize="14" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+    <btn:PosButton Content="+ 添加维度" Variant="Secondary" HorizontalAlignment="Left" />
+    <Border CornerRadius="6" Padding="12"
+            IsVisible="{Binding HasWarning}">
+      <Border.Background>
+        <SolidColorBrush Color="{DynamicResource WarningColor}" Opacity="0.12" />
+      </Border.Background>
+      <TextBlock Text="{Binding WarningText}" FontSize="14"
+                 Foreground="{DynamicResource WarningBrush}" TextWrapping="Wrap" />
+    </Border>
+    <TextBlock Text="下单预览：" FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" />
+    <ItemsControl x:Name="PreviewList" />
+  </StackPanel>
+</UserControl>
