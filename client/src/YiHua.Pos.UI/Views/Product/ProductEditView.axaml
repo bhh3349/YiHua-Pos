@@ -1,0 +1,64 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
+             xmlns:layout="clr-namespace:YiHua.Pos.UI.Controls.Layout"
+             x:Class="YiHua.Pos.UI.Views.Product.ProductEditView">
+  <Grid RowDefinitions="Auto,*,Auto">
+    <!-- 分段导航 -->
+    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="16,16,16,8">
+      <Button Content="基础信息" Classes="section-tab" />
+      <Button Content="规格设置" Classes="section-tab" />
+      <Button Content="套餐" Classes="section-tab" />
+    </StackPanel>
+
+    <!-- 表单区（滚动） -->
+    <ScrollViewer Grid.Row="1" Margin="16,0,16,0">
+      <StackPanel Spacing="16" MaxWidth="600">
+        <!-- 基础信息段 -->
+        <layout:SectionHeader Title="基础信息" />
+        <StackPanel Spacing="8">
+          <TextBlock Text="商品名称 *" FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" />
+          <input:TouchTextBox x:Name="NameBox" Watermark="如：兰州牛肉面" />
+          <TextBlock Text="别名（逗号分隔，用于快速搜索）" FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" />
+          <input:TouchTextBox x:Name="AliasBox" Watermark="如：牛肉面,牛肉拉面" />
+          <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+            <StackPanel Grid.Column="0" Spacing="8">
+              <TextBlock Text="分类 *" FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" />
+              <ComboBox x:Name="CategoryBox" MinHeight="48" HorizontalAlignment="Stretch" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Spacing="8">
+              <TextBlock Text="单位 *" FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" />
+              <ComboBox x:Name="UnitBox" MinHeight="48" HorizontalAlignment="Stretch" />
+            </StackPanel>
+          </Grid>
+          <TextBlock Text="价格" FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" />
+          <input:TouchTextBox x:Name="PriceBox" Watermark="0.00" />
+          <CheckBox Content="称重商品" x:Name="WeightedCheck" FontSize="16" />
+          <CheckBox Content="时价（每日确认当日价格）" x:Name="MarketPriceCheck" FontSize="16" />
+        </StackPanel>
+
+        <!-- 规格段占位（由 ProductSkuEditor 填充） -->
+        <layout:SectionHeader Title="规格设置" />
+        <ContentControl x:Name="SkuEditorHost" />
+
+        <!-- 套餐段占位 -->
+        <layout:SectionHeader Title="套餐" />
+        <ContentControl x:Name="BundleEditorHost" />
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- 固定保存栏 -->
+    <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
+            Padding="16,12">
+      <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+        <TextBlock Grid.Column="0" x:Name="ErrorText"
+                   Foreground="{DynamicResource DangerBrush}" FontSize="14"
+                   VerticalAlignment="Center" TextWrapping="Wrap" />
+        <btn:PosButton Grid.Column="1" Content="取消" Variant="Secondary" />
+        <btn:PosButton Grid.Column="2" Content="保存" Variant="Primary" MinWidth="120" />
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>

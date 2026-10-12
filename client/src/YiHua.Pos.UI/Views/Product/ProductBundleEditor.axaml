@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
+             xmlns:disp="clr-namespace:YiHua.Pos.UI.Controls.Display"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Product"
+             x:Class="YiHua.Pos.UI.Views.Product.ProductBundleEditor"
+             x:DataType="vm:ProductBundleEditorViewModel">
+  <StackPanel Spacing="12">
+    <TextBlock Text="从已有商品里选，数量固定为 1，售价按套餐算" FontSize="14"
+               Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" />
+    <ItemsControl x:Name="BundleItems">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="vm:BundleItem">
+          <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Margin="0,4,0,4">
+            <TextBlock Text="{Binding ProductName}" FontSize="16" VerticalAlignment="Center" />
+            <TextBlock Grid.Column="1" Text="{Binding Subtotal, StringFormat='¥{0:F2}'}"
+                       FontSize="16" VerticalAlignment="Center" />
+            <btn:IconButton Grid.Column="2" IconText="×" />
+          </Grid>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+    <btn:PosButton Content="+ 添加商品" Variant="Secondary" HorizontalAlignment="Left" />
+    <disp:KeyValueRow Key="单品总价" Value="{Binding ItemsTotal, StringFormat='¥{0:F2}'}" />
+    <StackPanel Orientation="Horizontal" Spacing="8">
+      <TextBlock Text="套餐售价" FontSize="16" VerticalAlignment="Center" />
+      <input:TouchTextBox Text="{Binding BundlePrice}" Width="120" Watermark="0.00" />
+    </StackPanel>
+    <disp:KeyValueRow Key="优惠" Value="{Binding DiscountAmount, StringFormat='¥{0:F2}'}" IsAmount="True" />
+  </StackPanel>
+</UserControl>
