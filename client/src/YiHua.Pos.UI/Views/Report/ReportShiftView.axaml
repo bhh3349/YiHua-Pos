@@ -1,0 +1,40 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Report"
+             xmlns:svc="clr-namespace:YiHua.Pos.UI.Services.Report"
+             x:Class="YiHua.Pos.UI.Views.Report.ReportShiftView"
+             x:DataType="vm:ReportShiftViewModel">
+  <ScrollViewer Margin="16">
+    <StackPanel Spacing="8" MaxWidth="800">
+      <TextBlock Text="班次账实（只读）" FontSize="20" FontWeight="Bold" Margin="0,0,0,8" />
+      <ItemsControl ItemsSource="{Binding Shifts}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="svc:ShiftReportDto">
+            <Border Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="8" Padding="12,10" Margin="0,0,0,4">
+              <Grid ColumnDefinitions="*,*,*,*,*" ColumnSpacing="8">
+                <StackPanel>
+                  <TextBlock Text="{Binding ShiftName}" FontSize="16" FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding OperatorName}" FontSize="14"
+                             Foreground="{DynamicResource TextSecondaryBrush}" />
+                </StackPanel>
+                <TextBlock Grid.Column="1" Text="{Binding OrderCount, StringFormat='{}{0} 单'}"
+                           FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                <TextBlock Grid.Column="2" Text="{Binding ExpectedAmount, StringFormat='应收¥{0:F2}'}"
+                           FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                <TextBlock Grid.Column="3" Text="{Binding ActualAmount, StringFormat='实点¥{0:F2}'}"
+                           FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                <TextBlock Grid.Column="4" Text="{Binding Difference, StringFormat='差{0:F2}'}"
+                           FontSize="14" FontWeight="SemiBold"
+                           VerticalAlignment="Center" HorizontalAlignment="Right" />
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <TextBlock Text="点击班次查看订单明细（与 T-309 联动）"
+                 FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
