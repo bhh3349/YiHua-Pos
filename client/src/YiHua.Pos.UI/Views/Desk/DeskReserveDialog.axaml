@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Desk"
+             x:Class="YiHua.Pos.UI.Views.Desk.DeskReserveDialog"
+             x:DataType="vm:DeskReserveViewModel">
+  <StackPanel Spacing="16" Margin="24">
+    <TextBlock Text="{Binding Desk.Name, StringFormat='预订 · {0}'}"
+               FontSize="{DynamicResource FontSizeTitle}"
+               FontWeight="Bold" />
+    <StackPanel Spacing="8">
+      <TextBlock Text="客人姓名" Foreground="{DynamicResource TextSecondaryBrush}" />
+      <TextBox Text="{Binding CustomerName}" Watermark="客人姓名" MinHeight="44" />
+    </StackPanel>
+    <StackPanel Spacing="8">
+      <TextBlock Text="电话（可选）" Foreground="{DynamicResource TextSecondaryBrush}" />
+      <TextBox Text="{Binding Phone}" Watermark="电话" MinHeight="44" />
+    </StackPanel>
+    <StackPanel Spacing="8">
+      <TextBlock Text="预订时间" Foreground="{DynamicResource TextSecondaryBrush}" />
+      <CalendarDatePicker SelectedDate="{Binding ReserveTime}" MinHeight="44" />
+    </StackPanel>
+    <StackPanel Spacing="8">
+      <TextBlock Text="人数" Foreground="{DynamicResource TextSecondaryBrush}" />
+      <NumericUpDown Value="{Binding GuestCount}" Minimum="1" Maximum="99" MinHeight="44" />
+    </StackPanel>
+    <TextBlock Text="{Binding ErrorMessage}"
+               IsVisible="{Binding !!ErrorMessage}"
+               Foreground="{DynamicResource DangerBrush}"
+               TextWrapping="Wrap" />
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <Button Content="取消" Click="OnCancel" MinHeight="48" MinWidth="120" />
+      <Button Content="确认预订" Click="OnConfirm" MinHeight="48" MinWidth="120" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>

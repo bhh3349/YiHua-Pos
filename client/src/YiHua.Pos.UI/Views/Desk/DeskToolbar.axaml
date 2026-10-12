@@ -1,0 +1,31 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Desk"
+             x:Class="YiHua.Pos.UI.Views.Desk.DeskToolbar"
+             x:DataType="vm:DeskMapViewModel">
+  <StackPanel Orientation="Horizontal" Spacing="12" Margin="16,12">
+    <!-- 区域筛选 -->
+    <ComboBox ItemsSource="{Binding Areas}"
+              SelectedItem="{Binding SelectedArea}"
+              MinHeight="44" MinWidth="120"
+              PlaceholderText="全部区域" />
+    <!-- 状态筛选 -->
+    <ComboBox x:Name="StatusCombo"
+              MinHeight="44" MinWidth="120"
+              PlaceholderText="全部状态"
+              SelectionChanged="OnStatusChanged">
+      <ComboBoxItem Content="全部" />
+      <ComboBoxItem Content="空闲" Tag="Idle" />
+      <ComboBoxItem Content="占用" Tag="Occupied" />
+      <ComboBoxItem Content="预订" Tag="Reserved" />
+    </ComboBox>
+    <!-- 排序切换 -->
+    <Button x:Name="SortButton"
+            Content="空闲在前"
+            Click="OnToggleSort"
+            MinHeight="44" />
+    <Button Content="+ 开台"
+            Click="OnOpenDesk"
+            MinHeight="44" />
+  </StackPanel>
+</UserControl>

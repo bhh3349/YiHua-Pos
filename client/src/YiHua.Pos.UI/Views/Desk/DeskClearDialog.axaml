@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Desk"
+             x:Class="YiHua.Pos.UI.Views.Desk.DeskClearDialog"
+             x:DataType="vm:DeskClearViewModel">
+  <StackPanel Spacing="16" Margin="24">
+    <TextBlock Text="{Binding Desk.Name, StringFormat='清台 · {0}'}"
+               FontSize="{DynamicResource FontSizeTitle}"
+               FontWeight="Bold" />
+    <TextBlock Text="清台后桌台恢复空闲，请确认已结账"
+               Foreground="{DynamicResource TextSecondaryBrush}"
+               TextWrapping="Wrap" />
+    <TextBlock Text="{Binding ErrorMessage}"
+               IsVisible="{Binding !!ErrorMessage}"
+               Foreground="{DynamicResource DangerBrush}"
+               TextWrapping="Wrap" />
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <Button Content="取消" Click="OnCancel" MinHeight="48" MinWidth="120" />
+      <Button Content="确认清台" Click="OnConfirm" MinHeight="48" MinWidth="120" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>

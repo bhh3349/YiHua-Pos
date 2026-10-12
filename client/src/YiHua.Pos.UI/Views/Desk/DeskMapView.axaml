@@ -1,0 +1,77 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Desk"
+             xmlns:views="clr-namespace:YiHua.Pos.UI.Views.Desk"
+             xmlns:cards="clr-namespace:YiHua.Pos.UI.Controls.Cards"
+             x:Class="YiHua.Pos.UI.Views.Desk.DeskMapView"
+             x:DataType="vm:DeskMapViewModel">
+  <UserControl.Resources>
+    <views:DeskStatusConverter x:Key="DeskStatusConverter" />
+  </UserControl.Resources>
+  <Grid RowDefinitions="Auto,*,Auto">
+    <!-- 工具栏 -->
+    <views:DeskToolbar Grid.Row="0"
+                       x:Name="Toolbar"
+                       DataContext="{Binding}" />
+
+    <!-- 桌台网格 -->
+    <ScrollViewer Grid.Row="1" Margin="16,0">
+      <ItemsControl ItemsSource="{Binding Desks}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <WrapPanel Orientation="Horizontal" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <cards:DeskCard DeskName="{Binding Name}"
+                            GuestCount="{Binding GuestCount}"
+                            CurrentAmount="{Binding CurrentAmount}"
+                            ElapsedText="{Binding ElapsedText}"
+                            Status="{Binding Status, Converter={StaticResource DeskStatusConverter}}"
+                            Margin="8" />
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <!-- 空状态：邀请行动的入口 -->
+    <StackPanel Grid.Row="1"
+                IsVisible="{Binding IsEmpty}"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                Spacing="12">
+      <TextBlock Text="今天还没有开台"
+                 FontSize="{DynamicResource FontSizeTitle}"
+                 Foreground="{DynamicResource TextPrimaryBrush}"
+                 HorizontalAlignment="Center" />
+      <TextBlock Text="点一张空闲桌开始接单"
+                 Foreground="{DynamicResource TextSecondaryBrush}"
+                 HorizontalAlignment="Center" />
+      <Button Content="+ 开台"
+              Click="OnOpenRequested"
+              MinHeight="48" MinWidth="160"
+              HorizontalAlignment="Center" />
+    </StackPanel>
+
+    <!-- 加载 / 错误 -->
+    <TextBlock Grid.Row="1"
+               Text="正在加载桌台…"
+               IsVisible="{Binding IsLoading}"
+               VerticalAlignment="Center" HorizontalAlignment="Center"
+               Foreground="{DynamicResource TextSecondaryBrush}" />
+    <TextBlock Grid.Row="1"
+               Text="{Binding ErrorMessage}"
+               IsVisible="{Binding !!ErrorMessage}"
+               VerticalAlignment="Center" HorizontalAlignment="Center"
+               Foreground="{DynamicResource DangerBrush}"
+               TextWrapping="Wrap" />
+
+    <!-- 状态栏 -->
+    <TextBlock Grid.Row="2"
+               Margin="16,8"
+               FontSize="{DynamicResource FontSizeSmall}"
+               Foreground="{DynamicResource TextSecondaryBrush}"
+               Text="{Binding Desks.Count, StringFormat='共 {0} 张桌'}" />
+  </Grid>
+</UserControl>
