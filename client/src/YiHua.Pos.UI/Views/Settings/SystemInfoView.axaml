@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:disp="clr-namespace:YiHua.Pos.UI.Controls.Display"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Settings"
+             x:Class="YiHua.Pos.UI.Views.Settings.SystemInfoView"
+             x:DataType="vm:SystemInfoViewModel">
+  <ScrollViewer>
+    <StackPanel Spacing="12" MaxWidth="600">
+      <!-- 版本号显眼 -->
+      <TextBlock Text="{Binding AppVersion, StringFormat='逸华收银 v{0}'}"
+                 FontSize="24" FontWeight="Bold" />
+      <disp:KeyValueRow Key="操作系统" Value="{Binding OSDescription}" />
+      <disp:KeyValueRow Key="数据库路径" Value="{Binding DatabasePath}" />
+
+      <TextBlock Text="备份与恢复" FontSize="18" FontWeight="SemiBold" Margin="0,8,0,0" />
+      <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+        <btn:PosButton Grid.Column="0" Content="一键备份" Variant="Primary" MinHeight="52" />
+        <btn:PosButton Grid.Column="1" Content="一键恢复" Variant="Danger" MinHeight="52" />
+      </Grid>
+      <TextBlock Text="{Binding BackupMessage}" FontSize="14" TextWrapping="Wrap" />
+      <TextBlock Text="恢复前会二次确认，并自动备份当前数据"
+                 FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" />
+
+      <TextBlock Text="诊断报告" FontSize="18" FontWeight="SemiBold" Margin="0,8,0,0" />
+      <TextBlock Text="点一下生成，发给客服，30 秒定位问题" FontSize="14"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+      <btn:PosButton Content="生成诊断报告" Variant="Secondary"
+                     HorizontalAlignment="Left" MinWidth="160" MinHeight="48" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

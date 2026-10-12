@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Settings"
+             x:Class="YiHua.Pos.UI.Views.Settings.CashRuleView"
+             x:DataType="vm:CashRuleViewModel">
+  <ScrollViewer>
+    <StackPanel Spacing="12" MaxWidth="600">
+      <TextBlock Text="收银规则" FontSize="20" FontWeight="Bold" />
+      <TextBlock Text="{Binding StateText}" FontSize="14"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+
+      <TextBlock Text="抹零规则" FontSize="16" FontWeight="SemiBold" />
+      <RadioButton Content="不抹零" FontSize="16" IsChecked="True" />
+      <RadioButton Content="抹到角（比如 ¥38.54 → ¥38.50）" FontSize="16" />
+      <RadioButton Content="抹到元（比如 ¥38.50 → ¥38.00）" FontSize="16" />
+
+      <!-- 预览：实时更新 -->
+      <Border Background="{DynamicResource PrimaryLightBrush}" CornerRadius="8" Padding="12">
+        <StackPanel Spacing="4">
+          <TextBlock Text="预览" FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" />
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="输入金额：" FontSize="14" VerticalAlignment="Center" />
+            <input:TouchTextBox Text="{Binding PreviewAmount}" Width="100" />
+          </StackPanel>
+          <TextBlock Text="{Binding RoundingPreview}" FontSize="18" FontWeight="Bold" />
+        </StackPanel>
+      </Border>
+
+      <TextBlock Text="折扣规则" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,0" />
+      <CheckBox Content="允许单品折扣" IsChecked="{Binding AllowItemDiscount}" FontSize="16" />
+      <CheckBox Content="允许整单折扣" IsChecked="{Binding AllowOrderDiscount}" FontSize="16" />
+
+      <btn:PosButton Content="保存收银规则" Variant="Primary"
+                     HorizontalAlignment="Left" MinWidth="160" MinHeight="48" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

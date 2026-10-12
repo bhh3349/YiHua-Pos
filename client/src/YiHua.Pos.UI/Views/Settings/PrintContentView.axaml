@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             x:Class="YiHua.Pos.UI.Views.Settings.PrintContentView">
+  <ScrollViewer>
+    <StackPanel Spacing="12" MaxWidth="800">
+      <TextBlock Text="小票内容设置" FontSize="20" FontWeight="Bold" />
+      <TextBlock Text="选什么就看到什么（复用 T-107 RenderPreview）" FontSize="14"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+
+      <Grid ColumnDefinitions="*,*">
+        <StackPanel Grid.Column="0" Spacing="8" Margin="0,0,16,0">
+          <CheckBox Content="显示商品明细" IsChecked="True" FontSize="16" />
+          <CheckBox Content="显示折扣信息" IsChecked="True" FontSize="16" />
+          <CheckBox Content="显示二维码（加粉）" FontSize="16" />
+          <CheckBox Content="显示店名 Logo" FontSize="16" />
+          <btn:PosButton Content="保存" Variant="Primary"
+                         HorizontalAlignment="Left" MinWidth="120" MinHeight="44" />
+        </StackPanel>
+        <Border Grid.Column="1" Background="{DynamicResource BackgroundBrush}"
+                CornerRadius="8" Padding="16" MinHeight="300">
+          <TextBlock Text="小票预览区&#10;（T-107 RenderPreview 渲染）"
+                     Foreground="{DynamicResource TextSecondaryBrush}"
+                     HorizontalAlignment="Center" VerticalAlignment="Center"
+                     TextAlignment="Center" />
+        </Border>
+      </Grid>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

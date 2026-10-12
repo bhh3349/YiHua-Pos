@@ -1,0 +1,78 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Settings"
+             xmlns:svc="clr-namespace:YiHua.Pos.UI.Services.Settings"
+             x:Class="YiHua.Pos.UI.Views.Settings.PrinterSettingsView"
+             x:DataType="vm:PrinterSettingsViewModel">
+  <ScrollViewer>
+    <StackPanel Spacing="12" MaxWidth="800">
+      <TextBlock Text="打印机管理" FontSize="20" FontWeight="Bold" />
+      <TextBlock Text="{Binding StateText}" FontSize="14"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+
+      <!-- 测试打印：最显眼 -->
+      <btn:PosButton Content="测试打印" Variant="Primary"
+                     MinHeight="56" FontSize="18" HorizontalAlignment="Stretch" />
+      <TextBlock Text="{Binding TestPrintMessage}" FontSize="14" />
+
+      <TextBlock Text="已配置打印机" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,0" />
+      <ItemsControl ItemsSource="{Binding Printers}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="svc:PrinterConfigDto">
+            <Border Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="8" Padding="12" Margin="0,0,0,8">
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <StackPanel Spacing="4">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold" />
+                    <!-- 状态：颜色 + 文字双重表达 -->
+                    <Border CornerRadius="10" Padding="8,2"
+                            Background="{DynamicResource SuccessLightBrush}">
+                      <TextBlock Text="在线" FontSize="12"
+                                 Foreground="{DynamicResource SuccessBrush}" />
+                    </Border>
+                  </StackPanel>
+                  <TextBlock Text="{Binding DevicePath}" FontSize="13"
+                             Foreground="{DynamicResource TextSecondaryBrush}" />
+                  <TextBlock Text="{Binding Station}" FontSize="13"
+                             Foreground="{DynamicResource TextSecondaryBrush}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"
+                            VerticalAlignment="Center">
+                  <btn:PosButton Content="测试" Variant="Secondary" />
+                  <btn:PosButton Content="删除" Variant="Danger" />
+                </StackPanel>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <TextBlock Text="发现的设备" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,0" />
+      <ItemsControl ItemsSource="{Binding Discovered}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="svc:DiscoveredPrinterDto">
+            <Border Background="{DynamicResource BackgroundBrush}" CornerRadius="6"
+                    Padding="10" Margin="0,0,0,4">
+              <Grid ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{Binding DisplayName}" FontSize="14" />
+                  <TextBlock Text="{Binding DevicePath}" FontSize="12"
+                             Foreground="{DynamicResource TextSecondaryBrush}" />
+                </StackPanel>
+                <btn:PosButton Grid.Column="1" Content="添加" Variant="Secondary" />
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <TextBlock Text="{Binding ValidationError}" Foreground="{DynamicResource DangerBrush}"
+                 FontSize="14" />
+      <btn:PosButton Content="保存打印机配置" Variant="Primary"
+                     HorizontalAlignment="Left" MinWidth="160" MinHeight="48" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
