@@ -1,0 +1,15 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             x:Class="YiHua.Pos.UI.Views.Payment.PrintRetryView">
+  <StackPanel Spacing="16" Margin="24" HorizontalAlignment="Center" VerticalAlignment="Center"
+              MaxWidth="360">
+    <TextBlock Text="结账成功，但打印失败" FontSize="20" FontWeight="Bold"
+               HorizontalAlignment="Center" TextWrapping="Wrap" />
+    <TextBlock Text="结账已完成，不会回滚。您可以重试打印，或稍后在订单详情中补打。"
+               FontSize="16" Foreground="{DynamicResource TextSecondaryBrush}"
+               TextWrapping="Wrap" TextAlignment="Center" />
+    <btn:PosButton Content="重试打印" Variant="Primary" HorizontalAlignment="Stretch" MinHeight="56" />
+    <btn:PosButton Content="稍后补打" Variant="Secondary" HorizontalAlignment="Stretch" />
+  </StackPanel>
+</UserControl>

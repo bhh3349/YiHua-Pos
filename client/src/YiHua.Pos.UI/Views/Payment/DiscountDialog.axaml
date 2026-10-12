@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Payment"
+             x:Class="YiHua.Pos.UI.Views.Payment.DiscountDialog"
+             x:DataType="vm:DiscountViewModel">
+  <StackPanel Spacing="12" MinWidth="300">
+    <TextBlock Text="折扣/抹零（仅店长）" FontSize="20" FontWeight="Bold" />
+    <RadioButton Content="按比例（如 9折）" IsChecked="True" FontSize="16" />
+    <input:TouchTextBox Watermark="0.9" />
+    <RadioButton Content="直接减（如减 10 元）" FontSize="16" />
+    <input:TouchTextBox Watermark="金额" />
+    <RadioButton Content="抹零到角" FontSize="16" />
+    <RadioButton Content="抹零到元" FontSize="16" />
+    <input:TouchTextBox Watermark="原因（选填）" />
+    <TextBlock Text="{Binding Validate}" Foreground="{DynamicResource DangerBrush}" FontSize="14" />
+    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+      <btn:PosButton Grid.Column="0" Content="取消" Variant="Secondary" />
+      <btn:PosButton Grid.Column="1" Content="应用" Variant="Primary" />
+    </Grid>
+  </StackPanel>
+</UserControl>

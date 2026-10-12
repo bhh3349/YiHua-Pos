@@ -1,0 +1,10 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="YiHua.Pos.UI.Views.Payment.OnlinePaymentView">
+  <StackPanel Spacing="16" Margin="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+    <TextBlock Text="暂未启用" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" />
+    <TextBlock Text="线上支付接口已预留，当前请使用「自定义收款」记录客人扫码付款。"
+               FontSize="16" Foreground="{DynamicResource TextSecondaryBrush}"
+               TextWrapping="Wrap" TextAlignment="Center" MaxWidth="320" />
+  </StackPanel>
+</UserControl>

@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Payment"
+             x:Class="YiHua.Pos.UI.Views.Payment.CustomQrPaymentView"
+             x:DataType="vm:CustomQrPaymentViewModel">
+  <StackPanel Spacing="12" Margin="16">
+    <TextBlock Text="{Binding PayableAmount, StringFormat='应收 ¥{0:F2}'}"
+               FontSize="24" FontWeight="Bold" />
+    <TextBlock Text="客人扫商家自己的收款码，系统只记录，不找零"
+               FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" />
+    <TextBlock Text="实收金额（=应收）" FontSize="16" Foreground="{DynamicResource TextSecondaryBrush}" />
+    <input:NumberPad x:Name="AmountPad" MaxWidth="400" HorizontalAlignment="Center" />
+    <TextBlock Text="收款方式" FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" />
+    <ComboBox SelectedIndex="0" MinHeight="48">
+      <ComboBoxItem>微信</ComboBoxItem>
+      <ComboBoxItem>支付宝</ComboBoxItem>
+      <ComboBoxItem>银行卡</ComboBoxItem>
+      <ComboBoxItem>其他</ComboBoxItem>
+    </ComboBox>
+    <input:TouchTextBox Watermark="凭据号（选填，客人付款流水号）" />
+    <input:TouchTextBox Watermark="备注（选填）" />
+    <TextBlock Text="{Binding Validate}" Foreground="{DynamicResource DangerBrush}" FontSize="14" />
+  </StackPanel>
+</UserControl>

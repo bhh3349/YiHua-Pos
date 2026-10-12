@@ -1,0 +1,40 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
+             xmlns:disp="clr-namespace:YiHua.Pos.UI.Controls.Display"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Payment"
+             x:Class="YiHua.Pos.UI.Views.Payment.CashPaymentView"
+             x:DataType="vm:CashPaymentViewModel">
+  <StackPanel Spacing="12" Margin="16">
+    <TextBlock Text="{Binding PayableAmount, StringFormat='应收 ¥{0:F2}'}"
+               FontSize="32" FontWeight="Bold" HorizontalAlignment="Center" />
+    <TextBlock Text="实收金额" FontSize="16" Foreground="{DynamicResource TextSecondaryBrush}" />
+    <input:NumberPad x:Name="AmountPad" MaxWidth="400" HorizontalAlignment="Center" />
+    <TextBlock Text="快捷金额" FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" />
+    <ItemsControl ItemsSource="{Binding QuickAmounts}">
+      <ItemsControl.ItemsPanel>
+        <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+      </ItemsControl.ItemsPanel>
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="x:Decimal">
+          <btn:PosButton Content="{Binding StringFormat='¥{0:F0}'}" Variant="Secondary"
+                         Margin="0,0,8,8" MinWidth="80" />
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+    <!-- 找零：大字号 + 强调色，全屏唯一 Primary 级视觉 -->
+    <Border Background="{DynamicResource PrimaryLightBrush}" CornerRadius="10" Padding="16">
+      <StackPanel>
+        <TextBlock Text="找零" FontSize="16" Foreground="{DynamicResource TextSecondaryBrush}"
+                   HorizontalAlignment="Center" />
+        <TextBlock Text="{Binding ChangeAmount, StringFormat='¥{0:F2}'}"
+                   FontSize="40" FontWeight="Bold"
+                   Foreground="{DynamicResource PrimaryBrush}"
+                   HorizontalAlignment="Center" />
+      </StackPanel>
+    </Border>
+    <TextBlock Text="{Binding Validate}" Foreground="{DynamicResource DangerBrush}"
+               FontSize="14" HorizontalAlignment="Center" />
+  </StackPanel>
+</UserControl>
