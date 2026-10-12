@@ -1,0 +1,55 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Login"
+             xmlns:views="clr-namespace:YiHua.Pos.UI.Views.Login"
+             x:Class="YiHua.Pos.UI.Views.Login.LoginFormView"
+             x:DataType="vm:LoginFormViewModel">
+  <StackPanel Spacing="16">
+    <!-- 账号 -->
+    <StackPanel Spacing="8">
+      <TextBlock Text="工号"
+                 FontSize="{DynamicResource FontSizeSmall}"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+      <TextBox Text="{Binding Username}"
+               Watermark="请输入工号"
+               MinHeight="44" />
+    </StackPanel>
+
+    <!-- 密码 -->
+    <StackPanel Spacing="8">
+      <TextBlock Text="密码"
+                 FontSize="{DynamicResource FontSizeSmall}"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBox Grid.Column="0"
+                 x:Name="PasswordBox"
+                 Text="{Binding Password}"
+                 Watermark="请输入密码"
+                 PasswordChar="•"
+                 MinHeight="44" />
+        <Button Grid.Column="1"
+                x:Name="TogglePasswordButton"
+                Content="显示"
+                Click="OnTogglePassword"
+                MinHeight="44"
+                MinWidth="64"
+                Margin="8,0,0,0" />
+      </Grid>
+    </StackPanel>
+
+    <!-- 错误提示 -->
+    <Border Background="{DynamicResource DangerBrush}"
+            Opacity="0.12"
+            CornerRadius="6"
+            Padding="12"
+            IsVisible="{Binding HasError}">
+      <TextBlock Text="{Binding ErrorMessage}"
+                 Foreground="{DynamicResource DangerBrush}"
+                 TextWrapping="Wrap" />
+    </Border>
+
+    <TextBlock Text="正在登录…"
+               IsVisible="{Binding IsLoading}"
+               Foreground="{DynamicResource TextSecondaryBrush}" />
+  </StackPanel>
+</UserControl>

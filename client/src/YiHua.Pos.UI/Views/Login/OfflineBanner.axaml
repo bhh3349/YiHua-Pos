@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="YiHua.Pos.UI.Views.Login.OfflineBanner">
+  <!-- 离线标识条：右上角常驻，琥珀底色，无动画 -->
+  <Border Background="{DynamicResource WarningBrush}"
+          CornerRadius="6"
+          Padding="12,6"
+          HorizontalAlignment="Right"
+          VerticalAlignment="Top"
+          Margin="0,12,12,0">
+    <TextBlock Text="离线模式"
+               FontSize="{DynamicResource FontSizeSmall}"
+               FontWeight="SemiBold"
+               Foreground="{DynamicResource TextOnPrimaryBrush}" />
+  </Border>
+</UserControl>

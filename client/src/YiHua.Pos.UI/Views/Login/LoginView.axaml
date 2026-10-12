@@ -1,0 +1,55 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Login"
+             xmlns:views="clr-namespace:YiHua.Pos.UI.Views.Login"
+             x:Class="YiHua.Pos.UI.Views.Login.LoginView"
+             x:DataType="vm:LoginViewModel">
+  <Grid RowDefinitions="Auto,*,Auto">
+    <!-- 离线标识 -->
+    <views:OfflineBanner Grid.Row="0"
+                         IsVisible="{Binding IsOfflineMode}" />
+
+    <!-- 分段控件：门店 / 账号 -->
+    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="24,16,24,0">
+      <Button Content="门店"
+              Click="OnSelectStoreStep"
+              MinHeight="44" MinWidth="88" />
+      <Button Content="账号"
+              Click="OnSelectLoginStep"
+              MinHeight="44" MinWidth="88" />
+    </StackPanel>
+
+    <!-- 内容区 -->
+    <ContentControl Grid.Row="1" Margin="0,8">
+      <ContentControl.Content>
+        <Panel>
+          <Panel IsVisible="{Binding IsStoreStep}">
+            <views:StoreSelectView DataContext="{Binding StoreSelect}" />
+          </Panel>
+          <Panel IsVisible="{Binding IsLoginStep}">
+            <views:LoginFormView DataContext="{Binding LoginForm}" />
+          </Panel>
+        </Panel>
+      </ContentControl.Content>
+    </ContentControl>
+
+    <!-- 底部操作 -->
+    <StackPanel Grid.Row="2" Margin="24,0,24,24" Spacing="12">
+      <Button Content="下一步"
+              IsVisible="{Binding IsStoreStep}"
+              Click="OnNext"
+              MinHeight="48"
+              HorizontalAlignment="Stretch"
+              HorizontalContentAlignment="Center" />
+      <StackPanel Orientation="Horizontal" Spacing="12"
+                  IsVisible="{Binding IsLoginStep}">
+        <Button Content="返回"
+                Click="OnBack"
+                MinHeight="48" MinWidth="120" />
+        <Button Content="登录"
+                Click="OnLogin"
+                MinHeight="48" MinWidth="120" />
+      </StackPanel>
+    </StackPanel>
+  </Grid>
+</UserControl>

@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Login"
+             x:Class="YiHua.Pos.UI.Views.Login.StoreSelectView"
+             x:DataType="vm:StoreSelectViewModel">
+  <StackPanel Spacing="16" Margin="24">
+    <TextBlock Text="选择门店"
+               FontSize="{DynamicResource FontSizeTitle}"
+               FontWeight="Bold"
+               Foreground="{DynamicResource TextPrimaryBrush}" />
+
+    <!-- 门店列表 -->
+    <ListBox ItemsSource="{Binding Stores}"
+             SelectedItem="{Binding SelectedStore}"
+             MinHeight="200"
+             MaxHeight="320">
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <StackPanel Spacing="4" Margin="0,8">
+            <TextBlock Text="{Binding StoreName}"
+                       FontSize="{DynamicResource FontSizeBody}"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimaryBrush}" />
+            <TextBlock Text="{Binding Address}"
+                       FontSize="{DynamicResource FontSizeSmall}"
+                       Foreground="{DynamicResource TextSecondaryBrush}" />
+          </StackPanel>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+
+    <!-- 手动输入门店编号（网络不通时） -->
+    <StackPanel Spacing="8">
+      <TextBlock Text="或手动输入门店编号"
+                 FontSize="{DynamicResource FontSizeSmall}"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+      <TextBox Text="{Binding ManualStoreCode}"
+               Watermark="门店编号"
+               MinHeight="44" />
+    </StackPanel>
+
+    <!-- 状态 -->
+    <TextBlock Text="正在加载门店…"
+               IsVisible="{Binding IsLoading}"
+               Foreground="{DynamicResource TextSecondaryBrush}" />
+    <TextBlock Text="暂无门店，请手动输入门店编号"
+               IsVisible="{Binding IsEmpty}"
+               Foreground="{DynamicResource TextSecondaryBrush}" />
+    <TextBlock Text="{Binding ErrorMessage}"
+               IsVisible="{Binding HasError}"
+               Foreground="{DynamicResource DangerBrush}"
+               TextWrapping="Wrap" />
+  </StackPanel>
+</UserControl>
