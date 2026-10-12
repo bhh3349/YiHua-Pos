@@ -139,6 +139,16 @@ jobs:
   # ============================================================
   # 3. 越界检查：确保没有改动冻结文件
   # ============================================================
+  guardrails:
+    name: 回归护栏
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 运行护栏检查
+        run: |
+          python3 tools/guardrails.py
+
   scope-check:
     name: 越界检查
     runs-on: ubuntu-latest

@@ -128,7 +128,9 @@ public class AmountDisplay : UserControl
             ? string.Empty
             : (abs - Math.Truncate(abs)).ToString("F" + decimalPlaces).Substring(2);
         // 处理四舍五入进位（如 9.999 → 10.00）
-        var rounded = Math.Round(abs, decimalPlaces);
+        // 必须显式指定 AwayFromZero：.NET 默认是 ToEven（银行家舍入），
+        // 那样 9.995 会变成 9.99，收银金额差一分钱。
+        var rounded = Math.Round(abs, decimalPlaces, MidpointRounding.AwayFromZero);
         integer = sign + Math.Truncate(rounded).ToString("N0");
         fraction = decimalPlaces == 0
             ? string.Empty
