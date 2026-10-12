@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.GroupBuy"
+             x:Class="YiHua.Pos.UI.Views.GroupBuy.CouponResultView"
+             x:DataType="vm:CouponVerifyViewModel">
+  <!-- 券面信息大字显示：面值、抵扣额、有效期一眼看清 -->
+  <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="8" Padding="20"
+          MaxWidth="520" Margin="24">
+    <StackPanel Spacing="12">
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <TextBlock Text="{Binding Coupon.PlatformName}"
+                   FontSize="{DynamicResource FontSizeTitle}" FontWeight="Bold" />
+        <TextBlock Text="{Binding Coupon.CouponName}"
+                   VerticalAlignment="Center"
+                   Foreground="{DynamicResource TextSecondaryBrush}" />
+      </StackPanel>
+      <TextBlock Text="{Binding Coupon.DiscountAmount, StringFormat='抵扣 ¥{0:F2}'}"
+                 FontSize="40" FontWeight="Bold"
+                 Foreground="{DynamicResource PrimaryBrush}" />
+      <TextBlock Text="{Binding Coupon.FaceValue, StringFormat='面值 ¥{0:F2}'}"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+      <TextBlock Text="{Binding Coupon.ValidFrom, StringFormat='有效期自 {0}'}"
+                 FontSize="{DynamicResource FontSizeSmall}"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+      <TextBlock Text="{Binding Coupon.ValidTo, StringFormat='有效期至 {0}'}"
+                 FontSize="{DynamicResource FontSizeSmall}"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+      <TextBlock Text="{Binding Coupon.CouponCode, StringFormat='券码 {0}'}"
+                 FontSize="{DynamicResource FontSizeSmall}"
+                 Foreground="{DynamicResource TextDisabledBrush}" />
+    </StackPanel>
+  </Border>
+</UserControl>

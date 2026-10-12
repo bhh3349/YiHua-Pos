@@ -1,0 +1,75 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.GroupBuy"
+             x:Class="YiHua.Pos.UI.Views.GroupBuy.CouponVerifyView"
+             x:DataType="vm:CouponVerifyViewModel">
+  <StackPanel Spacing="16" Margin="24" MaxWidth="520">
+    <TextBlock Text="团购验券" FontSize="{DynamicResource FontSizeTitle}" FontWeight="Bold" />
+
+    <!-- 扫码框：autofocus，扫码枪扫完回车即触发 -->
+    <StackPanel Spacing="8">
+      <TextBlock Text="请扫码（客人出示美团/饿了么 App 二维码）"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+      <TextBox x:Name="ScanBox" Text="{Binding InputCode}"
+               Watermark="扫码枪扫这里…"
+               MinHeight="56" FontSize="{DynamicResource FontSizeLarge}" />
+      <TextBlock Text="二维码加载不出来？让客人念券码，手工输入后按回车"
+                 FontSize="{DynamicResource FontSizeSmall}"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+    </StackPanel>
+
+    <!-- loading -->
+    <TextBlock Text="验券中…" IsVisible="{Binding IsLoading}"
+               FontSize="{DynamicResource FontSizeLarge}" />
+
+    <!-- 错误：说人话 -->
+    <Border IsVisible="{Binding IsError}"
+            Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource DangerBrush}" BorderThickness="1"
+            CornerRadius="6" Padding="12">
+      <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" />
+    </Border>
+
+    <!-- 断网：说清该做什么，不卡收银 -->
+    <Border IsVisible="{Binding IsOffline}"
+            Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1"
+            CornerRadius="6" Padding="12">
+      <StackPanel Spacing="8">
+        <TextBlock Text="{Binding OfflineHint}" TextWrapping="Wrap" FontWeight="Bold" />
+        <TextBlock Text="券信息（平台 + 券码）已记录，月底可对账。"
+                   FontSize="{DynamicResource FontSizeSmall}"
+                   Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" />
+      </StackPanel>
+    </Border>
+
+    <!-- 券面大字 -->
+    <Border IsVisible="{Binding IsSuccess}"
+            Background="{DynamicResource SurfaceBrush}"
+            CornerRadius="8" Padding="16">
+      <StackPanel Spacing="8">
+        <TextBlock Text="{Binding CouponDisplay}" TextWrapping="Wrap"
+                   FontSize="{DynamicResource FontSizeLarge}" FontWeight="Bold" />
+        <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+          <TextBlock Grid.Column="0" Text="抵扣前应收" Foreground="{DynamicResource TextSecondaryBrush}" />
+          <TextBlock Grid.Column="1" Text="{Binding PayableBefore, StringFormat='¥{0:F2}'}" />
+        </Grid>
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Grid.Column="0" Text="抵扣后应收" FontWeight="Bold" />
+          <TextBlock Grid.Column="1" Text="{Binding PayableAfter, StringFormat='¥{0:F2}'}"
+                     FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"
+                     FontSize="{DynamicResource FontSizeLarge}" />
+        </Grid>
+      </StackPanel>
+    </Border>
+
+    <StackPanel Orientation="Horizontal" Spacing="12" IsVisible="{Binding IsSuccess}">
+      <Button Content="重新扫码" Click="OnReset" MinHeight="48" MinWidth="120" />
+      <Button Content="确认核销" Click="OnRedeem"
+              IsEnabled="{Binding !Redeeming}"
+              MinHeight="48" MinWidth="160" />
+    </StackPanel>
+    <TextBlock Text="已核销" IsVisible="{Binding Redeemed}"
+               Foreground="{DynamicResource SuccessBrush}" FontWeight="Bold" />
+  </StackPanel>
+</UserControl>

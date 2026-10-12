@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:YiHua.Pos.UI.Views.GroupBuy"
+             x:Class="YiHua.Pos.UI.Views.GroupBuy.PlatformListView">
+  <!-- 平台管理（只读）：显示已接入平台与启用状态 -->
+  <StackPanel Spacing="12" Margin="24" MaxWidth="520">
+    <TextBlock Text="团购平台" FontSize="{DynamicResource FontSizeTitle}" FontWeight="Bold" />
+    <ListBox x:Name="PlatformList" MinHeight="200">
+      <ListBox.ItemTemplate>
+        <DataTemplate x:DataType="local:PlatformItem">
+          <Border Padding="12" CornerRadius="6" Background="{DynamicResource SurfaceBrush}">
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Grid.Column="0" Spacing="4">
+                <TextBlock Text="{Binding Name}" FontWeight="Bold" />
+                <TextBlock Text="{Binding StatusText}"
+                           FontSize="{DynamicResource FontSizeSmall}"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+              </StackPanel>
+              <!-- 未接入：明确显示「未接入」并置灰（文字标签，不只靠颜色） -->
+              <TextBlock Grid.Column="1" Text="{Binding BadgeText}"
+                         VerticalAlignment="Center" FontWeight="Bold"
+                         Foreground="{DynamicResource TextSecondaryBrush}" />
+            </Grid>
+          </Border>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+    <TextBlock Text="平台配置（密钥、绑定门店）请在服务端管理后台修改。"
+               FontSize="{DynamicResource FontSizeSmall}"
+               Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" />
+  </StackPanel>
+</UserControl>

@@ -1,0 +1,53 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.GroupBuy"
+             x:Class="YiHua.Pos.UI.Views.GroupBuy.GroupBuyRecordView"
+             x:DataType="vm:GroupBuyRecordViewModel">
+  <StackPanel Spacing="12" Margin="24" MaxWidth="640">
+    <TextBlock Text="团购核销流水" FontSize="{DynamicResource FontSizeTitle}" FontWeight="Bold" />
+    <StackPanel Orientation="Horizontal" Spacing="8">
+      <TextBox Text="{Binding Query}" Watermark="按订单/券码搜索" MinWidth="240" MinHeight="44" />
+      <ComboBox x:Name="PlatformCombo" MinHeight="44" MinWidth="140"
+                SelectionChanged="OnPlatformChanged">
+        <ComboBoxItem Content="全部平台" IsSelected="True" />
+        <ComboBoxItem Content="美团" />
+        <ComboBoxItem Content="饿了么" />
+        <ComboBoxItem Content="抖音" />
+      </ComboBox>
+    </StackPanel>
+    <ListBox ItemsSource="{Binding Records}" MinHeight="300">
+      <ListBox.ItemTemplate>
+        <DataTemplate x:DataType="vm:RedeemRecordItem">
+          <Border Padding="12" CornerRadius="6" Background="{DynamicResource SurfaceBrush}">
+            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+              <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding OrderNo}" FontWeight="Bold" />
+              <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="{Binding PlatformName}"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                <!-- 不可用/已撤销用灰色 + 标签，不只靠颜色 -->
+                <TextBlock Text="已撤销" IsVisible="{Binding Reversed}"
+                           Foreground="{DynamicResource TextDisabledBrush}" FontWeight="Bold" />
+              </StackPanel>
+              <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding CouponCode}"
+                         FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextDisabledBrush}" />
+              <TextBlock Grid.Row="1" Grid.Column="1"
+                         Text="{Binding DiscountAmount, StringFormat='¥{0:F2}'}" />
+              <TextBlock Grid.Row="2" Grid.Column="0"
+                         Text="{Binding CreatedAt, StringFormat='{}{0:MM-dd HH:mm}'}"
+                         FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextSecondaryBrush}" />
+              <TextBlock Grid.Row="2" Grid.Column="1"
+                         Text="{Binding OperatorName}"
+                         FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextSecondaryBrush}" />
+            </Grid>
+          </Border>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+    <TextBlock Text="{Binding Error}"
+               IsVisible="{Binding !!Error}"
+               Foreground="{DynamicResource DangerBrush}" />
+  </StackPanel>
+</UserControl>
