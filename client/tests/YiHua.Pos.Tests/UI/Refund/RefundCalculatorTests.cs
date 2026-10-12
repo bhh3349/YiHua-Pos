@@ -96,7 +96,7 @@ public class RefundCalculatorTests
     {
         var (ok, reason) = RefundCalculator.ValidateVoid(MakeOrder(status: OrderStatus.Settled));
         Assert.False(ok);
-        Assert.Contains("只能退单", reason);
+        Assert.Contains("退单", reason);   // 实现文案是「已结账订单不能冲正，请走退单流程」
     }
 
     [Fact]

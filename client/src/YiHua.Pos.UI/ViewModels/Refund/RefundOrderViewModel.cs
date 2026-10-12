@@ -102,7 +102,21 @@ public class RefundOrderViewModel : ViewModelBase
         string reasonText,
         CancellationToken ct = default)
     {
-        decimal total = Math.Round(selected.Sum(s => s.RefundAmount), 2, MidpointRounding.AwayFromZero);
+        if (selected.Count == 0)
+            return (false, "请先选择要退的菜品");
+
+        // 每一行都要单独校验。只校验订单总额是不够的：
+        // 否则可以对 ¥18 的菜退 ¥500，只要订单总额够。
+        decimal total = 0m;
+        foreach (var s in selected)
+        {
+            var (rowOk, rowReason) = RefundCalculator.ValidateItemRefund(s.Item, s.RefundAmount);
+            if (!rowOk)
+                return (false, rowReason);
+
+            total = Math.Round(total + s.RefundAmount, 2, MidpointRounding.AwayFromZero);
+        }
+
         var (ok, reason) = RefundCalculator.ValidateOrderRefund(Order, total);
         if (!ok)
             return (false, reason);

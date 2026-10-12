@@ -29,7 +29,7 @@ public class VoidFlowTests
         var vm = new RefundOrderViewModel(order, "张三", "收银员", 10L);
         var (ok, error, _) = vm.VoidOrder("想作废");
         Assert.False(ok);
-        Assert.Contains("只能退单", error);
+        Assert.Contains("退单", error);   // 实现文案是「已结账订单不能冲正，请走退单流程」
         Assert.Equal(OrderStatus.Settled, order.Status); // 状态不变
     }
 
