@@ -1,0 +1,172 @@
+# 任务卡 T-105 · 电子秤串口协议（首批 3 品牌）
+
+> **收件人：MUSE-2** · 项目：逸华餐饮收银 · 工作区：`（略）
+
+---
+
+## 0. 项目背景
+
+**逸华餐饮收银** —— 自有品牌餐饮 POS 系统。
+
+| 项 | 内容 |
+|---|---|
+| 技术栈 | .NET 8 / .NET 6 双目标 + Avalonia UI 11 + Prism |
+| 目标平台 | **Linux 触屏一体机（主力）** + Windows 台式机 |
+| 硬件约束 | 2~4 核低功耗 CPU、4GB 内存、机械硬盘 |
+
+**关键认知**：餐饮收银的电子秤走 **串口自定义协议**（不是标准协议），
+每个品牌一套。但协议是**纯数据解析**，与操作系统无关，所以 C# 实现可以跨平台复用。
+
+---
+
+## 1. 铁律（违反会导致多 AI 协作撞车）
+
+```
+✅ 你只能修改这个目录下的文件：
+      src/YiHua.Pos.Hardware/Scales/**
+      tests/YiHua.Pos.Tests/Hardware/Scales/**
+
+❌ 禁止修改以下任何文件（已冻结）：
+      YiHua.Pos.sln / Directory.Build.props
+      src/YiHua.Pos.Domain/**
+      src/YiHua.Pos.Hardware/Abstractions/**   ← 接口在这里，只能读
+      src/YiHua.Pos.Hardware/YiHua.Pos.Hardware.csproj
+      其他任何模块
+
+❌ 禁止复制行业通行的代码（可以看协议细节，代码自己写）
+❌ 禁止引入任何第三方串口库
+```
+
+**需要改接口时**：不要自己改 `Abstractions/`，写「接口变更请求」反馈给 Lead。
+
+---
+
+## 2. 任务目标
+
+实现 **3 个品牌的电子秤串口协议**，并做一个自动探测管理器。
+
+首批品牌（按市场占有率选）：
+
+| 品牌 | 协议类型 | 说明 |
+|---|---|---|
+| **大华** | ACS 系列（OS2X / PS1X） | 餐饮最常用 |
+| **托利多** | ArivaS / FreshStar | 高端餐饮 |
+| **凯士** | Cas216 | 中端 |
+
+---
+
+## 3. 已冻结的接口（在 `Hardware/Abstractions/HardwareAbstractions.cs`）
+
+```csharp
+public interface IScaleProtocol
+{
+    string ProtocolName { get; }        // 如 "DaHua.OS2X"
+    int BaudRate { get; }
+    int DataBits { get; }
+    string Parity { get; }
+    string StopBits { get; }
+
+    bool TryParse(ReadOnlySpan<byte> frame, out decimal weight);  // 解析一帧，返回 kg
+    byte[] BuildZeroCommand();          // 置零指令
+    byte[] BuildTareCommand();          // 去皮指令
+}
+```
+
+---
+
+## 4. 交付物
+
+```
+src/YiHua.Pos.Hardware/Scales/
+├── Protocols/
+│   ├── DaHuaOs2xProtocol.cs
+│   ├── DaHuaPs1xProtocol.cs
+│   ├── ToledoArivaProtocol.cs
+│   └── KssCas216Protocol.cs
+├── ScaleProtocolRegistry.cs      协议注册表
+├── ScaleManager.cs               连接管理 + 自动探测
+└── SerialScale.cs                IScale 的串口实现
+
+tests/YiHua.Pos.Tests/Hardware/Scales/
+├── DaHuaProtocolTests.cs
+├── ToledoProtocolTests.cs
+└── KssProtocolTests.cs
+```
+
+---
+
+## 5. 技术要求
+
+| 项 | 要求 |
+|---|---|
+| 目标框架 | `net8.0` + `net6.0` 双目标必须编译通过 |
+| 串口 | 用 `System.IO.Ports.SerialPort`（已在 csproj 里引用） |
+| 解析 | **纯函数**：`TryParse(ReadOnlySpan<byte>, out decimal)`，便于单测 |
+| 容错 | 半帧/粘包/校验错要能正确丢弃，不能崩 |
+| 自动探测 | 遍历串口 × 波特率组合，发指令看有没有合法回包 |
+
+### 实现要点
+
+1. **协议解析与串口 IO 分离** —— 解析写成纯函数，才能写单元测试
+2. **帧同步** —— 串口数据流要按帧头/帧尾切分，处理粘包
+3. **稳定性判断** —— 电子秤有「稳定/晃动」标志位，要暴露出来
+4. **单位换算** —— 协议通常返回克，统一转成 kg
+
+---
+
+## 6. 验收标准
+
+```
+□ dotnet build 通过（net8.0 + net6.0）
+□ dotnet test 全通过
+□ 每个协议至少 5 个测试用例：
+    - 正常帧解析
+    - 半帧丢弃
+    - 粘包处理
+    - 校验和错误
+    - 单位换算正确
+□ ScaleManager 能枚举串口并尝试探测
+□ 没有第三方依赖
+```
+
+---
+
+## 7. 提交要求
+
+```
+1. 改动文件清单
+2. dotnet build + dotnet test 输出
+3. 每个协议的「帧格式说明」（你从行业通行做法里读出来的）
+```
+
+---
+
+## 8. 参考
+
+**协议规范已整理成独立文档**：
+
+```
+client/docs/协议规范-电子秤.md
+```
+
+里面包含 3 个品牌的完整协议事实：
+
+| 品牌 | 帧长 | 帧头/帧尾 | 指令 |
+|---|---|---|---|
+| 大华 OS2X | 15 字节 | `01 02` / `03 04` | 初始化/取重/置零/去皮 |
+| 托利多 ArivaS | 31 字节 | `02` / `03` | 取重/置零/去皮 |
+| 凯士 CAS216 | 12 字节 | 无 | 被动接收 |
+
+文档里还有：串口默认参数、帧结构逐字节说明、解析算法步骤、单位换算规则。
+
+**你只需要按这份文档实现，不需要其他参考资料。**
+
+---
+
+
+## 9. 完成后
+
+反馈给 Lead，通过后进入 Wave 2：
+```
+你的下一个任务：T-105 续（其余品牌）+ T-106 钱箱/客显
+```

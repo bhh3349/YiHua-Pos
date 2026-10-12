@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- 双目标：net8.0 = Linux 镜像 + Win10+；net6.0 = Windows 7 保底 -->
+    <TargetFrameworks>net8.0;net6.0</TargetFrameworks>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>YiHua.Pos.App</RootNamespace>
+    <AssemblyName>YiHua.Pos</AssemblyName>
+
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" Condition="'$(Configuration)' == 'Debug'" />
+    <PackageReference Include="Prism.Avalonia" Version="$(PrismVersion)" />
+    <PackageReference Include="Prism.DryIoc.Avalonia" Version="$(PrismVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\YiHua.Pos.UI\YiHua.Pos.UI.csproj" />
+    <ProjectReference Include="..\YiHua.Pos.Domain\YiHua.Pos.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

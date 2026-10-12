@@ -1,0 +1,52 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:YiHua.Pos.App.ViewModels"
+        x:Class="YiHua.Pos.App.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="逸华餐饮收银"
+        Width="1024" Height="768"
+        MinWidth="1024" MinHeight="768"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BackgroundBrush}">
+
+  <Grid RowDefinitions="Auto,*">
+    <!-- 顶栏 -->
+    <Border Grid.Row="0" Background="{StaticResource PrimaryBrush}" Padding="16,12">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <TextBlock Grid.Column="0"
+                   Text="{Binding Title}"
+                   FontSize="{StaticResource FontSizeSubtitle}"
+                   FontWeight="SemiBold"
+                   Foreground="{StaticResource TextOnPrimaryBrush}"
+                   VerticalAlignment="Center" />
+        <TextBlock Grid.Column="2"
+                   Text="{Binding BuildInfo}"
+                   FontSize="{StaticResource FontSizeSmall}"
+                   Foreground="{StaticResource TextOnPrimaryBrush}"
+                   Opacity="0.85"
+                   VerticalAlignment="Center" />
+      </Grid>
+    </Border>
+
+    <!-- 内容区 -->
+    <Border Grid.Row="1" Margin="16" CornerRadius="{StaticResource RadiusMd}"
+            Background="{StaticResource SurfaceBrush}">
+      <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="16">
+        <TextBlock Text="逸华餐饮收银"
+                   FontSize="{StaticResource FontSizeDisplay}"
+                   FontWeight="Bold"
+                   Foreground="{StaticResource TextPrimaryBrush}"
+                   HorizontalAlignment="Center" />
+        <TextBlock Text="项目骨架已就绪 —— 下一步开始业务模块开发"
+                   FontSize="{StaticResource FontSizeBody}"
+                   Foreground="{StaticResource TextSecondaryBrush}"
+                   HorizontalAlignment="Center" />
+        <TextBlock Text="{Binding RuntimeInfo}"
+                   FontSize="{StaticResource FontSizeSmall}"
+                   Foreground="{StaticResource TextDisabledBrush}"
+                   HorizontalAlignment="Center" />
+      </StackPanel>
+    </Border>
+  </Grid>
+
+</Window>

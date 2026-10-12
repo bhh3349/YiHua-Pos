@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net6.0</TargetFrameworks>
+    <RootNamespace>YiHua.Pos.Hardware</RootNamespace>
+    <AssemblyName>YiHua.Pos.Hardware</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\YiHua.Pos.Domain\YiHua.Pos.Domain.csproj" />
+  </ItemGroup>
+
+  <!--
+    平台相关的包按目标框架条件引入：
+      - Windows: System.IO.Ports 用于串口
+      - Linux:   System.IO.Ports 同样可用（.NET 在 Linux 上支持串口）
+    后续如需 libusb 等，在这里加条件 PackageReference
+  -->
+  <ItemGroup>
+    <PackageReference Include="System.IO.Ports" Version="8.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="System.IO.Ports" Version="6.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net6.0</TargetFrameworks>
+    <RootNamespace>YiHua.Pos.Domain</RootNamespace>
+    <AssemblyName>YiHua.Pos.Domain</AssemblyName>
+  </PropertyGroup>
+
+  <!-- 领域层不依赖任何第三方库，纯 POCO -->
+
+</Project>

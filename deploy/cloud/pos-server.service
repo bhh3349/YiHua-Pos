@@ -1,0 +1,52 @@
+# 自有餐饮 POS 服务端 —— systemd 单元（裸机 / 非 Docker 部署）
+#
+#   sudo cp pos-server.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now pos-server
+#   sudo journalctl -u pos-server -f
+#
+# 前提：
+#   1. /opt/pos-server/ 下放 app/ run.py requirements.txt，并已 pip install
+#   2. MySQL 已建库建用户
+
+[Unit]
+Description=YueDian POS Server
+After=network-online.target mysql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pos
+Group=pos
+WorkingDirectory=/opt/pos-server
+
+Environment="DSH_POS_DATA=/var/lib/pos-server"
+Environment="DSH_POS_DB=mysql+pymysql://pos:CHANGE_ME@127.0.0.1:3306/pos?charset=utf8mb4"
+Environment="DSH_POS_JWT_SECRET=CHANGE_ME_TO_LONG_RANDOM"
+Environment="DSH_POS_OSS_BASE=https://pos.yourdomain.com/oss/"
+
+# gunicorn + uvicorn worker：多进程，适合生产
+ExecStart=/opt/pos-server/.venv/bin/gunicorn \
+    -k uvicorn.workers.UvicornWorker \
+    -w 4 \
+    -b 127.0.0.1:8000 \
+    --access-logfile - \
+    --error-logfile - \
+    --timeout 60 \
+    app.main:app
+
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+LimitNOFILE=65535
+
+# 基础加固
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/pos-server
+
+[Install]
+WantedBy=multi-user.target

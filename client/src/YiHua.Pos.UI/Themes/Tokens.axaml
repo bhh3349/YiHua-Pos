@@ -1,0 +1,86 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!--
+    ============================================================
+     设计 Token —— 【冻结文件】由 Lead 维护
+     所有界面必须使用这里的语义化 Token，禁止硬编码颜色/字号
+    ============================================================
+  -->
+
+  <!-- ========== 品牌色 ========== -->
+  <Color x:Key="PrimaryColor">#2F6BFF</Color>
+  <Color x:Key="PrimaryHoverColor">#4A7EFF</Color>
+  <Color x:Key="PrimaryPressedColor">#1F55E0</Color>
+  <Color x:Key="PrimaryLightColor">#E8F0FF</Color>
+
+  <!-- ========== 功能色 ========== -->
+  <Color x:Key="SuccessColor">#14A44D</Color>
+  <Color x:Key="WarningColor">#E8A33D</Color>
+  <Color x:Key="DangerColor">#DC3545</Color>
+  <Color x:Key="InfoColor">#3D8BFD</Color>
+
+  <!-- ========== 中性色 ========== -->
+  <Color x:Key="TextPrimaryColor">#1A1D24</Color>
+  <Color x:Key="TextSecondaryColor">#5A6172</Color>
+  <Color x:Key="TextDisabledColor">#9AA1B1</Color>
+  <Color x:Key="BorderColor">#E3E6EC</Color>
+  <Color x:Key="DividerColor">#EFF1F5</Color>
+  <Color x:Key="BackgroundColor">#F5F7FA</Color>
+  <Color x:Key="SurfaceColor">#FFFFFF</Color>
+  <Color x:Key="OverlayColor">#66000000</Color>
+
+  <!-- ========== 桌台状态色 ========== -->
+  <Color x:Key="DeskIdleColor">#F0F2F5</Color>
+  <Color x:Key="DeskOccupiedColor">#2F6BFF</Color>
+  <Color x:Key="DeskReservedColor">#E8A33D</Color>
+
+  <!-- ========== 画刷 ========== -->
+  <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}" />
+  <SolidColorBrush x:Key="PrimaryHoverBrush" Color="{StaticResource PrimaryHoverColor}" />
+  <SolidColorBrush x:Key="PrimaryPressedBrush" Color="{StaticResource PrimaryPressedColor}" />
+  <SolidColorBrush x:Key="PrimaryLightBrush" Color="{StaticResource PrimaryLightColor}" />
+
+  <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}" />
+  <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}" />
+  <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource DangerColor}" />
+
+  <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}" />
+  <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}" />
+  <SolidColorBrush x:Key="TextDisabledBrush" Color="{StaticResource TextDisabledColor}" />
+  <SolidColorBrush x:Key="TextOnPrimaryBrush" Color="#FFFFFF" />
+
+  <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}" />
+  <SolidColorBrush x:Key="DividerBrush" Color="{StaticResource DividerColor}" />
+  <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}" />
+  <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}" />
+
+  <SolidColorBrush x:Key="DeskIdleBrush" Color="{StaticResource DeskIdleColor}" />
+  <SolidColorBrush x:Key="DeskOccupiedBrush" Color="{StaticResource DeskOccupiedColor}" />
+  <SolidColorBrush x:Key="DeskReservedBrush" Color="{StaticResource DeskReservedColor}" />
+
+  <!-- ========== 字号（收银界面正文不小于 16，触摸屏要看得清） ========== -->
+  <x:Double x:Key="FontSizeCaption">12</x:Double>
+  <x:Double x:Key="FontSizeSmall">14</x:Double>
+  <x:Double x:Key="FontSizeBody">16</x:Double>
+  <x:Double x:Key="FontSizeSubtitle">20</x:Double>
+  <x:Double x:Key="FontSizeTitle">24</x:Double>
+  <x:Double x:Key="FontSizeDisplay">32</x:Double>
+  <x:Double x:Key="FontSizeAmount">40</x:Double>
+
+  <!-- ========== 间距 ========== -->
+  <Thickness x:Key="SpacingXs">4</Thickness>
+  <Thickness x:Key="SpacingSm">8</Thickness>
+  <Thickness x:Key="SpacingMd">16</Thickness>
+  <Thickness x:Key="SpacingLg">24</Thickness>
+  <Thickness x:Key="SpacingXl">32</Thickness>
+
+  <!-- ========== 圆角 ========== -->
+  <CornerRadius x:Key="RadiusSm">6</CornerRadius>
+  <CornerRadius x:Key="RadiusMd">8</CornerRadius>
+  <CornerRadius x:Key="RadiusLg">12</CornerRadius>
+
+  <!-- ========== 触摸目标（收银机以触摸为主，最小 44px） ========== -->
+  <x:Double x:Key="TouchTargetMin">44</x:Double>
+
+</ResourceDictionary>
