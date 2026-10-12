@@ -20,6 +20,7 @@
     <ProjectReference Include="..\..\src\YiHua.Pos.Domain\YiHua.Pos.Domain.csproj" />
     <ProjectReference Include="..\..\src\YiHua.Pos.Hardware\YiHua.Pos.Hardware.csproj" />
     <ProjectReference Include="..\..\src\YiHua.Pos.Data\YiHua.Pos.Data.csproj" />
+    <ProjectReference Include="..\..\src\YiHua.Pos.UI\YiHua.Pos.UI.csproj" />
   </ItemGroup>
 
   <!--

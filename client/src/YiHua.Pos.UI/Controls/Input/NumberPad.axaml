@@ -1,0 +1,86 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="YiHua.Pos.UI.Controls.Input.NumberPad">
+  <UserControl.Styles>
+    <!-- 数字键：56px 高，中性纸面，无动画 -->
+    <Style Selector="Button.numpad-key">
+      <Setter Property="MinHeight" Value="56" />
+      <Setter Property="FontSize" Value="20" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Margin" Value="4" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="VerticalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.numpad-key:pressed">
+      <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+    </Style>
+    <!-- 功能键：浅灰底 -->
+    <Style Selector="Button.numpad-fn">
+      <Setter Property="Background" Value="{DynamicResource BackgroundBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+      <Setter Property="FontSize" Value="16" />
+    </Style>
+    <!-- 确定键：全键盘唯一的 Primary 实心键 -->
+    <Style Selector="Button.numpad-confirm">
+      <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextOnPrimaryBrush}" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="FontSize" Value="20" />
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style Selector="Button.numpad-confirm:pressed">
+      <Setter Property="Background" Value="{DynamicResource PrimaryPressedBrush}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Border Background="{DynamicResource SurfaceBrush}"
+          BorderBrush="{DynamicResource BorderBrush}"
+          BorderThickness="1"
+          CornerRadius="10"
+          Padding="8">
+    <Grid RowDefinitions="Auto,*,*,*,*" ColumnDefinitions="*,*,*,*">
+      <!-- 显示区 -->
+      <Border Grid.Row="0" Grid.ColumnSpan="4"
+              Background="{DynamicResource BackgroundBrush}"
+              CornerRadius="6" Padding="16,12" Margin="4,4,4,8">
+        <TextBlock x:Name="DisplayText" Text="0"
+                   FontSize="{DynamicResource FontSizeDisplay}"
+                   FontWeight="Bold"
+                   Foreground="{DynamicResource TextPrimaryBrush}"
+                   HorizontalAlignment="Right"
+                   VerticalAlignment="Center" />
+      </Border>
+
+      <!-- 第一行 -->
+      <Button Grid.Row="1" Grid.Column="0" Classes="numpad-key" Content="1" Tag="1" Click="OnDigitClick" />
+      <Button Grid.Row="1" Grid.Column="1" Classes="numpad-key" Content="2" Tag="2" Click="OnDigitClick" />
+      <Button Grid.Row="1" Grid.Column="2" Classes="numpad-key" Content="3" Tag="3" Click="OnDigitClick" />
+      <Button Grid.Row="1" Grid.Column="3" Classes="numpad-key numpad-fn" Content="清除" Tag="clear" Click="OnDigitClick" />
+
+      <!-- 第二行 -->
+      <Button Grid.Row="2" Grid.Column="0" Classes="numpad-key" Content="4" Tag="4" Click="OnDigitClick" />
+      <Button Grid.Row="2" Grid.Column="1" Classes="numpad-key" Content="5" Tag="5" Click="OnDigitClick" />
+      <Button Grid.Row="2" Grid.Column="2" Classes="numpad-key" Content="6" Tag="6" Click="OnDigitClick" />
+      <Button Grid.Row="2" Grid.Column="3" Classes="numpad-key numpad-fn" Content="00" Tag="00" Click="OnDigitClick" />
+
+      <!-- 第三行 -->
+      <Button Grid.Row="3" Grid.Column="0" Classes="numpad-key" Content="7" Tag="7" Click="OnDigitClick" />
+      <Button Grid.Row="3" Grid.Column="1" Classes="numpad-key" Content="8" Tag="8" Click="OnDigitClick" />
+      <Button Grid.Row="3" Grid.Column="2" Classes="numpad-key" Content="9" Tag="9" Click="OnDigitClick" />
+      <Button Grid.Row="3" Grid.Column="3" Classes="numpad-key numpad-fn" Content="退格" Tag="backspace" Click="OnDigitClick" />
+
+      <!-- 第四行：确定键占两列 -->
+      <Button Grid.Row="4" Grid.Column="0" Classes="numpad-key" Content="." Tag="." Click="OnDigitClick" />
+      <Button Grid.Row="4" Grid.Column="1" Classes="numpad-key" Content="0" Tag="0" Click="OnDigitClick" />
+      <Button Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="2"
+              Classes="numpad-key numpad-confirm" Content="确定" Tag="confirm" Click="OnDigitClick" />
+    </Grid>
+  </Border>
+</UserControl>

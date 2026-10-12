@@ -1,0 +1,51 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:lists="clr-namespace:YiHua.Pos.UI.Controls.Lists"
+             x:Class="YiHua.Pos.UI.Controls.Lists.OrderItemRow">
+  <Border Background="{DynamicResource SurfaceBrush}"
+          BorderBrush="{DynamicResource DividerBrush}"
+          BorderThickness="0,0,0,1"
+          Padding="16,12">
+    <Grid ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto">
+      <!-- 商品名 + 赠菜标记 -->
+      <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal" Spacing="8">
+        <TextBlock x:Name="NameText"
+                   Text="{Binding ProductName, RelativeSource={RelativeSource AncestorType=lists:OrderItemRow}}"
+                   FontSize="{DynamicResource FontSizeBody}"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextPrimaryBrush}"
+                   VerticalAlignment="Center" />
+        <Border x:Name="GiftTag"
+                Background="{DynamicResource SuccessBrush}"
+                CornerRadius="4"
+                Padding="6,2"
+                VerticalAlignment="Center"
+                IsVisible="False">
+          <TextBlock Text="赠" FontSize="12" Foreground="White" />
+        </Border>
+      </StackPanel>
+      <!-- 规格 -->
+      <TextBlock Grid.Column="0" Grid.Row="1"
+                 Text="{Binding SpecText, RelativeSource={RelativeSource AncestorType=lists:OrderItemRow}}"
+                 FontSize="{DynamicResource FontSizeSmall}"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+      <!-- 数量 × 单价 -->
+      <Button Grid.Column="1" Grid.Row="0" Grid.RowSpan="2"
+              Content="{Binding Quantity, RelativeSource={RelativeSource AncestorType=lists:OrderItemRow}, StringFormat='×{0}'}"
+              FontSize="{DynamicResource FontSizeBody}"
+              Background="Transparent" BorderThickness="0"
+              Foreground="{DynamicResource TextSecondaryBrush}"
+              VerticalAlignment="Center" Margin="8,0"
+              Click="OnQtyClick" />
+      <!-- 小计 -->
+      <TextBlock x:Name="SubtotalText"
+                 Grid.Column="2" Grid.Row="0" Grid.RowSpan="2"
+                 FontSize="{DynamicResource FontSizeBody}"
+                 FontWeight="Bold"
+                 Foreground="{DynamicResource TextPrimaryBrush}"
+                 VerticalAlignment="Center"
+                 MinWidth="80"
+                 TextAlignment="Right" />
+    </Grid>
+  </Border>
+</UserControl>

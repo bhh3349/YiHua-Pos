@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:cards="clr-namespace:YiHua.Pos.UI.Controls.Cards"
+             x:Class="YiHua.Pos.UI.Controls.Cards.DeskCard">
+  <Border x:Name="CardBorder"
+          Background="{DynamicResource DeskIdleBrush}"
+          CornerRadius="10"
+          Padding="16"
+          MinHeight="120"
+          MinWidth="140"
+          PointerPressed="OnPointerPressed"
+          PointerReleased="OnPointerReleased">
+    <Grid RowDefinitions="Auto,*,Auto">
+      <!-- 桌号（大字） -->
+      <TextBlock x:Name="DeskNameText"
+                 Grid.Row="0"
+                 Text="{Binding DeskName, RelativeSource={RelativeSource AncestorType=cards:DeskCard}}"
+                 FontSize="{DynamicResource FontSizeTitle}"
+                 FontWeight="Bold"
+                 Foreground="{DynamicResource TextPrimaryBrush}" />
+      <!-- 人数 + 时长 -->
+      <TextBlock x:Name="DeskInfoText"
+                 Grid.Row="1"
+                 FontSize="{DynamicResource FontSizeSmall}"
+                 Foreground="{DynamicResource TextSecondaryBrush}"
+                 VerticalAlignment="Center">
+        <TextBlock.Text>
+          <MultiBinding StringFormat="{}{0}人 · {1}">
+            <Binding Path="GuestCount" RelativeSource="{RelativeSource AncestorType=cards:DeskCard}" />
+            <Binding Path="ElapsedText" RelativeSource="{RelativeSource AncestorType=cards:DeskCard}" />
+          </MultiBinding>
+        </TextBlock.Text>
+      </TextBlock>
+      <!-- 当前金额 -->
+      <TextBlock Grid.Row="2"
+                 Text="{Binding CurrentAmount, RelativeSource={RelativeSource AncestorType=cards:DeskCard}, StringFormat='¥{0:F2}'}"
+                 FontSize="{DynamicResource FontSizeSubtitle}"
+                 FontWeight="SemiBold"
+                 x:Name="AmountText" />
+    </Grid>
+  </Border>
+</UserControl>

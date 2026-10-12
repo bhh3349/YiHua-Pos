@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
+             x:Class="YiHua.Pos.UI.Controls.Input.QtyStepper">
+  <UserControl.Styles>
+    <Style Selector="Button.stepper-btn">
+      <Setter Property="MinWidth" Value="48" />
+      <Setter Property="MinHeight" Value="48" />
+      <Setter Property="FontSize" Value="24" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Background" Value="{DynamicResource BackgroundBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.stepper-btn:pressed">
+      <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+    </Style>
+    <Style Selector="Button.stepper-btn:disabled">
+      <Setter Property="Foreground" Value="{DynamicResource TextDisabledBrush}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Border Background="{DynamicResource SurfaceBrush}"
+          BorderBrush="{DynamicResource BorderBrush}"
+          BorderThickness="1"
+          CornerRadius="6"
+          Padding="4">
+    <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+      <Button Classes="stepper-btn" Content="-" Click="OnMinusClick" />
+      <TextBlock Text="{Binding Value, RelativeSource={RelativeSource AncestorType=input:QtyStepper}}"
+                 FontSize="{DynamicResource FontSizeSubtitle}"
+                 FontWeight="SemiBold"
+                 MinWidth="56"
+                 HorizontalAlignment="Center"
+                 VerticalAlignment="Center"
+                 TextAlignment="Center" />
+      <Button Classes="stepper-btn" Content="+" Click="OnPlusClick" />
+    </StackPanel>
+  </Border>
+</UserControl>

@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:fb="clr-namespace:YiHua.Pos.UI.Controls.Feedback"
+             x:Class="YiHua.Pos.UI.Controls.Feedback.PosModal">
+  <UserControl.Resources>
+    <SolidColorBrush x:Key="ModalOverlayBrush" Color="{DynamicResource OverlayColor}" />
+  </UserControl.Resources>
+  <!-- 遮罩 -->
+  <Border Background="{StaticResource ModalOverlayBrush}"
+          HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+          PointerPressed="OnOverlayPointerPressed">
+    <Border Background="{DynamicResource SurfaceBrush}"
+            CornerRadius="14"
+            Padding="24"
+            MinWidth="320" MaxWidth="480"
+            HorizontalAlignment="Center" VerticalAlignment="Center"
+            PointerPressed="OnCardPointerPressed">
+      <StackPanel Spacing="16">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Grid.Column="0"
+                     Text="{Binding Title, RelativeSource={RelativeSource AncestorType=fb:PosModal}}"
+                     FontSize="{DynamicResource FontSizeTitle}"
+                     FontWeight="Bold"
+                     Foreground="{DynamicResource TextPrimaryBrush}"
+                     VerticalAlignment="Center" />
+          <Button Grid.Column="1" Content="×" FontSize="20"
+                  Background="Transparent" BorderThickness="0"
+                  Foreground="{DynamicResource TextSecondaryBrush}"
+                  MinWidth="44" MinHeight="44"
+                  HorizontalContentAlignment="Center"
+                  VerticalContentAlignment="Center"
+                  Click="OnCloseClick" />
+        </Grid>
+        <ContentPresenter Content="{Binding DialogContent, RelativeSource={RelativeSource AncestorType=fb:PosModal}}" />
+      </StackPanel>
+    </Border>
+  </Border>
+</UserControl>

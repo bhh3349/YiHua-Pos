@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:cards="clr-namespace:YiHua.Pos.UI.Controls.Cards"
+             x:Class="YiHua.Pos.UI.Controls.Cards.CategoryTab">
+  <UserControl.Styles>
+    <Style Selector="Button.category-tab">
+      <Setter Property="MinHeight" Value="48" />
+      <Setter Property="Padding" Value="20,8" />
+      <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <Style Selector="Button.category-tab:pressed">
+      <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Button x:Name="TabButton" Classes="category-tab" Click="OnTabClick">
+    <TextBlock x:Name="TabText"
+               Text="{Binding CategoryName, RelativeSource={RelativeSource AncestorType=cards:CategoryTab}}" />
+  </Button>
+</UserControl>
