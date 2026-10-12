@@ -6,7 +6,7 @@ resolve_scope 会校验 store 是否真实存在，不存在就静默兜底到�
 import pytest
 
 from conftest import SessionLocal, envelope, new_client_no, post
-from app.models import Desk, DeskArea, Order, Store, Tenant
+from app.models import Desk, DeskArea, Order, Product, Store, Tenant
 
 ISO_TENANT = 990002
 ISO_STORE = 990002
@@ -27,6 +27,8 @@ def iso_store():
     try:
         session.add(Tenant(id=ISO_TENANT, code="T990002", name="隔离测试租户",
                            edition="STD", status=1))
+        session.add(Product(id=990003, tenant_id=ISO_TENANT, name="隔离商品",
+                            code="P990003", price=26.0, version=1))
         session.add(Store(id=ISO_STORE, tenant_id=ISO_TENANT, code="S990002",
                           name="隔离测试门店", store_mode=1, status=1))
         session.add(DeskArea(id=990002, store_id=ISO_STORE, name="隔离区", sort=0))
@@ -80,7 +82,7 @@ def test_order_created_in_isolated_store_not_visible_in_main(client, db, iso_sto
     cno = new_client_no("ISO")
     o = envelope(post(client, "/pos/order/submit",
                       {"clientOrderNo": cno, "products": [
-                          {"productId": 1003, "productName": "麻婆豆腐",
+                          {"productId": 990003, "productName": "隔离商品",
                            "prodPrice": 26.0, "prodUnitAmt": 26.0,
                            "quantity": 1, "prodSalesAmt": 26.0}]},
                       ISO_HEADERS))

@@ -25,7 +25,7 @@ from ..legacy_core import (STATUS_FROM_LEGACY, Scope, desk_dto, envelope, err, f
                            order_detail, parse_payload, pay_name, q, resolve_scope, s,
                            save_order_extra, ts_str)
 from ..models import (Desk, DeskArea, Member, MemberBalanceLog, Order, OrderFlow,
-                      OrderItem, Payment, Shift)
+                      OrderItem, Payment, Product, Shift)
 from ..util import gen_order_no, gen_trade_no
 
 router = APIRouter(tags=["legacy-order"])
@@ -34,6 +34,45 @@ STATUS_PENDING, STATUS_SETTLED, STATUS_REFUNDED, STATUS_VOID = 0, 1, 2, 3
 
 # 已经不能再改单的状态
 _LOCKED = (STATUS_SETTLED, STATUS_REFUNDED, STATUS_VOID)
+
+# 落库上限：t_order.client_order_no 是 VARCHAR(64)、remark 是 VARCHAR(255)
+MAX_CLIENT_NO = 64
+MAX_REMARK = 255
+
+
+def _trunc(v) -> str:
+    """备注超长按 255 截断 —— 为一条备注把整单打回，客户端要重来一遍。"""
+    return (v or "")[:MAX_REMARK]
+
+
+def _check_products(db: Session, scope: Scope, products: list):
+    """明细校验，返回 (错误码, 错误信息)；通过则 (0, "")。"""
+    for idx, p in enumerate(products or [], 1):
+        price = f(p.get("prodPrice") if p.get("prodPrice") is not None
+                  else p.get("prodUnitAmt"))
+        qty = q(p.get("quantity"))
+        amount = f(p.get("prodSalesAmt"))
+        pid = i(p.get("productId"))
+        if price < 0 or amount < 0:
+            return 400, "第 %d 个菜品的金额不能为负数" % idx
+        if qty <= 0:
+            return 400, "第 %d 个菜品的数量必须大于 0（当前 %s）" % (idx, p.get("quantity"))
+        if pid:
+            product = db.get(Product, pid)
+            if product is None:
+                return 404, "商品不存在: productId=%d" % pid
+            if product.tenant_id != scope.tenant_id:
+                return 404, "商品不存在: productId=%d" % pid
+    return 0, ""
+
+
+def _check_client_no(client_no: str):
+    """幂等键校验，返回错误信息；通过则返回空串。"""
+    if not client_no:
+        return "缺少 clientOrderNo / orderNo，无法保证幂等"
+    if len(client_no) > MAX_CLIENT_NO:
+        return "clientOrderNo 超长（%d > %d 字符）" % (len(client_no), MAX_CLIENT_NO)
+    return ""
 
 
 async def _read(request: Request):
@@ -210,7 +249,7 @@ async def open_desk(request: Request, db: Session = Depends(get_db)):
               status=STATUS_PENDING, member_id=0,
               amount_total=0, amount_discount=0, order_discount=0, amount_pay=0,
               shift_id=shift.id if shift else 0, operator_id=scope.user_id,
-              remark=s(payload.get("memo")))
+              remark=_trunc(s(payload.get("memo"))))
     db.add(o)
     db.flush()
 
@@ -343,8 +382,9 @@ async def order_submit(request: Request, db: Session = Depends(get_db)):
 
     order_no_in = s(payload.get("orderNo"))
     client_no = s(payload.get("clientOrderNo")) or order_no_in
-    if not client_no:
-        return err(500, "缺少 clientOrderNo / orderNo，无法保证幂等")
+    bad = _check_client_no(client_no)
+    if bad:
+        return err(400, bad)
 
     o = None
     if order_no_in:
@@ -360,6 +400,9 @@ async def order_submit(request: Request, db: Session = Depends(get_db)):
         return err(409, "订单已结账/已退款/已作废，不能改单", _detail(db, o, scope))
 
     products = payload.get("products") or []
+    code, msg = _check_products(db, scope, products)
+    if code:
+        return err(code, msg)
     total = _replace_items(db, o, products) if o is not None else 0.0
 
     if o is None:
@@ -372,7 +415,7 @@ async def order_submit(request: Request, db: Session = Depends(get_db)):
                   status=STATUS_PENDING, member_id=0,
                   amount_total=0, amount_discount=0, order_discount=0, amount_pay=0,
                   shift_id=shift.id if shift else 0, operator_id=scope.user_id,
-                  remark=s(payload.get("memo")))
+                  remark=_trunc(s(payload.get("memo"))))
         db.add(o)
         db.flush()
         total = _replace_items(db, o, products)
@@ -383,7 +426,7 @@ async def order_submit(request: Request, db: Session = Depends(get_db)):
     m = _member_of(db, scope, payload)
     o.member_id = m.id if m else 0
     o.desk_id = i(payload.get("deskId")) or o.desk_id
-    o.remark = s(payload.get("memo")) or o.remark
+    o.remark = _trunc(s(payload.get("memo"))) or o.remark
     o.amount_total = total
     o.order_discount = f(payload.get("discStoreAmt"))
     o.amount_discount = round(o.order_discount + f(payload.get("discAmt")), 2)
@@ -437,8 +480,12 @@ async def order_settle(request: Request, db: Session = Depends(get_db)):
     client_no = s(payload.get("clientOrderNo")) or order_no_in
     o = _find_order(db, scope, payload)
     if o is None:
-        if not client_no:
-            return err(404, "订单不存在")
+        bad = _check_client_no(client_no)
+        if bad:
+            return err(404, "订单不存在") if not client_no else err(400, bad)
+        code, msg = _check_products(db, scope, payload.get("products") or [])
+        if code:
+            return err(code, msg)
         # 离线补传：服务端没这单，但客户端已经结了 → 先落单再结
         shift = _shift_now(db, scope)
         o = Order(tenant_id=scope.tenant_id, store_id=scope.store_id,
@@ -449,7 +496,7 @@ async def order_settle(request: Request, db: Session = Depends(get_db)):
                   status=STATUS_PENDING, member_id=0,
                   amount_total=0, amount_discount=0, order_discount=0, amount_pay=0,
                   shift_id=shift.id if shift else 0, operator_id=scope.user_id,
-                  remark=s(payload.get("memo")))
+                  remark=_trunc(s(payload.get("memo"))))
         db.add(o)
         db.flush()
         total = _replace_items(db, o, payload.get("products") or [])
@@ -465,6 +512,23 @@ async def order_settle(request: Request, db: Session = Depends(get_db)):
         return err(409, "订单已结账", {"orderDetail": _detail(db, o, scope)})
     if o.status != STATUS_PENDING:
         return err(409, "订单状态不允许结账", {"orderDetail": _detail(db, o, scope)})
+
+    # 先用条件更新抢占结账权，避免并发请求同时写支付流水/扣会员余额。
+    if o.id is None:
+        db.flush()
+    order_id = o.id
+    claimed = (db.query(Order)
+                 .filter(Order.id == order_id, Order.store_id == scope.store_id,
+                         Order.status == STATUS_PENDING)
+                 .update({Order.status: STATUS_SETTLED}, synchronize_session=False))
+    if claimed != 1:
+        db.rollback()
+        current = db.get(Order, order_id)
+        data = {"orderDetail": _detail(db, current, scope)} if current else None
+        return err(409, "订单已结账", data)
+    # 更新语句执行后丢弃之前读到的 ORM 状态，后续属性写入仍保留条件更新状态。
+    db.expire(o)
+    o.status = STATUS_SETTLED
 
     m = _member_of(db, scope, payload)
     if m is not None:

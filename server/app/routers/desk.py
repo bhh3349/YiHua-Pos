@@ -49,8 +49,22 @@ def open_desk(req: OpenReq, ctx: Ctx = Depends(get_ctx), db: Session = Depends(g
     d = db.get(Desk, req.deskId)
     if not d or d.store_id != ctx.store_id:
         raise BizError("404", "桌台不存在")
-    if d.status == 1 and d.current_order_id:
-        return ok({"deskId": d.id, "orderId": d.current_order_id, "reused": True})
+    if d.status == 1:
+        # 已被占用：回 409 + 当前占用信息，收银端据此提示「这台已经开过单」，
+        # 而不是悄悄复用一张别人正在用的单。
+        info = {"deskId": d.id, "deskName": d.name, "deskStatus": d.status,
+                "orderId": d.current_order_id or 0, "orderNo": "",
+                "amountTotal": 0.0, "openTime": ""}
+        if d.current_order_id:
+            o = db.get(Order, d.current_order_id)
+            if o is not None:
+                info.update({
+                    "orderId": o.id, "orderNo": o.order_no,
+                    "amountTotal": float(o.amount_total or 0),
+                    "openTime": (o.created_at.strftime("%Y-%m-%d %H:%M:%S")
+                                 if o.created_at else ""),
+                })
+        raise BizError("409", "桌台已被占用", info)
     d.status = 1
     d.current_order_id = 0     # 订单在 order/create 时回填
     db.commit()

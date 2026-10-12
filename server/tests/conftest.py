@@ -19,7 +19,9 @@ if SERVER_DIR not in sys.path:
 # ---- 必须在 import app.* 之前设置 ----
 _TEST_DATA = tempfile.mkdtemp(prefix="yihua-pos-test-")
 os.environ["DSH_POS_DATA"] = _TEST_DATA
-os.environ.setdefault("DSH_POS_JWT_SECRET", "test-secret")
+# 密钥必须 >= 32 字节，否则启动时会被打上「开发密钥」警告（见 app/config.py）
+os.environ.setdefault("DSH_POS_JWT_SECRET",
+                      "test-secret-0123456789abcdef0123456789abcdef")
 
 from fastapi.testclient import TestClient  # noqa: E402
 
