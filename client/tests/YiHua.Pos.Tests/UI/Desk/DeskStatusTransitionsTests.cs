@@ -8,8 +8,10 @@ namespace YiHua.Pos.Tests.UI.Desk;
 /// <summary>桌台状态机测试：合法转换通过，5 种非法转换全部被拒绝</summary>
 public class DeskStatusTransitionsTests
 {
+    // id 必须随桌号变化：并台/换台会校验「不能是同一张桌」，
+    // 写死 Id=1 会让所有双桌用例都撞上「自己和自己」而被拒。
     private static DeskEntity MakeDesk(DeskStatus status, string name = "A01") =>
-        new() { Id = 1, Name = name, Status = status };
+        new() { Id = Math.Abs(name.GetHashCode()) + 1, Name = name, Status = status };
 
     [Fact]
     public void Open_Idle_Succeeds() =>
