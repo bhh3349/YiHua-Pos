@@ -21,6 +21,18 @@ DB_FILE = os.path.join(DB_FILE, "pos.db")
 TOKEN = None
 HDR = {}
 
+# 打印策略的默认值直接取服务端源码，避免这里硬编码一份后与服务端漂移。
+# 这两个常量还用于「写完还原」，让冒烟测试可以重复运行（见第 27 节）。
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+try:
+    from app.routers.legacy_print import DEFAULT_PRINT_STRATEGY
+    DEFAULT_STRATEGY_NAME = DEFAULT_PRINT_STRATEGY["strategyName"]
+    # strategyType 不在默认策略里，由 /strategy/list 的存储层补默认值 2
+    DEFAULT_STRATEGY_TYPE = 2
+except Exception:  # pragma: no cover - 服务端源码不可用时的兜底
+    DEFAULT_STRATEGY_NAME = "后厨档口"
+    DEFAULT_STRATEGY_TYPE = 2
+
 
 def ensure_server():
     """BASE 上没服务时就地起一个（CI 里只有 seed + 本脚本，没人先跑 run.py）。
@@ -568,7 +580,9 @@ def main():
           {"printStrategyList", "deviceList"} == set(dv), sorted(dv))
     strat = (dv.get("printStrategyList") or [{}])[0]
     check("打印策略含 strategyName/strategyType",
-          strat.get("strategyName") == "后厨档口" and strat.get("strategyType") == 2, strat.get("strategyName"))
+          strat.get("strategyName") == DEFAULT_STRATEGY_NAME
+          and strat.get("strategyType") == DEFAULT_STRATEGY_TYPE,
+          strat.get("strategyName"))
     check("打印策略不含 deviceList（与抓包一致）", "deviceList" not in strat)
     check("内置打印机已绑定",
           len(dv.get("deviceList") or []) == 1
@@ -602,6 +616,15 @@ def main():
     check("strategy/save 后 device 快照同步",
           (((payload_of(r) or {}).get("printStrategyList") or [{}])[0]).get("strategyName")
           == "冒烟测试档口")
+
+    # strategy/save 是持久化写入（kv_set），不还原的话第 570 行「期望默认值」的断言
+    # 在第二次运行时必然失败 —— 测试污染自己。存完立刻恢复默认策略名。
+    ORIG_STRATEGY_NAME = (payload_of(r) or {}).get("strategyName")
+    call("/pos/print/strategy/save", {"strategyName": DEFAULT_STRATEGY_NAME,
+                                      "addFoodNum": 0})
+    r = call("/pos/print/strategy/info", {})
+    check("strategy/save 还原后恢复默认值（测试可重入）",
+          (payload_of(r) or {}).get("strategyName") == DEFAULT_STRATEGY_NAME, payload_of(r))
     r = call("/open/print/device/brandList", {})
     bl = payload_of(r) or []
     check("brandList 5 个品牌", len(bl) == 5, len(bl))

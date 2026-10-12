@@ -7,6 +7,12 @@ using YiHua.Pos.UI.ViewModels.Ordering;
 
 namespace YiHua.Pos.Tests.UI.Ordering;
 
+// 别名放在 namespace 内部：文件层级的 using 属于全局作用域，而
+// YiHua.Pos.UI.ViewModels 下有 Desk / Product 两个子命名空间参与名字解析，
+// 更近的作用域优先，全局别名会被跳过，导致 CS0118。
+using Desk = YiHua.Pos.Domain.Entities.Desk;
+using Product = YiHua.Pos.Domain.Entities.Product;
+
 /// <summary>测试用假仓储</summary>
 public sealed class FakeProductRepository : IProductRepository
 {

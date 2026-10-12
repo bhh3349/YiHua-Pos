@@ -6,6 +6,12 @@ using YiHua.Pos.UI.Services.Ordering;
 
 namespace YiHua.Pos.UI.ViewModels.Ordering;
 
+// 别名必须放在 namespace 内部：文件层级的 using 属于全局作用域，
+// 而 YiHua.Pos.UI.ViewModels 下有 Desk / Product 两个子命名空间，
+// 名字查找时更近的作用域优先，全局别名根本轮不上。
+using Desk = YiHua.Pos.Domain.Entities.Desk;
+using Product = YiHua.Pos.Domain.Entities.Product;
+
 /// <summary>
 /// 加菜动作：点商品后 UI 该做什么。
 /// </summary>

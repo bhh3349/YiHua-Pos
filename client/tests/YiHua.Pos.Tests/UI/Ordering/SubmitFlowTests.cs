@@ -6,6 +6,11 @@ using static YiHua.Pos.Tests.UI.Ordering.OrderingTestFactory;
 
 namespace YiHua.Pos.Tests.UI.Ordering;
 
+// 别名放在 namespace 内部：文件层级的 using 属于全局作用域，而
+// YiHua.Pos.UI.ViewModels 下的 Desk / Product 子命名空间会参与名字解析，
+// 更近的作用域优先，全局别名被跳过，导致 CS0118。
+using Desk = YiHua.Pos.Domain.Entities.Desk;
+
 public class SubmitFlowTests
 {
     [Fact]
