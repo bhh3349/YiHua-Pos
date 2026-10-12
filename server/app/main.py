@@ -4,13 +4,15 @@ import uuid
 from datetime import datetime
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from .config import APP_NAME, OSS_DIR
 from .db import init_db
-from .routers import auth, catalog, desk, legacy, member, order, pay, report, shift
+from .routers import (auth, catalog, desk, legacy, legacy_order, legacy_print,
+                      member, order, pay, report, shift)
 from .util import BizError, biz_error_handler
 
 app = FastAPI(title=APP_NAME, version="0.1.0")
@@ -48,6 +50,25 @@ async def access_log(request: Request, call_next):
 @app.exception_handler(BizError)
 async def _biz(request: Request, exc: BizError):
     return await biz_error_handler(request, exc)
+
+
+@app.exception_handler(RequestValidationError)
+async def _validation(request: Request, exc: RequestValidationError):
+    """参数校验失败也回标准响应体。
+
+    客户端只认 {code, message, data}，裸的 FastAPI 422（{detail:[...]}）
+    会让它解析失败、直接卡住；这里统一成业务错误形态。
+    """
+    trace = request.headers.get("X-Trace-No") or uuid.uuid4().hex
+    first = (exc.errors() or [{}])[0]
+    loc = ".".join(str(x) for x in (first.get("loc") or []) if x != "body")
+    return JSONResponse(status_code=200, content={
+        "code": "422",
+        "message": "参数错误: %s %s" % (loc, first.get("msg") or ""),
+        "data": None,
+        "traceNo": trace,
+        "timestamp": int(datetime.now().timestamp() * 1000),
+    })
 
 
 @app.exception_handler(Exception)
@@ -91,4 +112,8 @@ os.makedirs(OSS_DIR, exist_ok=True)
 app.mount("/oss", StaticFiles(directory=OSS_DIR), name="oss")
 
 # ---- 兼容层放最后：catch-all 不能吃掉上面的路由 ----
+# 顺序要求：legacy_order / legacy_print 必须在 legacy 之前，
+# 因为 legacy.router 末尾有 POST /{full_path:path} 兜底。
+app.include_router(legacy_order.router)
+app.include_router(legacy_print.router)
 app.include_router(legacy.router)

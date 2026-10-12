@@ -5,6 +5,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..db import get_db
@@ -79,7 +80,12 @@ def _order_dto(db: Session, o: Order) -> dict:
 
 @router.post("/create")
 def create(req: CreateReq, ctx: Ctx = Depends(get_ctx), db: Session = Depends(get_db)):
-    exist = db.query(Order).filter(Order.client_order_no == req.clientOrderNo).first()
+    # 幂等键必须带 store_id 过滤：不同门店可能出现相同的 clientOrderNo，
+    # 不隔离会把别家门店的单据当成「重复提交」返回出去。
+    exist = (db.query(Order)
+               .filter(Order.client_order_no == req.clientOrderNo,
+                       Order.store_id == ctx.store_id)
+               .first())
     if exist:
         raise BizError("409", "单据已存在", _order_dto(db, exist))
 
@@ -96,29 +102,40 @@ def create(req: CreateReq, ctx: Ctx = Depends(get_ctx), db: Session = Depends(ge
               amount_pay=round(total - disc, 2),
               shift_id=shift.id if shift else 0, operator_id=ctx.user_id,
               remark=req.remark)
-    db.add(o)
-    db.flush()
+    try:
+        db.add(o)
+        db.flush()
 
-    for it in req.items:
-        pid = it.productId
-        name = it.productName
-        if pid and not name:
-            p = db.get(Product, pid)
-            name = p.name if p else ""
-        db.add(OrderItem(order_id=o.id, product_id=pid or 0, product_name=name,
-                         spec_text=it.specText, price=it.price, qty=it.qty,
-                         amount=round(float(it.price) * float(it.qty), 2),
-                         discount_amount=it.discountAmount, gift_flag=it.giftFlag,
-                         remark=it.remark))
+        for it in req.items:
+            pid = it.productId
+            name = it.productName
+            if pid and not name:
+                p = db.get(Product, pid)
+                name = p.name if p else ""
+            db.add(OrderItem(order_id=o.id, product_id=pid or 0, product_name=name,
+                             spec_text=it.specText, price=it.price, qty=it.qty,
+                             amount=round(float(it.price) * float(it.qty), 2),
+                             discount_amount=it.discountAmount, gift_flag=it.giftFlag,
+                             remark=it.remark))
 
-    if req.deskId:
-        d = db.get(Desk, req.deskId)
-        if d and d.store_id == ctx.store_id:
-            d.status = 1
-            d.current_order_id = o.id
+        if req.deskId:
+            d = db.get(Desk, req.deskId)
+            if d and d.store_id == ctx.store_id:
+                d.status = 1
+                d.current_order_id = o.id
 
-    _add_flow(db, o.id, "create", -1, STATUS_PENDING, ctx.user_id)
-    db.commit()
+        _add_flow(db, o.id, "create", -1, STATUS_PENDING, ctx.user_id)
+        db.commit()
+    except IntegrityError:
+        # t_order.client_order_no 是「全局」唯一索引（不带 store_id，见 models.py），
+        # 上面按门店过滤的查询挡不住跨门店撞号。真撞上时与其漏出 500 让客户端
+        # 卡死，不如按「单据已存在」回 409 —— 客户端本来就把它当重复提交处理。
+        db.rollback()
+        other = (db.query(Order)
+                   .filter(Order.client_order_no == req.clientOrderNo)
+                   .first())
+        raise BizError("409", "单据已存在",
+                       _order_dto(db, other) if other else None)
     return ok(_order_dto(db, o))
 
 
@@ -159,6 +176,9 @@ class DiscountReq(BaseModel):
 
 def _recalc_discount(db: Session, o: Order) -> None:
     """整单折扣与单品折扣分开存，保证重复调用幂等。"""
+    # 会话关掉了 autoflush（见 db.py），不显式 flush 的话刚改的单品行折扣
+    # 查不到，SUM 出来是旧值 —— 单品折扣会「点了没反应」。
+    db.flush()
     item_disc = float(db.query(func.coalesce(func.sum(OrderItem.discount_amount), 0))
                         .filter(OrderItem.order_id == o.id).scalar() or 0)
     o.amount_discount = round(float(o.order_discount or 0) + item_disc, 2)
