@@ -78,7 +78,8 @@ public class TemplateRendererTests
         };
 
         string preview = new TemplateRenderer(template).RenderPreview(SampleVars());
-        string[] lines = preview.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        // 按 \r\n 切分：只切 '\n' 会把 CR 留在行尾，DisplayWidth 会多算一列
+        string[] lines = preview.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
 
         // 表头 + 2 行数据
         Assert.Equal(3, lines.Length);

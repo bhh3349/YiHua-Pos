@@ -64,8 +64,8 @@ public static class TemplateDefaults
     public static PrintTemplate Kitchen(PaperWidth paper = PaperWidth.Mm80)
     {
         int[] itemWidths = paper == PaperWidth.Mm58
-            ? new[] { 14, 6, 12 }
-            : new[] { 24, 8, 16 };
+            ? new[] { 13, 5, 12 }
+            : new[] { 23, 7, 16 };
 
         return new PrintTemplate
         {
@@ -83,6 +83,8 @@ public static class TemplateDefaults
                     Widths = itemWidths,
                     Fields = new[] { "Name", "Qty", "Remark" },
                     DataSource = "items",
+                    // 数量右对齐后紧贴备注会挤成一团，加一列空格分隔
+                    ColumnGap = 1,
                 },
                 new LineElement { Char = '=' },
                 new TextElement { Text = "备注:{remark}", Bold = true },

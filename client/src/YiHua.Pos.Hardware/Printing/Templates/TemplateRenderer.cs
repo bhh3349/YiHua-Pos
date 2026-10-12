@@ -37,7 +37,11 @@ public sealed class TemplateRenderer
         return b.Build();
     }
 
-    /// <summary>渲染为纯文本预览（无控制码，用于测试断言与小票样张）</summary>
+    /// <summary>
+    /// 渲染为纯文本预览（无控制码，用于测试断言与小票样张）。
+    /// 行分隔符为 <c>\r\n</c>（与 <see cref="stringBuilder.AppendLine"/> 一致）。
+    /// 断言显示宽度前需先按 <c>\r\n</c> 切分，否则行尾的 CR 会被算作一列。
+    /// </summary>
     public string RenderPreview(IReadOnlyDictionary<string, object?>? vars = null)
     {
         var ctx = vars ?? new Dictionary<string, object?>();
@@ -143,17 +147,18 @@ public sealed class TemplateRenderer
             return rows;
 
         if (tb.ShowHeader)
-            rows.Add(JoinCells(cols, widths));
+            rows.Add(JoinCells(cols, widths, tb.ColumnGap));
 
         foreach (var cells in ResolveTableData(tb, ctx))
-            rows.Add(JoinCells(cells, widths));
+            rows.Add(JoinCells(cells, widths, tb.ColumnGap));
 
         return rows;
     }
 
-    private static string JoinCells(IReadOnlyList<string> cells, int[] widths)
+    private static string JoinCells(IReadOnlyList<string> cells, int[] widths, int gap = 0)
     {
         var sb = new System.Text.StringBuilder();
+        string sep = gap > 0 ? new string(' ', gap) : string.Empty;
         for (int i = 0; i < widths.Length; i++)
         {
             string cell = i < cells.Count ? cells[i] ?? string.Empty : string.Empty;
@@ -161,6 +166,7 @@ public sealed class TemplateRenderer
             sb.Append(IsNumericCell(cell)
                 ? DisplayWidth.PadLeft(cell, widths[i])
                 : DisplayWidth.PadRight(cell, widths[i]));
+            if (i < widths.Length - 1) sb.Append(sep);
         }
         return sb.ToString();
     }

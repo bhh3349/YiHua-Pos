@@ -15,6 +15,12 @@ public sealed class TableElement : TemplateElement
     public string[] Fields { get; set; } = Array.Empty<string>();
     /// <summary>是否打印表头，默认 true</summary>
     public bool ShowHeader { get; set; } = true;
+    /// <summary>
+    /// 列间距（每个单元格右侧补的空格数，默认 0）。
+    /// 设为 1 可让相邻列有视觉间隔，避免右对齐的数字列紧贴下一列。
+    /// 启用时各列宽度需自行缩减，总宽 = Widths 之和 + ColumnGap × 列数。
+    /// </summary>
+    public int ColumnGap { get; set; } = 0;
 }
 
 /// <summary>商品明细行（表格数据源的行模型）</summary>

@@ -98,10 +98,32 @@ public class DefaultTemplateTests
     public void Receipt_58mm_Lines_Fit_32_Columns()
     {
         string preview = new TemplateRenderer(TemplateDefaults.Receipt(PaperWidth.Mm58)).RenderPreview(FullVars());
-        foreach (string line in preview.Split('\n'))
+        foreach (string line in preview.Split(new[] { "\r\n" }, StringSplitOptions.None))
         {
             if (line.StartsWith("[")) continue; // QR 占位行跳过
             Assert.True(DisplayWidth.Of(line.TrimEnd()) <= 32, $"超宽行: {line}");
         }
+    }
+
+    [Theory]
+    [InlineData(PaperWidth.Mm58, 32)]
+    [InlineData(PaperWidth.Mm80, 48)]
+    public void Kitchen_Table_Fits_Paper_Width(PaperWidth paper, int expected)
+    {
+        string preview = new TemplateRenderer(TemplateDefaults.Kitchen(paper)).RenderPreview(FullVars());
+        foreach (string line in preview.Split(new[] { "\r\n" }, StringSplitOptions.None))
+            Assert.True(DisplayWidth.Of(line.TrimEnd()) <= expected, $"超宽行: {line}");
+    }
+
+    [Fact]
+    public void Kitchen_Quantity_Column_Has_Gap_Before_Remark()
+    {
+        string preview = new TemplateRenderer(TemplateDefaults.Kitchen()).RenderPreview(FullVars());
+        // 数量右对齐填满列宽后，备注前必须留空格，否则会粘成 "1微辣"
+        string line = preview.Split(new[] { "\r\n" }, StringSplitOptions.None)
+            .First(l => l.Contains("少辣"));
+        int idx = line.IndexOf("少辣");
+        Assert.True(idx >= 2 && line[idx - 1] == ' ',
+            $"数量与备注之间应有一个空格，实际: [{line}]");
     }
 }
