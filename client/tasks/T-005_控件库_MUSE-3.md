@@ -1,0 +1,299 @@
+# 任务卡 T-005 · 收银界面控件库
+
+> **收件人：MUSE-3** · 分支：`task/T-005-controls`
+
+---
+
+## 0. 环境说明（先看这个，避免绕路）
+
+| 项 | 值 |
+|---|---|
+| **唯一仓库** | `https://github.com/bhh3349/YiHua-Pos`（公开） |
+| **基线** | `main` 最新提交（当前 `8564612`） |
+| **你的分支** | `task/T-005-controls` |
+| **推送** | `git push -u origin task/T-005-controls` |
+
+```bash
+git clone https://github.com/bhh3349/YiHua-Pos.git
+cd YiHua-Pos
+git checkout -b task/T-005-controls
+```
+
+> ⚠️ 只有一个仓库，没有第二个。
+
+---
+
+## 1. 项目背景
+
+**逸华餐饮收银** —— 自有品牌餐饮 POS 系统。
+
+| 项 | 内容 |
+|---|---|
+| 技术栈 | .NET 8 / .NET 6 双目标 + **Avalonia UI 11.3.22** + Prism |
+| 目标平台 | **Linux 触屏一体机（主力）** + Windows 台式机 |
+| 硬件约束 | 2~4 核低功耗 CPU、**4GB 内存**、机械硬盘 |
+| **交互方式** | **触摸为主，鼠标键盘为辅** |
+
+**使用场景**：收银员在嘈杂、繁忙、光线不稳定的餐厅前台，**用一根手指快速操作**。
+不是给设计师看的作品集，是给人在压力下用的工具。
+
+---
+
+## 2. 铁律
+
+```
+✅ 你只能修改这两个目录：
+      client/src/YiHua.Pos.UI/Controls/**
+      client/tests/YiHua.Pos.Tests/UI/**
+
+❌ 禁止修改（冻结文件）：
+      client/src/YiHua.Pos.UI/Themes/Tokens.axaml   ← 只能读，要加 token 先报给 Lead
+      client/src/YiHua.Pos.UI/YiHua.Pos.UI.csproj   ← 要加包先报给 Lead
+      client/YiHua.Pos.sln / Directory.Build.props
+      client/src/YiHua.Pos.Domain/**
+      client/src/YiHua.Pos.Hardware/**
+      其他任何模块
+
+❌ 不引入任何第三方 UI 库（不用 HandyControl / Material.Avalonia 等）
+❌ 不复制任何第三方代码或界面素材
+❌ 不直接推 main
+```
+
+---
+
+## 3. UI 工艺标准（**必须遵守**）
+
+### 3.1 反 slop 禁令（命中 Critical 级 = 立即重做）
+
+| # | 禁止 |
+|---|---|
+| 1 | 相同的卡片网格重复 3-6 次（图标+标题+两行文字）——最经典的 AI 指纹 |
+| 2 | 紫/青渐变刷一切；暗色玻璃拟态配霓虹 |
+| 3 | **emoji 当功能图标**（收银界面必须用几何图标或纯文字） |
+| 4 | 全大写标题/导航/按钮 |
+| 5 | `bounce` / 弹性缓动 |
+| 6 | **所有元素同一个圆角值** |
+| 7 | 趋势数字配彩色胶囊 |
+| 8 | 卡片上加粗彩色左/上边框 |
+| 9 | 通用 CTA（"了解更多""点击这里"） |
+| 10 | `transition: all` |
+
+**品味陷阱**（同样是默认值，别用它们替换旧默认值）：
+暖奶油底+衬线大标题+陶土色、近黑底+荧光绿、发丝线报纸栏式、统一的软灰阴影卡片包。
+
+### 3.2 要主动做到的
+
+- **90% 中性色，一个强调色**。强调色在首屏最多 3-5 处
+- **排版承载个性**：正文行宽 50-75 字符；数据用 `tabular-nums`；大字号跳跃用 3× 而非 1.5×
+- **圆角按角色变化**：输入框 6px、卡片 10px、弹窗 14px（**不要统一**）
+- **阴影分层**（环境光+直射光 2-3 层），胜过一条平边框
+- **一个签名细节**：一处让人记住的布局破格或独特 hover
+- **克制**：把大胆只花在一个地方，周围全部保持安静
+
+### 3.3 收银场景的额外约束
+
+| 约束 | 原因 |
+|---|---|
+| **触控目标 ≥ 44px** | 手指操作，已有 token `TouchTargetMin` |
+| **高频操作不做动画** | 收银员一分钟点几十次，动画 = 拖累 |
+| **金额必须 `tabular-nums` 且大字号** | 数字跳动会导致看错钱 |
+| **对比度 ≥ 4.5:1** | 前台光线不稳定 |
+| **焦点态可见** | 键盘辅助操作 |
+| **尊重 `prefers-reduced-motion`** | 无障碍地板 |
+
+---
+
+## 4. 第一步：Craft Read（**写码前必须先输出这一行**）
+
+> **Craft Read:** *[界面类型] 为 [受众]，[产品|营销] 语境，[主题/强调色倾向]，变化度 [N]，签名动作：[具体选择]。*
+
+**建议参数**（你可以调整，但要说明理由）：
+
+| 旋钮 | 建议值 | 理由 |
+|---|---|---|
+| `CRAFT_LEVEL` | 8 | 收银界面是高频工具，打磨深度要够 |
+| `MOTION_INTENSITY` | 2 | 高频操作，只留 hover/按下反馈 |
+| `VISUAL_DENSITY` | 7 | 收银需要一屏看到尽可能多的商品和桌台 |
+| `DESIGN_VARIANCE` | 3 | 工具类界面，稳定可预期优先于实验性 |
+
+**方案自检**（必须做）：拿你的选择问自己——"如果换个同类需求，我是不是也会得出这个方案？"
+是 → 这是默认值不是决定，改掉并说明改了什么、为什么。
+
+---
+
+## 5. 第二步：读现有设计 Token
+
+**`client/src/YiHua.Pos.UI/Themes/Tokens.axaml`（冻结，只能读）** 已定义：
+
+| 类别 | 内容 |
+|---|---|
+| 品牌色 | `PrimaryColor` `PrimaryHoverColor` `PrimaryPressedColor` `PrimaryLightColor` |
+| 功能色 | `SuccessColor` `WarningColor` `DangerColor` `InfoColor` |
+| 中性色 | `TextPrimary/Secondary/Disabled` `BorderColor` `DividerColor` `BackgroundColor` `SurfaceColor` |
+| 桌台状态色 | `DeskIdleColor` `DeskOccupiedColor` `DeskReservedColor` |
+| 字号 | 12 / 14 / **16（正文下限）** / 20 / 24 / 32 / 40 |
+| 间距 | `SpacingXs/Sm/Md/Lg/Xl`（4/8/16/24/32） |
+| 圆角 | `RadiusSm/Md/Lg`（6/8/12） |
+| 触控 | `TouchTargetMin` = 44 |
+
+**缺失的类别**（需要补充，但要先报给 Lead）：
+- 阴影（`--shadow-sm/md/lg`）
+- 动效时长与缓动（`--duration-fast/normal`、`--ease-*`）
+- z-index 层级
+- 组件级 token（如 `ButtonPrimaryBackground`）
+
+**做法**：把你需要的 token 列成清单，说明用途，**报给 Lead**（不要自己改 Tokens.axaml）。
+在你自己的控件里可以先用局部资源，但要在报告里注明。
+
+---
+
+## 6. 交付物
+
+```
+client/src/YiHua.Pos.UI/Controls/
+├── Buttons/
+│   ├── PosButton.cs / .axaml           主按钮（含 Primary/Secondary/Danger 变体）
+│   └── IconButton.cs                   图标按钮（触摸友好）
+├── Input/
+│   ├── TouchTextBox.cs                 触摸友好输入框（大热区、大字号）
+│   ├── NumberPad.cs / .axaml           数字键盘（收银必备）
+│   └── QtyStepper.cs / .axaml          数量加减器
+├── Display/
+│   ├── AmountDisplay.cs / .axaml       金额显示（大字号 + tabular-nums）
+│   ├── StatusTag.cs                    状态标签
+│   └── KeyValueRow.cs                  键值行（如「合计  128.00」）
+├── Cards/
+│   ├── ProductCard.cs / .axaml         商品卡片（图 + 名 + 价）
+│   ├── DeskCard.cs / .axaml            桌台卡片（桌号 + 人数 + 金额 + 状态）
+│   └── CategoryTab.cs / .axaml         分类切换标签
+├── Lists/
+│   └── OrderItemRow.cs / .axaml        订单明细行
+├── Feedback/
+│   ├── PosToast.cs                     轻提示
+│   ├── PosModal.cs                     模态弹窗
+│   ├── ConfirmDialog.cs                确认对话框
+│   ├── LoadingOverlay.cs               加载遮罩
+│   └── EmptyState.cs                   空状态
+└── Layout/
+    └── SectionHeader.cs                区块标题
+
+client/tests/YiHua.Pos.Tests/UI/
+├── NumberPadTests.cs
+├── QtyStepperTests.cs
+├── AmountDisplayTests.cs
+└── DeskCardStateTests.cs
+```
+
+---
+
+## 7. 关键控件的具体要求
+
+### 7.1 NumberPad（数字键盘）—— 收银必备
+
+```
+┌─────────────────────────┐
+│        128.00           │  ← 大字号显示区
+├─────┬─────┬─────┬───────┤
+│  1  │  2  │  3  │  清除 │
+├─────┼─────┼─────┼───────┤
+│  4  │  5  │  6  │   00  │
+├─────┼─────┼─────┼───────┤
+│  7  │  8  │  9  │  退格 │
+├─────┴──┬──┴─────┼───────┤
+│   .    │   0    │  确定 │
+└────────┴────────┴───────┘
+```
+
+- 按键 ≥ 56px（比 44 更大，因为误触成本高）
+- 支持物理键盘输入（收银员可能用外接键盘）
+- 小数点只能有一个
+- 最大值限制可配置
+- **按下反馈 ≤100ms，无动画延迟**
+
+### 7.2 ProductCard（商品卡片）
+
+- 三种尺寸：大图（快餐）/ 中图（正餐）/ 纯文字（商品多时）
+- 显示：图片、名称（最多 2 行）、价格、单位
+- 状态：正常 / 售罄（灰化 + 标记）/ 称重（显示"称重"标记）/ 套餐（显示套餐标记）
+- 触摸反馈：按下时轻微缩放（≤150ms）或底色变化
+
+### 7.3 DeskCard（桌台卡片）
+
+- 显示：桌号（大字）、就餐人数、当前金额、开台时长
+- 状态：空闲 / 占用 / 预订（用 `DeskIdleColor` `DeskOccupiedColor` `DeskReservedColor`）
+- **不要用彩色边框** —— 用底色区分
+- 长按/右键出操作菜单（换台/并台/清台）
+
+### 7.4 OrderItemRow（订单明细行）
+
+- 显示：商品名、规格、数量、单价、小计
+- 操作：改数量、改价、赠菜、删除
+- 赠菜要有明显标记（不计价）
+- 已退菜品要有删除线
+
+### 7.5 AmountDisplay（金额显示）
+
+- **必须 `tabular-nums`**（数字等宽，避免跳动）
+- 大字号（建议 32-40）
+- 支持前缀符号（¥）和小数位配置
+- 结账场景要能突出显示「找零」
+
+---
+
+## 8. 状态覆盖（**阻塞级要求**）
+
+每个交互控件必须有 **8 个状态**：
+
+```
+idle / loading / empty / error / success / partial / conflict / offline
+```
+
+**最少必须定义这三个**（未定义 = 阻塞，不许交付）：
+- **loading** —— 加载中
+- **empty** —— 空状态（且必须是"邀请行动的入口"，不是"暂无数据"）
+- **error** —— 错误（说清发生了什么 + 怎么修，不道歉不含糊）
+
+**其他必须覆盖的通用状态**：
+- `disabled` —— 禁用
+- `pressed` —— 按下
+- `focused` —— 焦点（键盘可达）
+- `selected` —— 选中
+
+---
+
+## 9. 验收标准
+
+```
+□ dotnet build client/YiHua.Pos.sln 通过（net8.0 + net6.0）
+□ dotnet test 全通过
+□ 每个控件有独立的预览（一个 Preview 页面或单元测试断言其行为）
+□ 触摸目标 ≥ 44px（NumberPad ≥ 56px）
+□ 高频操作无动画延迟
+□ 金额控件使用 tabular-nums
+□ 圆角按角色变化（不是全部同一个值）
+□ 没有 emoji 当图标
+□ 没有第三方 UI 库依赖
+□ 状态覆盖：loading / empty / error / disabled / pressed / focused / selected 都有定义
+□ 提供一份「设计 Token 补充清单」报给 Lead
+```
+
+---
+
+## 10. 完成后
+
+```bash
+dotnet build client/YiHua.Pos.sln
+dotnet test  client/YiHua.Pos.sln
+
+git fetch origin && git rebase origin/main
+git add -A
+git commit -m "T-005: 收银界面控件库"
+git push -u origin task/T-005-controls
+```
+
+告诉 Lead：「T-005 完成」
+附：
+1. 改动文件清单 + dotnet test 输出
+2. **你的 Craft Read 一行**
+3. **设计 Token 补充清单**（你需要的但 Tokens.axaml 里没有的）
+4. 每个控件的预览截图（如果能渲染）
