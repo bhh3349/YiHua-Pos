@@ -1,0 +1,75 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:YiHua.Pos.UI.Controls.Buttons">
+  <!-- 基础：触控目标 44px，圆角 6px（操作类），正文字号 16 -->
+  <Style Selector="controls|PosButton">
+    <Setter Property="MinHeight" Value="44" />
+    <Setter Property="MinWidth" Value="88" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Padding" Value="16,8" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="Cursor" Value="Hand" />
+  </Style>
+
+  <!-- Primary：唯一的承诺动作（确定/结账），实心品牌蓝 -->
+  <Style Selector="controls|PosButton[Variant=Primary]">
+    <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextOnPrimaryBrush}" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  <Style Selector="controls|PosButton[Variant=Primary]:pointerover">
+    <Setter Property="Background" Value="{DynamicResource PrimaryHoverBrush}" />
+  </Style>
+  <Style Selector="controls|PosButton[Variant=Primary]:pressed">
+    <Setter Property="Background" Value="{DynamicResource PrimaryPressedBrush}" />
+  </Style>
+
+  <!-- Secondary：中性纸面，细边框 -->
+  <Style Selector="controls|PosButton[Variant=Secondary]">
+    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+  <Style Selector="controls|PosButton[Variant=Secondary]:pointerover">
+    <Setter Property="Background" Value="{DynamicResource BackgroundBrush}" />
+  </Style>
+  <Style Selector="controls|PosButton[Variant=Secondary]:pressed">
+    <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+  </Style>
+
+  <!-- Danger：危险操作，浅红底 + 红字（不刺眼但明确）
+       浅红底为局部派生（Danger 12% 透明度），已列入 Token 补充清单 -->
+  <Style Selector="controls|PosButton[Variant=Danger]">
+    <Setter Property="Background">
+      <Setter.Value>
+        <SolidColorBrush Color="{DynamicResource DangerColor}" Opacity="0.12" />
+      </Setter.Value>
+    </Setter>
+    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  <Style Selector="controls|PosButton[Variant=Danger]:pressed">
+    <Setter Property="Background">
+      <Setter.Value>
+        <SolidColorBrush Color="{DynamicResource DangerColor}" Opacity="0.2" />
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- 禁用：统一降灰 -->
+  <Style Selector="controls|PosButton:disabled">
+    <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextDisabledBrush}" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+
+  <!-- 焦点可见（键盘操作） -->
+  <Style Selector="controls|PosButton:focus-visible">
+    <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+    <Setter Property="BorderThickness" Value="2" />
+  </Style>
+</Styles>

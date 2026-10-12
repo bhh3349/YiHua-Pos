@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:fb="clr-namespace:YiHua.Pos.UI.Controls.Feedback"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             x:Class="YiHua.Pos.UI.Controls.Feedback.ConfirmDialog">
+  <StackPanel Spacing="16" MinWidth="280">
+    <TextBlock Text="{Binding Title, RelativeSource={RelativeSource AncestorType=fb:ConfirmDialog}}"
+               FontSize="{DynamicResource FontSizeTitle}"
+               FontWeight="Bold"
+               Foreground="{DynamicResource TextPrimaryBrush}" />
+    <TextBlock Text="{Binding Message, RelativeSource={RelativeSource AncestorType=fb:ConfirmDialog}}"
+               FontSize="{DynamicResource FontSizeBody}"
+               Foreground="{DynamicResource TextSecondaryBrush}"
+               TextWrapping="Wrap" />
+    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+      <btn:PosButton Grid.Column="0"
+                     Variant="Secondary"
+                     Content="{Binding CancelText, RelativeSource={RelativeSource AncestorType=fb:ConfirmDialog}}"
+                     Click="OnCancelClick" />
+      <btn:PosButton Grid.Column="1"
+                     x:Name="ConfirmButton"
+                     Variant="Primary"
+                     Content="{Binding ConfirmText, RelativeSource={RelativeSource AncestorType=fb:ConfirmDialog}}"
+                     Click="OnConfirmClick" />
+    </Grid>
+  </StackPanel>
+</UserControl>

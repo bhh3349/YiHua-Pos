@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:cards="clr-namespace:YiHua.Pos.UI.Controls.Cards"
+             xmlns:conv="clr-namespace:YiHua.Pos.UI.Controls.Converters"
+             x:Class="YiHua.Pos.UI.Controls.Cards.ProductCard">
+  <UserControl.Resources>
+    <conv:ProductStateTagConverter x:Key="StateTagConverter" />
+    <conv:ProductHasTagConverter x:Key="HasTagConverter" />
+  </UserControl.Resources>
+  <Button Click="OnCardClick"
+          Background="Transparent"
+          BorderThickness="0"
+          Padding="0"
+          HorizontalAlignment="Stretch"
+          VerticalAlignment="Stretch">
+    <Button.Styles>
+      <Style Selector="Button:pressed > Border#CardBorder">
+        <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+      </Style>
+    </Button.Styles>
+    <Border x:Name="CardBorder"
+            Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="10"
+            Padding="12"
+            MinHeight="96">
+      <Grid RowDefinitions="Auto,*,Auto">
+        <!-- 状态标签 -->
+        <TextBlock Grid.Row="0"
+                   Text="{Binding State, RelativeSource={RelativeSource AncestorType=cards:ProductCard}, Converter={StaticResource StateTagConverter}}"
+                   FontSize="12"
+                   Foreground="{DynamicResource TextSecondaryBrush}"
+                   HorizontalAlignment="Right"
+                   IsVisible="{Binding State, RelativeSource={RelativeSource AncestorType=cards:ProductCard}, Converter={StaticResource HasTagConverter}}" />
+        <!-- 商品名（最多 2 行） -->
+        <TextBlock Grid.Row="1"
+                   Text="{Binding ProductName, RelativeSource={RelativeSource AncestorType=cards:ProductCard}}"
+                   FontSize="{DynamicResource FontSizeBody}"
+                   Foreground="{DynamicResource TextPrimaryBrush}"
+                   TextWrapping="Wrap"
+                   MaxLines="2"
+                   VerticalAlignment="Center"
+                   Margin="0,8" />
+        <!-- 价格行 -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Bottom">
+          <TextBlock Text="{Binding Price, RelativeSource={RelativeSource AncestorType=cards:ProductCard}, StringFormat='¥{0:F2}'}"
+                     FontSize="{DynamicResource FontSizeSubtitle}"
+                     FontWeight="Bold"
+                     Foreground="{DynamicResource TextPrimaryBrush}" />
+          <TextBlock Text="{Binding UnitName, RelativeSource={RelativeSource AncestorType=cards:ProductCard}}"
+                     FontSize="{DynamicResource FontSizeSmall}"
+                     Foreground="{DynamicResource TextSecondaryBrush}"
+                     VerticalAlignment="Bottom" />
+        </StackPanel>
+      </Grid>
+    </Border>
+  </Button>
+</UserControl>
