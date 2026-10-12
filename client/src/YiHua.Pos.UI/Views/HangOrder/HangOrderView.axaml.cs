@@ -1,3 +1,6 @@
+using YiHua.Pos.Domain.Entities;
+using YiHua.Pos.Domain.Enums;
+using YiHua.Pos.Domain.Interfaces;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;

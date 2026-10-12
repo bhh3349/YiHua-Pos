@@ -35,6 +35,26 @@ public class Order
     /// <summary>已退金额</summary>
     public decimal AmountRefund { get; set; }
 
+    /// <summary>
+    /// 团购平台编码（self / meituan / eleme / douyin）。
+    /// 为空表示非团购单。
+    ///
+    /// 注意：业务代码**不要**写 if (platform == "meituan") 这种判断——
+    /// 加平台走PlatformAdapter（T-405 已实现并有 AST 测试保证）。
+    /// 这里只存编码，用于对账与核销记录回溯。
+    /// </summary>
+    public string GroupBuyPlatform { get; set; } = string.Empty;
+
+    /// <summary>团购券码</summary>
+    public string GroupBuyCouponCode { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 团购券抵扣金额。
+    /// 抵扣不是打折，两者口径不同：打折改应付，抵扣只是少付。
+    /// 报表要分开列，否则老板会把团购单当成打折单。
+    /// </summary>
+    public decimal AmountGroupBuy { get; set; }
+
     /// <summary>实收金额</summary>
     public decimal AmountReceived { get; set; }
 

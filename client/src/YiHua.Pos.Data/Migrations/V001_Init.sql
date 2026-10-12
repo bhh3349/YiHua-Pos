@@ -25,6 +25,11 @@ CREATE TABLE IF NOT EXISTS "Order" (
     AmountRefund  TEXT NOT NULL DEFAULT '0',
     AmountReceived TEXT NOT NULL DEFAULT '0',
     AmountChange  TEXT NOT NULL DEFAULT '0',
+    -- 团购（T-405）：只存编码，平台差异走 PlatformAdapter，业务代码不做平台分支
+    GroupBuyPlatform    TEXT NOT NULL DEFAULT '',
+    GroupBuyCouponCode  TEXT NOT NULL DEFAULT '',
+    -- 抵扣不是打折：打折改应付，抵扣只影响实付，报表要分开列
+    AmountGroupBuy      TEXT NOT NULL DEFAULT '0',
     TakeNo        TEXT NOT NULL DEFAULT '',
     ShiftId       INTEGER NOT NULL DEFAULT 0,
     OperatorId    INTEGER NOT NULL DEFAULT 0,

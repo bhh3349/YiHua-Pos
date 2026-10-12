@@ -1,3 +1,6 @@
+using YiHua.Pos.Domain.Entities;
+using YiHua.Pos.Domain.Enums;
+using YiHua.Pos.Domain.Interfaces;
 namespace YiHua.Pos.UI.Services.Settings;
 
 /// <summary>

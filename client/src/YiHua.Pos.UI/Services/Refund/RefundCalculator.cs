@@ -3,17 +3,7 @@ using YiHua.Pos.Domain.Enums;
 
 namespace YiHua.Pos.UI.Services.Refund;
 
-/// <summary>退款类型</summary>
-public enum RefundType
-{
-    /// <summary>退菜（部分退）</summary>
-    Item,
-    /// <summary>整单退单</summary>
-    Order,
-    /// <summary>冲正（作废）</summary>
-    Void,
-}
-
+// RefundType 已上移到 Domain（Wave 5 补充）。
 /// <summary>
 /// 退款计算器：纯逻辑类，所有金额红线集中于此，重点测试。
 /// 全程 decimal，取整显式 MidpointRounding.AwayFromZero。

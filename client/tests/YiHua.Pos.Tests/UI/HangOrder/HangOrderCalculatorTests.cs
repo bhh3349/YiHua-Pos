@@ -1,3 +1,4 @@
+using YiHua.Pos.Domain.Interfaces;
 using Xunit;
 using YiHua.Pos.Domain.Entities;
 using YiHua.Pos.Domain.Enums;

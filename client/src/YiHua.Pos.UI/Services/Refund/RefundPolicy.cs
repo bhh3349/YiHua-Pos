@@ -1,3 +1,6 @@
+using YiHua.Pos.Domain.Entities;
+using YiHua.Pos.Domain.Enums;
+using YiHua.Pos.Domain.Interfaces;
 namespace YiHua.Pos.UI.Services.Refund;
 
 /// <summary>退款策略：阈值与权限规则（可配置）</summary>

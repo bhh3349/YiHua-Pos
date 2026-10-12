@@ -1,3 +1,6 @@
+using YiHua.Pos.Domain.Entities;
+using YiHua.Pos.Domain.Enums;
+using YiHua.Pos.Domain.Interfaces;
 using Xunit;
 using YiHua.Pos.UI.Services.HangOrder;
 using YiHua.Pos.UI.ViewModels.HangOrder;

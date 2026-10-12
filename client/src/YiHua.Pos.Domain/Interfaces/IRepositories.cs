@@ -108,3 +108,68 @@ public interface IDbInitializer
     /// <summary>备份到指定路径</summary>
     Task BackupAsync(string targetPath, CancellationToken ct = default);
 }
+
+// ============================================================================
+//  Wave 5 补充 —— 由 Lead 统一补齐
+//
+//  补的时机：三家的 UI 层已经用接口 + 假实现跑通了逻辑，
+//  现在把契约上移到 Domain，实现类可以真正落库。
+// ============================================================================
+
+/// <summary>退款仓储</summary>
+public interface IRefundRepository
+{
+    Task<long> InsertAsync(RefundRecord record, CancellationToken ct = default);
+    Task<IReadOnlyList<RefundRecord>> GetByOrderIdAsync(long orderId, CancellationToken ct = default);
+
+    /// <summary>订单累计已退金额（红线校验用：累计不能超过实收）</summary>
+    Task<decimal> GetTotalRefundedAsync(long orderId, CancellationToken ct = default);
+
+    /// <summary>按班次查退款（交班对账用）</summary>
+    Task<IReadOnlyList<RefundRecord>> GetByShiftIdAsync(long shiftId, CancellationToken ct = default);
+
+    Task MarkPrintedAsync(long recordId, CancellationToken ct = default);
+}
+
+/// <summary>挂单仓储</summary>
+public interface IHangOrderRepository
+{
+    Task<HangOrderRecord> ParkAsync(HangOrderRecord record, CancellationToken ct = default);
+    Task<HangOrderRecord?> GetByIdAsync(string id, CancellationToken ct = default);
+
+    /// <summary>全部挂单（默认只含 Parked）</summary>
+    Task<List<HangOrderRecord>> GetAllAsync(bool includeClosed = false, CancellationToken ct = default);
+
+    Task<List<HangOrderRecord>> GetByDeskIdAsync(long deskId, CancellationToken ct = default);
+    Task RemoveAsync(string id, CancellationToken ct = default);
+    Task UpdateAsync(HangOrderRecord record, CancellationToken ct = default);
+    Task<int> CountAsync(CancellationToken ct = default);
+}
+
+/// <summary>门店信息仓储</summary>
+public interface IStoreInfoRepository
+{
+    Task<StoreInfo> GetAsync(CancellationToken ct = default);
+    Task SaveAsync(StoreInfo info, CancellationToken ct = default);
+}
+
+/// <summary>打印机配置仓储</summary>
+public interface IPrinterConfigRepository
+{
+    Task<List<PrinterConfig>> GetAllAsync(CancellationToken ct = default);
+    Task ReplaceAllAsync(IEnumerable<PrinterConfig> printers, CancellationToken ct = default);
+}
+
+/// <summary>系统配置仓储</summary>
+public interface ISystemConfigRepository
+{
+    Task<SystemConfig> GetAsync(CancellationToken ct = default);
+    Task SaveAsync(SystemConfig config, CancellationToken ct = default);
+}
+
+/// <summary>收银规则仓储</summary>
+public interface ICashRuleRepository
+{
+    Task<CashRule> GetAsync(CancellationToken ct = default);
+    Task SaveAsync(CashRule rule, CancellationToken ct = default);
+}

@@ -1,3 +1,6 @@
+using YiHua.Pos.Domain.Entities;
+using YiHua.Pos.Domain.Enums;
+using YiHua.Pos.Domain.Interfaces;
 using System.Collections.ObjectModel;
 using YiHua.Pos.UI.Services.HangOrder;
 using YiHua.Pos.UI.ViewModels.Ordering;
@@ -69,7 +72,7 @@ public sealed class HangOrderViewModel : ViewModelBase
         ErrorMessage = null;
         try
         {
-            var list = await _repo.GetAllAsync(ct).ConfigureAwait(false);
+            var list = await _repo.GetAllAsync(ct: ct).ConfigureAwait(false);
             Records.Clear();
             foreach (var r in list) Records.Add(r);
             RaisePropertyChanged(nameof(FilteredRecords));

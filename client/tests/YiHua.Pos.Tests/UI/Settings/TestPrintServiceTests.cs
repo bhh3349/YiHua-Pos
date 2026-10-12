@@ -1,3 +1,5 @@
+using YiHua.Pos.Domain.Entities;
+using YiHua.Pos.Domain.Interfaces;
 using System.Text;
 using YiHua.Pos.Domain.Enums;
 using YiHua.Pos.Hardware.Abstractions;

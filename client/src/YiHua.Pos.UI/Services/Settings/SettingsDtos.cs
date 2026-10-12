@@ -1,3 +1,5 @@
+using YiHua.Pos.Domain.Entities;
+
 namespace YiHua.Pos.UI.Services.Settings;
 
 /// <summary>
@@ -24,20 +26,24 @@ public class PrinterConfigDto
     public PrinterUsage Usage { get; set; } = PrinterUsage.Receipt;
     /// <summary>设备路径（Linux: /dev/usb/lp0；Windows: 共享名/COM口）。</summary>
     public string DevicePath { get; set; } = string.Empty;
-    /// <summary>档口（后厨打印机用，如"热菜"/"凉菜"）。</summary>
-    public string Station { get; set; } = string.Empty;
+
+    /// <summary>是否启用（停用的打印机不参与打印，但配置保留）。</summary>
     public bool Enabled { get; set; } = true;
+
+    /// <summary>
+    /// 绑定的档口名（如「热菜」「凉菜」）。为空表示不参与档口分单。
+    /// 后厨单要能按档口分打到不同打印机，否则厨师互相抢单。
+    /// </summary>
+    public string Station { get; set; } = string.Empty;
+
+    /// <summary>运行状态：实时探测得到，不持久化。</summary>
     public PrinterStatus Status { get; set; } = PrinterStatus.Unknown;
 }
 
-public enum PrinterUsage
-{
-    Receipt,   // 小票
-    Kitchen,   // 后厨
-    Label,     // 标签
-    Shift,     // 交班单
-}
-
+/// <summary>
+/// 打印机运行状态。
+/// 属于运行时状态而非持久化配置，所以留在 UI 层不进 Domain。
+/// </summary>
 public enum PrinterStatus
 {
     Unknown,
@@ -48,23 +54,18 @@ public enum PrinterStatus
 }
 
 /// <summary>
-/// 收银规则 DTO。
+/// 收银规则 DTO。RoundingRule 已上移到 Domain（Wave 5 补充）。
 /// </summary>
 public class CashRuleDto
 {
     public RoundingRule RoundingRule { get; set; } = RoundingRule.None;
+
     public bool AllowItemDiscount { get; set; } = true;
     public bool AllowOrderDiscount { get; set; } = true;
-    public bool ShowDetailOnReceipt { get; set; } = true;
-    public bool ShowDiscountOnReceipt { get; set; } = true;
-    public bool ShowQrCodeOnReceipt { get; set; } = false;
-}
+    public bool AllowMemberDiscount { get; set; } = true;
 
-public enum RoundingRule
-{
-    None,       // 不抹零
-    ToJiao,     // 抹到角
-    ToYuan,     // 抹到元
+    public bool PrintItems { get; set; } = true;
+    public bool PrintDiscount { get; set; } = true;
 }
 
 /// <summary>

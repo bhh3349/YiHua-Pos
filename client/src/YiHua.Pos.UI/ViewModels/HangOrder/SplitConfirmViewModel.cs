@@ -1,3 +1,6 @@
+using YiHua.Pos.Domain.Entities;
+using YiHua.Pos.Domain.Enums;
+using YiHua.Pos.Domain.Interfaces;
 using YiHua.Pos.UI.Services.HangOrder;
 using YiHua.Pos.UI.ViewModels.Ordering;
 
@@ -61,7 +64,7 @@ public sealed class HangOrderCleanViewModel : ViewModelBase
     {
         try
         {
-            var all = await _repo.GetAllAsync(ct).ConfigureAwait(false);
+            var all = await _repo.GetAllAsync(ct: ct).ConfigureAwait(false);
             ToClean = all.Where(r => HangOrderCalculator.IsTimedOut(r, timeout)).ToList();
             RaisePropertyChanged(nameof(ToClean));
             RaisePropertyChanged(nameof(CleanCount));

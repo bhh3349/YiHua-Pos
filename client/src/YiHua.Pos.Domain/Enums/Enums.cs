@@ -122,3 +122,29 @@ public enum TemplateType
     /// <summary>交班单</summary>
     Handover = 4,
 }
+
+/// <summary>退款类型</summary>
+public enum RefundType
+{
+    /// <summary>退菜（部分退）</summary>
+    Item,
+
+    /// <summary>整单退单</summary>
+    Order,
+
+    /// <summary>冲正（作废，仅未结账订单可用）</summary>
+    Void,
+}
+
+/// <summary>挂单状态</summary>
+public enum HangOrderStatus
+{
+    /// <summary>挂起中，等待取单</summary>
+    Parked,
+
+    /// <summary>已取回，订单恢复结账</summary>
+    Recalled,
+
+    /// <summary>已作废（批量清理或超时自动清理）</summary>
+    Cancelled,
+}
