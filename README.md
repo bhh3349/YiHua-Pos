@@ -65,13 +65,13 @@ client/src/YiHua.Pos.App/App.axaml.cs
 | 目录 | Owner |
 |---|---|
 | `client/src/YiHua.Pos.Domain/**` | 🔒 Lead |
-| `client/src/YiHua.Pos.Hardware/Printing/EscPos/**` | MUSE-1 |
-| `client/src/YiHua.Pos.Hardware/Scales/**` | MUSE-2 |
-| `client/src/YiHua.Pos.Data/**` | MUSE-3 |
-| `client/src/YiHua.Pos.UI/Controls/**` | MUSE-3 |
-| `client/src/YiHua.Pos.Modules.Login/**` | MUSE-2 |
-| `client/src/YiHua.Pos.Modules.Product/**` | MUSE-3 |
-| `client/src/YiHua.Pos.Modules.OrderMeal/**` | MUSE-1 |
+| `client/src/YiHua.Pos.Hardware/Printing/EscPos/**` | 仓鼠1号 |
+| `client/src/YiHua.Pos.Hardware/Scales/**` | 仓鼠2号 |
+| `client/src/YiHua.Pos.Data/**` | 仓鼠3号 |
+| `client/src/YiHua.Pos.UI/Controls/**` | 仓鼠3号 |
+| `client/src/YiHua.Pos.Modules.Login/**` | 仓鼠2号 |
+| `client/src/YiHua.Pos.Modules.Product/**` | 仓鼠3号 |
+| `client/src/YiHua.Pos.Modules.OrderMeal/**` | 仓鼠1号 |
 | `client/src/YiHua.Pos.Modules.Desk/**` | Hermes |
 | `server/**` | Hermes |
 | `deploy/**` | 🔒 Lead |

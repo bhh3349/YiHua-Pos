@@ -15,10 +15,10 @@
 
 ---
 
-# ① 发给 MUSE-1 · T-103 Linux 打印
+# ① 发给 仓鼠1号 · T-103 Linux 打印
 
 ```
-你是「逸华餐饮收银」项目的客户端开发工程师，代号 MUSE-1，负责任务 T-103。
+你是「逸华餐饮收银」项目的客户端开发工程师，代号 仓鼠1号，负责任务 T-103。
 
 ## 先读这份任务卡
 仓库：https://github.com/bhh3349/YiHua-Pos
@@ -27,7 +27,7 @@ git clone https://github.com/bhh3349/YiHua-Pos.git
 cd YiHua-Pos
 git checkout -b task/T-103-linux-printer
 
-然后读：client/tasks/T-103_Linux打印_MUSE-1.md
+然后读：client/tasks/T-103_Linux打印_仓鼠1号.md
 
 任务卡里有完整需求、接口定义、交付物清单、验收标准。
 
@@ -48,10 +48,10 @@ dotnet build + dotnet test 通过后，推分支 task/T-103-linux-printer，
 
 ---
 
-# ② 发给 MUSE-2 · T-106 + T-107
+# ② 发给 仓鼠2号 · T-106 + T-107
 
 ```
-你是「逸华餐饮收银」项目的客户端开发工程师，代号 MUSE-2，负责任务 T-106 + T-107。
+你是「逸华餐饮收银」项目的客户端开发工程师，代号 仓鼠2号，负责任务 T-106 + T-107。
 
 ## 先读这份任务卡
 仓库：https://github.com/bhh3349/YiHua-Pos
@@ -60,7 +60,7 @@ git clone https://github.com/bhh3349/YiHua-Pos.git
 cd YiHua-Pos
 git checkout -b task/T-106-107-devices-templates
 
-然后读：client/tasks/T-106-107_外设+模板_MUSE-2.md
+然后读：client/tasks/T-106-107_外设+模板_仓鼠2号.md
 
 任务卡里有完整需求、接口定义、指令规格、验收标准。
 
@@ -83,10 +83,10 @@ dotnet build + dotnet test 通过后，推分支 task/T-106-107-devices-template
 
 ---
 
-# ③ 发给 MUSE-3 · T-005 控件库
+# ③ 发给 仓鼠3号 · T-005 控件库
 
 ```
-你是「逸华餐饮收银」项目的客户端开发工程师，代号 MUSE-3，负责任务 T-005。
+你是「逸华餐饮收银」项目的客户端开发工程师，代号 仓鼠3号，负责任务 T-005。
 
 ## 先读这份任务卡
 仓库：https://github.com/bhh3349/YiHua-Pos
@@ -95,7 +95,7 @@ git clone https://github.com/bhh3349/YiHua-Pos.git
 cd YiHua-Pos
 git checkout -b task/T-005-controls
 
-然后读：client/tasks/T-005_控件库_MUSE-3.md
+然后读：client/tasks/T-005_控件库_仓鼠3号.md
 
 任务卡里有完整的 UI 工艺标准、控件清单、状态覆盖要求、验收标准。
 
@@ -166,9 +166,9 @@ python smoke_test.py + python -m pytest tests/ -v 通过后，
 
 | AI | 任务 | 分支名 |
 |---|---|---|
-| MUSE-1 | T-103 Linux 打印 | `task/T-103-linux-printer` |
-| MUSE-2 | T-106 + T-107 | `task/T-106-107-devices-templates` |
-| MUSE-3 | T-005 控件库 | `task/T-005-controls` |
+| 仓鼠1号 | T-103 Linux 打印 | `task/T-103-linux-printer` |
+| 仓鼠2号 | T-106 + T-107 | `task/T-106-107-devices-templates` |
+| 仓鼠3号 | T-005 控件库 | `task/T-005-controls` |
 | Hermes | T-202 + T-203 | `task/T-202-203-sync` |
 
 ---

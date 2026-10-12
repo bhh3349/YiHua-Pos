@@ -1,6 +1,6 @@
 # 任务卡 T-102 · ESC/POS 指令生成器
 
-> **收件人：MUSE-1** · 项目：逸华餐饮收银 · 工作区：`C:\WorkSpace\purge\client`
+> **收件人：仓鼠1号** · 项目：逸华餐饮收银 · 工作区：`C:\WorkSpace\purge\client`
 
 ---
 

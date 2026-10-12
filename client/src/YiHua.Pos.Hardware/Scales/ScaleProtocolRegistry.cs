@@ -1,4 +1,4 @@
-// MUSE-2 · T-105 电子秤协议
+// 仓鼠2号 · T-105 电子秤协议
 // 协议注册表：按名创建协议实例，并定义自动探测顺序（按市场占有率）。
 
 using YiHua.Pos.Hardware.Abstractions;

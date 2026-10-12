@@ -1,6 +1,6 @@
 # 任务卡 T-103 · Linux 打印实现
 
-> **收件人：MUSE-1** · 分支：`task/T-103-linux-printer`
+> **收件人：仓鼠1号** · 分支：`task/T-103-linux-printer`
 
 ---
 

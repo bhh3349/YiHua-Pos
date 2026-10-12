@@ -1,4 +1,4 @@
-// MUSE-2 · T-105 电子秤协议
+// 仓鼠2号 · T-105 电子秤协议
 // 电子秤状态枚举（对应《协议规范-电子秤.md》1.4 节）
 
 namespace YiHua.Pos.Hardware.Scales;
