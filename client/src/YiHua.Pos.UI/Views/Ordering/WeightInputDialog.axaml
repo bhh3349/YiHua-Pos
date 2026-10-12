@@ -1,0 +1,62 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Ordering"
+        xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
+        xmlns:display="clr-namespace:YiHua.Pos.UI.Controls.Display"
+        x:Class="YiHua.Pos.UI.Views.Ordering.WeightInputDialog"
+        x:DataType="vm:WeightInputViewModel"
+        Title="称重"
+        Width="420" Height="620"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BackgroundBrush}">
+  <Grid RowDefinitions="Auto,Auto,*,Auto">
+    <StackPanel Grid.Row="0" Margin="24,20,24,8">
+      <TextBlock Text="{Binding ProductName}"
+                 FontSize="{DynamicResource FontSizeSubtitle}"
+                 FontWeight="SemiBold"
+                 Foreground="{DynamicResource TextPrimaryBrush}" />
+      <TextBlock Text="{Binding UnitPrice, StringFormat='单价 ¥{0:F2}/kg'}"
+                 FontSize="{DynamicResource FontSizeBody}"
+                 Foreground="{DynamicResource TextSecondaryBrush}"
+                 Margin="0,4,0,0" />
+    </StackPanel>
+
+    <!-- 重量显示（带单位） -->
+    <Border Grid.Row="1"
+            Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="10"
+            Padding="16,12"
+            Margin="24,8">
+      <Grid ColumnDefinitions="*,Auto">
+        <display:AmountDisplay Grid.Column="0"
+                               Amount="{Binding WeightKg}"
+                               FontSize="40" />
+        <TextBlock Grid.Column="1"
+                   Text="kg"
+                   FontSize="{DynamicResource FontSizeSubtitle}"
+                   Foreground="{DynamicResource TextSecondaryBrush}"
+                   VerticalAlignment="Center"
+                   Margin="8,0,0,0" />
+      </Grid>
+    </Border>
+
+    <!-- 数字键盘 -->
+    <input:NumberPad Grid.Row="2" Margin="24,8" />
+
+    <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="24,16">
+      <!-- 金额是算出来的 -->
+      <TextBlock Grid.Column="0"
+                 Text="{Binding Amount, StringFormat='金额 ¥{0:F2}'}"
+                 FontSize="{DynamicResource FontSizeSubtitle}"
+                 FontWeight="SemiBold"
+                 Foreground="{DynamicResource PrimaryBrush}"
+                 VerticalAlignment="Center" />
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
+        <Button Content="取消" MinWidth="110" MinHeight="52" />
+        <Button Content="确定" MinWidth="110" MinHeight="52" />
+      </StackPanel>
+    </Grid>
+  </Grid>
+</Window>

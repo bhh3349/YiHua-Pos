@@ -13,4 +13,9 @@
     <PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
   </ItemGroup>
 
+  <!-- T-303: 点单模块需复用 Domain 实体与仓储接口 -->
+  <ItemGroup>
+    <ProjectReference Include="..\YiHua.Pos.Domain\YiHua.Pos.Domain.csproj" />
+  </ItemGroup>
+
 </Project>
