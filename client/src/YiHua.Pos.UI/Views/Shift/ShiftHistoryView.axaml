@@ -1,0 +1,53 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Shift"
+             x:Class="YiHua.Pos.UI.Views.Shift.ShiftHistoryView"
+             x:DataType="vm:ShiftHistoryViewModel">
+  <Grid RowDefinitions="Auto,*,Auto">
+    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12" Margin="16,12">
+      <TextBlock Text="交班历史" FontSize="{DynamicResource FontSizeTitle}"
+                 FontWeight="Bold" VerticalAlignment="Center" />
+      <CalendarDatePicker SelectedDate="{Binding From}" MinHeight="44" />
+      <TextBlock Text="至" VerticalAlignment="Center" />
+      <CalendarDatePicker SelectedDate="{Binding To}" MinHeight="44" />
+    </StackPanel>
+
+    <ListBox Grid.Row="1" Margin="16,0" ItemsSource="{Binding Shifts}">
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,8">
+            <StackPanel Grid.Column="0" Spacing="4" MinWidth="160">
+              <TextBlock Text="{Binding OperatorName}" FontWeight="SemiBold" />
+              <TextBlock Text="{Binding StartAt, StringFormat='{}{0:MM-dd HH:mm}'}"
+                         FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextSecondaryBrush}" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+              <TextBlock Text="{Binding OrderCount}"
+                         Foreground="{DynamicResource TextSecondaryBrush}" />
+              <TextBlock Text=" 笔"
+                         Foreground="{DynamicResource TextSecondaryBrush}" />
+            </StackPanel>
+            <TextBlock Grid.Column="2"
+                       Text="{Binding DifferenceText}"
+                       VerticalAlignment="Center" Margin="12,0"
+                       Foreground="{DynamicResource TextSecondaryBrush}" />
+            <Button Grid.Column="3" Content="重打交班单"
+                    Click="OnReprint" MinHeight="44" />
+          </Grid>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+
+    <StackPanel Grid.Row="1" IsVisible="{Binding IsEmpty}"
+                VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
+      <TextBlock Text="暂无交班记录" HorizontalAlignment="Center"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+    </StackPanel>
+
+    <TextBlock Grid.Row="2" Margin="16,8"
+               FontSize="{DynamicResource FontSizeSmall}"
+               Foreground="{DynamicResource TextSecondaryBrush}"
+               Text="{Binding Shifts.Count, StringFormat='共 {0} 个班次'}" />
+  </Grid>
+</UserControl>

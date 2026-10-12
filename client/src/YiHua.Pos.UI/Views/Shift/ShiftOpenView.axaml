@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Shift"
+             x:Class="YiHua.Pos.UI.Views.Shift.ShiftOpenView"
+             x:DataType="vm:ShiftOpenViewModel">
+  <StackPanel Spacing="16" Margin="24" MaxWidth="400">
+    <TextBlock Text="开班" FontSize="{DynamicResource FontSizeTitle}" FontWeight="Bold" />
+    <TextBlock Text="请输入本班备用金（钱箱初始现金）"
+               Foreground="{DynamicResource TextSecondaryBrush}"
+               TextWrapping="Wrap" />
+    <StackPanel Spacing="8">
+      <TextBlock Text="备用金" Foreground="{DynamicResource TextSecondaryBrush}" />
+      <NumericUpDown Value="{Binding OpeningFloat}"
+                     Minimum="0" Maximum="99999"
+                     MinHeight="48" />
+    </StackPanel>
+    <TextBlock Text="{Binding ErrorMessage}"
+               IsVisible="{Binding !!ErrorMessage}"
+               Foreground="{DynamicResource DangerBrush}"
+               TextWrapping="Wrap" />
+    <TextBlock Text="正在开班…"
+               IsVisible="{Binding IsLoading}"
+               Foreground="{DynamicResource TextSecondaryBrush}" />
+    <Button Content="确认开班"
+            Click="OnConfirm"
+            MinHeight="48"
+            HorizontalAlignment="Stretch"
+            HorizontalContentAlignment="Center" />
+  </StackPanel>
+</UserControl>
