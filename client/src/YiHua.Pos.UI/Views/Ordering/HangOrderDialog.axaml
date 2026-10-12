@@ -1,0 +1,60 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Ordering"
+        x:Class="YiHua.Pos.UI.Views.Ordering.HangOrderDialog"
+        x:DataType="vm:HangOrderViewModel"
+        Title="挂单列表"
+        Width="560" Height="520"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BackgroundBrush}">
+  <Grid RowDefinitions="Auto,*,Auto">
+    <TextBlock Grid.Row="0" Text="挂单列表"
+               FontSize="{DynamicResource FontSizeSubtitle}"
+               FontWeight="SemiBold"
+               Foreground="{DynamicResource TextPrimaryBrush}"
+               Margin="24,20,24,12" />
+
+    <ListBox Grid.Row="1" ItemsSource="{Binding Hangs}" Margin="24,0"
+             Background="Transparent" BorderThickness="0">
+      <ListBox.ItemTemplate>
+        <DataTemplate x:DataType="vm:HangOrderSnapshotView">
+          <Border Background="{DynamicResource SurfaceBrush}"
+                  BorderBrush="{DynamicResource BorderBrush}"
+                  BorderThickness="1"
+                  CornerRadius="10"
+                  Padding="16,12"
+                  Margin="0,0,0,8">
+            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+              <TextBlock Grid.Row="0" Grid.Column="0"
+                         Text="{Binding DeskName, StringFormat='桌台 {0}'}"
+                         FontSize="{DynamicResource FontSizeBody}"
+                         FontWeight="SemiBold"
+                         Foreground="{DynamicResource TextPrimaryBrush}" />
+              <TextBlock Grid.Row="0" Grid.Column="1"
+                         Text="{Binding Amount, StringFormat='¥{0:F2}'}"
+                         FontSize="{DynamicResource FontSizeBody}"
+                         FontWeight="SemiBold"
+                         Foreground="{DynamicResource PrimaryBrush}" />
+              <TextBlock Grid.Row="1" Grid.Column="0"
+                         Text="{Binding Summary}"
+                         FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextSecondaryBrush}"
+                         Margin="0,4,0,0" />
+              <TextBlock Grid.Row="1" Grid.Column="1"
+                         Text="可能已遗忘"
+                         FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource WarningBrush}"
+                         IsVisible="{Binding IsStale}"
+                         Margin="0,4,0,0" />
+            </Grid>
+          </Border>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+
+    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12"
+                HorizontalAlignment="Right" Margin="24,16">
+      <Button Content="关闭" MinWidth="110" MinHeight="52" />
+    </StackPanel>
+  </Grid>
+</Window>

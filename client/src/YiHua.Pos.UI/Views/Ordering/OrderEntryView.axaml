@@ -1,0 +1,207 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Ordering"
+             xmlns:cards="clr-namespace:YiHua.Pos.UI.Controls.Cards"
+             xmlns:lists="clr-namespace:YiHua.Pos.UI.Controls.Lists"
+             xmlns:display="clr-namespace:YiHua.Pos.UI.Controls.Display"
+             xmlns:buttons="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:feedback="clr-namespace:YiHua.Pos.UI.Controls.Feedback"
+             x:Class="YiHua.Pos.UI.Views.Ordering.OrderEntryView"
+             x:DataType="vm:OrderEntryViewModel"
+             Background="{DynamicResource BackgroundBrush}">
+  <Grid RowDefinitions="Auto,*,Auto">
+
+    <!-- ===== 桌台头：桌号 · 人数 · 已开时长 | 操作 ===== -->
+    <Border Grid.Row="0"
+            Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource DividerBrush}"
+            BorderThickness="0,0,0,1"
+            Padding="16,12">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+          <TextBlock Text="{Binding DeskName}"
+                     FontSize="{DynamicResource FontSizeTitle}"
+                     FontWeight="Bold"
+                     Foreground="{DynamicResource TextPrimaryBrush}"
+                     VerticalAlignment="Center" />
+          <TextBlock Text="{Binding Desk.GuestCount, StringFormat='{}{0}人'}"
+                     FontSize="{DynamicResource FontSizeBody}"
+                     Foreground="{DynamicResource TextSecondaryBrush}"
+                     VerticalAlignment="Center" />
+          <!-- 签名细节：已开时长 -->
+          <Border Background="{DynamicResource PrimaryLightBrush}"
+                  CornerRadius="6"
+                  Padding="10,4"
+                  VerticalAlignment="Center">
+            <TextBlock Text="{Binding OpenDurationText}"
+                       FontSize="{DynamicResource FontSizeSmall}"
+                       Foreground="{DynamicResource PrimaryBrush}"
+                       />
+          </Border>
+        </StackPanel>
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+          <buttons:PosButton Content="换台" />
+          <buttons:PosButton Content="并台" />
+          <buttons:PosButton Content="清台" />
+          <buttons:PosButton Content="结账" Variant="Primary" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- ===== 主区域：左商品（55%） + 右明细（45%） ===== -->
+    <Grid Grid.Row="1" ColumnDefinitions="5.5*,4.5*">
+
+      <!-- 左：商品区 -->
+      <Grid Grid.Column="0" RowDefinitions="Auto,*">
+        <!-- 分类标签 -->
+        <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+          <ItemsControl ItemsSource="{Binding Categories}" Margin="16,12,16,0">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" Spacing="8" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:CategoryTabViewModel">
+                <cards:CategoryTab CategoryName="{Binding Name}"
+                                   IsSelected="{Binding IsSelected}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+
+        <!-- 商品卡片网格 -->
+        <ScrollViewer Grid.Row="1" Padding="16,12">
+          <ItemsControl ItemsSource="{Binding Products}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel Orientation="Horizontal" ItemWidth="140" ItemHeight="108" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <cards:ProductCard ProductName="{Binding Name}"
+                                   Price="{Binding Price}"
+                                   UnitName="{Binding UnitName}"
+                                   Margin="0,0,12,12" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+
+        <!-- 空状态 -->
+        <feedback:EmptyState Grid.Row="1"
+                            Title="暂无商品"
+                            Description="请选择分类或等待商品数据加载"
+                            IsVisible="{Binding !Products.Count}" />
+      </Grid>
+
+      <!-- 右：订单明细 -->
+      <Border Grid.Column="1"
+              Background="{DynamicResource SurfaceBrush}"
+              BorderBrush="{DynamicResource DividerBrush}"
+              BorderThickness="1,0,0,0">
+        <Grid RowDefinitions="Auto,*,Auto,Auto">
+          <TextBlock Grid.Row="0"
+                     Text="订单明细"
+                     FontSize="{DynamicResource FontSizeSubtitle}"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextPrimaryBrush}"
+                     Margin="16,16,16,8" />
+
+          <!-- 明细列表 -->
+          <ListBox Grid.Row="1"
+                   ItemsSource="{Binding Lines}"
+                   SelectedItem="{Binding SelectedLine}"
+                   Background="Transparent"
+                   BorderThickness="0">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:OrderLineViewModel">
+                <lists:OrderItemRow ProductName="{Binding ProductName}"
+                                    SpecText="{Binding SpecText}"
+                                    Quantity="{Binding Qty}"
+                                    UnitPrice="{Binding Price}"
+                                    IsGift="{Binding IsGift}"
+                                    IsRefunded="{Binding IsRefunded}" />
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+
+          <!-- 合计区（吸底） -->
+          <Border Grid.Row="2"
+                  BorderBrush="{DynamicResource DividerBrush}"
+                  BorderThickness="0,1,0,0"
+                  Padding="16,12">
+            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+              <TextBlock Grid.Row="0" Grid.Column="0" Text="合计"
+                         FontSize="{DynamicResource FontSizeBody}"
+                         Foreground="{DynamicResource TextSecondaryBrush}" />
+              <!-- 金额 tabular-nums 右对齐固定列宽 -->
+              <display:AmountDisplay Grid.Row="0" Grid.Column="1"
+                                     Amount="{Binding Totals.Payable}"
+                                     FontSize="{DynamicResource FontSizeTitle}"
+                                    
+                                     HorizontalAlignment="Right"
+                                     MinWidth="160" />
+              <TextBlock Grid.Row="1" Grid.Column="0" Text="折扣"
+                         FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextSecondaryBrush}"
+                         IsVisible="{Binding HasDiscount}" />
+              <TextBlock Grid.Row="1" Grid.Column="1"
+                         Text="{Binding Totals.OrderDiscount, StringFormat='-¥{0:F2}'}"
+                         FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource DangerBrush}"
+                         HorizontalAlignment="Right"
+                         IsVisible="{Binding HasDiscount}" />
+              <TextBlock Grid.Row="2" Grid.Column="0" Text="抹零"
+                         FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextSecondaryBrush}"
+                         IsVisible="{Binding HasWipeZero}" />
+              <TextBlock Grid.Row="2" Grid.Column="1"
+                         Text="{Binding Totals.WipeZeroAmount, StringFormat='-¥{0:F2}'}"
+                         FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextSecondaryBrush}"
+                         HorizontalAlignment="Right"
+                         IsVisible="{Binding HasWipeZero}" />
+            </Grid>
+          </Border>
+
+          <!-- 明细操作 -->
+          <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8" Margin="16,0,16,16">
+            <buttons:PosButton Content="挂单" />
+            <buttons:PosButton Content="备注" />
+            <buttons:PosButton Content="退菜" Variant="Danger" />
+          </StackPanel>
+        </Grid>
+      </Border>
+    </Grid>
+
+    <!-- ===== 底栏：挂起/并桌/叫号 | 桌台 | 提交下单 ===== -->
+    <Border Grid.Row="2"
+            Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource DividerBrush}"
+            BorderThickness="0,1,0,0"
+            Padding="16,12">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+          <buttons:PosButton Content="挂起" />
+          <buttons:PosButton Content="并桌" />
+          <buttons:PosButton Content="叫号" />
+        </StackPanel>
+        <TextBlock Grid.Column="1"
+                   Text="{Binding DeskName, StringFormat='桌台 {0}'}"
+                   FontSize="{DynamicResource FontSizeBody}"
+                   Foreground="{DynamicResource TextSecondaryBrush}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center" />
+        <!-- 提交按钮：大而固定，提交中有处理中状态 -->
+        <buttons:PosButton Grid.Column="2"
+                           Content="提交下单"
+                           Variant="Primary"
+                           MinWidth="200"
+                           MinHeight="56"
+                           FontSize="{DynamicResource FontSizeSubtitle}" />
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>

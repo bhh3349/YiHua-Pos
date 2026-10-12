@@ -1,0 +1,54 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Ordering"
+        x:Class="YiHua.Pos.UI.Views.Ordering.SpecSelectDialog"
+        x:DataType="vm:SpecSelectViewModel"
+        Title="选择规格"
+        Width="480" Height="560"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BackgroundBrush}">
+  <Grid RowDefinitions="Auto,*,Auto">
+    <TextBlock Grid.Row="0"
+               Text="{Binding ProductName}"
+               FontSize="{DynamicResource FontSizeSubtitle}"
+               FontWeight="SemiBold"
+               Foreground="{DynamicResource TextPrimaryBrush}"
+               Margin="24,20,24,12" />
+
+    <!-- 规格组：点选后自动收起 -->
+    <ScrollViewer Grid.Row="1" Margin="24,0">
+      <ItemsControl ItemsSource="{Binding Options}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:SpecOption">
+            <Border Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="2"
+                    CornerRadius="10"
+                    Padding="16,12"
+                    Margin="0,0,0,8"
+                    MinHeight="56">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="{Binding Value}"
+                           FontSize="{DynamicResource FontSizeBody}"
+                           Foreground="{DynamicResource TextPrimaryBrush}"
+                           VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1"
+                           Text="{Binding PriceDelta, StringFormat='+¥{0:F2}'}"
+                           FontSize="{DynamicResource FontSizeSmall}"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           VerticalAlignment="Center"
+                           IsVisible="{Binding PriceDelta}" />
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12"
+                HorizontalAlignment="Right" Margin="24,16">
+      <Button Content="取消" MinWidth="120" MinHeight="48" />
+    </StackPanel>
+  </Grid>
+</Window>

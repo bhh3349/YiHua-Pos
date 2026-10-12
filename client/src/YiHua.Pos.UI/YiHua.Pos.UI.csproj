@@ -13,7 +13,9 @@
     <PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
   </ItemGroup>
 
-  <!-- T-306 需要：ViewModel 通过 IDeskRepository 访问数据（任务卡要求复用 Domain 接口） -->
+<!-- ViewModel 通过 Domain 仓储接口访问数据（任务卡要求复用既有接口，不自造数据层）
+       - T-306 桌台管理：IDeskRepository
+       - T-303 正餐点单：IOrderRepository -->
   <ItemGroup>
     <ProjectReference Include="..\YiHua.Pos.Domain\YiHua.Pos.Domain.csproj" />
   </ItemGroup>

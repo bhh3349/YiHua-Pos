@@ -1,0 +1,56 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Ordering"
+        x:Class="YiHua.Pos.UI.Views.Ordering.PriceEditDialog"
+        x:DataType="vm:PriceEditViewModel"
+        Title="改价（店长）"
+        Width="420" Height="380"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BackgroundBrush}">
+  <StackPanel Margin="24,20" Spacing="16">
+    <TextBlock Text="{Binding ProductName}"
+               FontSize="{DynamicResource FontSizeSubtitle}"
+               FontWeight="SemiBold"
+               Foreground="{DynamicResource TextPrimaryBrush}" />
+
+    <!-- 必须显示原值 -->
+    <Border Background="{DynamicResource PrimaryLightBrush}"
+            CornerRadius="8"
+            Padding="16,12">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Grid.Column="0" Text="原价"
+                   FontSize="{DynamicResource FontSizeBody}"
+                   Foreground="{DynamicResource TextSecondaryBrush}"
+                   VerticalAlignment="Center" />
+        <TextBlock Grid.Column="1"
+                   Text="{Binding OriginalPrice, StringFormat='¥{0:F2}'}"
+                   FontSize="{DynamicResource FontSizeTitle}"
+                   Foreground="{DynamicResource TextPrimaryBrush}"
+                   VerticalAlignment="Center" />
+      </Grid>
+    </Border>
+
+    <Grid ColumnDefinitions="*,Auto">
+      <TextBlock Grid.Column="0" Text="新单价"
+                 FontSize="{DynamicResource FontSizeBody}"
+                 Foreground="{DynamicResource TextPrimaryBrush}"
+                 VerticalAlignment="Center" />
+      <TextBox Grid.Column="1"
+               Text="{Binding NewPrice}"
+               FontSize="{DynamicResource FontSizeTitle}"
+               MinWidth="160"
+               HorizontalContentAlignment="Right" />
+    </Grid>
+
+    <!-- 二次确认提示 -->
+    <TextBlock Text="请再次确认改价"
+               FontSize="{DynamicResource FontSizeSmall}"
+               Foreground="{DynamicResource DangerBrush}"
+               IsVisible="{Binding Confirmed}" />
+
+    <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
+      <Button Content="取消" MinWidth="110" MinHeight="52" />
+      <Button Content="确定改价" MinWidth="140" MinHeight="52" />
+    </StackPanel>
+  </StackPanel>
+</Window>

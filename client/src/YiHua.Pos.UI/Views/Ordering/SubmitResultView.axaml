@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Ordering"
+             x:Class="YiHua.Pos.UI.Views.Ordering.SubmitResultView"
+             x:DataType="vm:SubmitStateMachine">
+  <StackPanel Spacing="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+    <!-- 成功态 -->
+    <TextBlock Text="已下单"
+               FontSize="40"
+               FontWeight="Bold"
+               Foreground="{DynamicResource SuccessBrush}"
+               HorizontalAlignment="Center"
+               IsVisible="{Binding IsSucceeded}" />
+    <!-- 失败态 -->
+    <StackPanel Spacing="8" IsVisible="{Binding IsFailed}">
+      <TextBlock Text="提交失败"
+                 FontSize="{DynamicResource FontSizeTitle}"
+                 FontWeight="Bold"
+                 Foreground="{DynamicResource DangerBrush}"
+                 HorizontalAlignment="Center" />
+      <TextBlock Text="{Binding ErrorMessage}"
+                 FontSize="{DynamicResource FontSizeBody}"
+                 Foreground="{DynamicResource TextSecondaryBrush}"
+                 HorizontalAlignment="Center"
+                 TextWrapping="Wrap"
+                 MaxWidth="400" />
+      <Button Content="重试" MinWidth="160" MinHeight="56" HorizontalAlignment="Center" />
+    </StackPanel>
+    <!-- 冲突态 -->
+    <StackPanel Spacing="8" IsVisible="{Binding IsConflict}">
+      <TextBlock Text="提交冲突"
+                 FontSize="{DynamicResource FontSizeTitle}"
+                 FontWeight="Bold"
+                 Foreground="{DynamicResource WarningBrush}"
+                 HorizontalAlignment="Center" />
+      <TextBlock Text="{Binding ErrorMessage}"
+                 FontSize="{DynamicResource FontSizeBody}"
+                 Foreground="{DynamicResource TextSecondaryBrush}"
+                 HorizontalAlignment="Center"
+                 TextWrapping="Wrap"
+                 MaxWidth="400" />
+      <TextBlock Text="请返回桌台页刷新后重试"
+                 FontSize="{DynamicResource FontSizeSmall}"
+                 Foreground="{DynamicResource TextDisabledBrush}"
+                 HorizontalAlignment="Center" />
+    </StackPanel>
+    <!-- 提交中 -->
+    <TextBlock Text="提交中…"
+               FontSize="{DynamicResource FontSizeSubtitle}"
+               Foreground="{DynamicResource TextSecondaryBrush}"
+               HorizontalAlignment="Center"
+               IsVisible="{Binding IsSubmitting}" />
+  </StackPanel>
+</UserControl>
