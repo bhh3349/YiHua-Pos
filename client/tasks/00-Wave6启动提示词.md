@@ -81,8 +81,8 @@ using SomeType = YiHua.Pos.Domain.Entities.SomeType;
 # ① 给仓鼠1号
 
 ```
-你是「逸华餐饮收银」项目的客户端开发工程师，代号仓鼠1号。
-Wave 6 你负责团购验券与核销（T-601）。**这一波优先级最高。**
+你是「逸华餐饮收银」项目的客户端开发工程师，代号 仓鼠1号。
+Wave 6 你负责团购券记账（T-601）。**这一波优先级最高。**
 
 git clone https://github.com/bhh3349/YiHua-Pos.git
 cd YiHua-Pos
@@ -91,56 +91,76 @@ git pull origin main
 
 任务卡：client/tasks/T-601_团购验券_仓鼠1号.md
 
-## 一句话
-服务端团购（T-405）已合并，适配层、券核销、对账、8 种券状态错误码全部就绪，
-但客户端团购代码目前是零。
-这是「99 元/平台/年」这条收入线的唯一入口。
+## 这张卡只做三件事
+1. 验券    客人在美团 App 出示二维码，收银员扫码 → 验出券信息和抵扣额
+2. 记券    平台 + 券码 + 抵扣额，记到订单上
+3. 抵扣进优惠   AmountDiscount，不是收款
 
-## 服务端契约（已定稿）
-POST /api/v1/groupbuy
-  /platformList   平台列表
-  /configList     平台配置
-  /coupon/verify  验券（不出账）
-  /coupon/redeem  核销（真扣）
+## ⚠️ 券是怎么来的（别搞错）
+客人在美团/饿了么 App 点开自己的券 → App 显示二维码
+→ 收银员用扫码枪扫这个二维码 → 系统拿到券码 → 调服务端验券
 
-请求体：{ platformCode, couponCode, storeId, orderId }
-  storeId=0 用当前门店；orderId=0 表示未关联订单
+**平台代金券不是实体券，没有纸券。**
+收银员不需要也不应该手输券码。手工输入只作为客人二维码加载不出来的兜底。
 
-⚠️ 双层封装：业务响应在 data 字段里再套一层 JSON 字符串，必须反序列化两次。
-   写 DoubleEnvelopeTests 验证这件事。
+扫码枪在收银场景通常表现为「键盘输入 + 回车」，
+所以输入框要 autofocus，支持扫码枪前缀后缀过滤
+（部分扫码枪用 F9 触发、回车结尾），防止把收银员敲的键也当券码。
 
-## 重点：8 种券状态错误码，每种给不同的人话
-  COUPON_NOT_FOUND         → 券码不存在，请核对后重试
-  COUPON_USED              → 这张券已经用过了，让客人出示新的券
-  COUPON_NOT_YET_VALID     → 未到有效期
-  COUPON_EXPIRED           → 券已过期，请客人确认有效期
-  COUPON_STORE_MISMATCH    → 这张券只能在指定门店使用
-  COUPON_TIME_RESTRICTED   → 这张券只能在特定时段用（如仅限午市）
-  COUPON_NEED_BOOKING      → 这张券需要提前预约
-  PLATFORM_MISMATCH        → 不属于该平台
+## ⚠️ 金额口径（最重要）
+团购券抵扣算优惠，不算收款：
+
+  订单原价 100
+  团购券抵扣 30      → 计入 AmountDiscount（优惠）
+  实收（现金/微信）  70
+
+❌ 不能记成收款「团购 70 元」——平台结的是核销金额 30，不是实付 70。
+
+现有代码 OrderEntryViewModel：
+  AmountDiscount = LineDiscountTotal + OrderDiscount + WipeZeroAmount
+要加第四项 GroupBuyDiscount。
+⚠️ 那一行在 ViewModels/Ordering/ 属于别人的目录，你不要改，
+   把计算放 Services/GroupBuy/，报告里说明，我合并时接上。
+
+## 服务端接口（已定稿）
+POST /api/v1/groupbuy/coupon/verify
+     { platformCode, couponCode, storeId }
+
+⚠️ 双层封装：data 字段里再套一层 JSON 字符串，必须反序列化两次。
+   写 DoubleEnvelopeTests 验证。
+
+返回两个金额：
+  faceValue       面值（满 30 券，面值 30）
+  discountAmount  本单实际抵扣
+用 discountAmount，界面同时显示面值。平台按实际核销金额结账，用面值对不上账。
+
+## 8 种券状态错误码，每种给人话
+  COUPON_USED           → 这张券已经用过了，让客人出示新的券
+  COUPON_EXPIRED         → 券已过期，请客人确认有效期
+  COUPON_STORE_MISMATCH  → 这张券只能在指定门店使用
+  COUPON_TIME_RESTRICTED → 这张券只能在特定时段用（如仅限午市）
+  COUPON_NEED_BOOKING    → 这张券需要提前预约
+  COUPON_NOT_FOUND       → 券码不存在，请核对后重试
+  COUPON_NOT_YET_VALID   → 券还没到使用时间
+  PLATFORM_MISMATCH      → 这张券不属于该平台
 
 理由：收银员看到「券无效」没法处理客人，
      看到「只能在午市用」才知道该跟客人怎么说。
 
-## 验券交互
-- 扫码枪优先（回车触发），手工输入兜底
-- 券码去空格 + 转大写（微信复制常带空格换行）
-- 券面信息大字显示：面值/抵扣额/有效期/适用时段/门店
-- 抵扣额不能超过订单应付
-- 验券失败无任何副作用
-- 网络不通要说「验券需要联网」，不是「网络错误」
+## ⚠️ 断网怎么办（用系统已有的优惠，不是新功能）
+断网验不了，但抵扣额是确定的（客人 App 上券面写着）：
+  收银员按券面金额直接打折 —— 就是优惠金额/抹零，本来就有
+  券信息（平台 + 券码）照样记，月底对账用
 
-## 核销
-- **幂等**：重复点核销不能重复扣（点击后立即禁用按钮）
-- 成功后写回 Order.GroupBuyPlatform / GroupBuyCouponCode / AmountGroupBuy
-- **核销失败不能改订单**
-- 抵扣不是打折：AmountGroupBuy 单独存，报表要分开列
+❌ 不做「手填团购抵扣额」——那不是真实优惠，凭空多一个收款方式，
+   报表显示「团购收入 30」永远跟平台对不上。
 
-## ⚠️ 断网兜底（验券保留，这是备用路径）
+提示要说清：「券验证需要联网。可以按券面金额直接打折。」不卡住收银。
+
+代金券在 T-603 会员模块，本卡不重复造，接口留好即可。
 
 ## 已有东西直接用
-Order.GroupBuyPlatform / GroupBuyCouponCode / AmountGroupBuy 已存在，
-不要重复定义。
+Order.GroupBuyPlatform / GroupBuyCouponCode / AmountGroupBuy 已存在，不要重复定义。
 
 ## 铁律
 ✅ 只改 UI/Views/GroupBuy/ UI/ViewModels/GroupBuy/ UI/Services/GroupBuy/ 及测试
@@ -149,14 +169,14 @@ Order.GroupBuyPlatform / GroupBuyCouponCode / AmountGroupBuy 已存在，
 ## 完成后
 dotnet build + dotnet test + python tools/guardrails.py
 git fetch origin && git rebase origin/main
-git commit -m "T-601: 团购验券与核销"
+git commit -m "T-601: 团购券记账"
 git push -u origin task/T-601-groupbuy-verify
 
-报告要含：8 种错误码映射表、**优惠口径怎么接到 Ordering**（我合并时要改哪一行）、双层JSON解包方式、Domain 缺口
+报告要含：优惠口径怎么接到 Ordering（我合并时要改哪一行）、
+扫码枪前缀后缀的处理方式、8 种错误码映射表、双层JSON解包方式
 ```
 
 ---
-
 # ② 给仓鼠2号
 
 ```
