@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Settings"
+             x:Class="YiHua.Pos.UI.Views.Settings.StoreInfoView"
+             x:DataType="vm:StoreInfoViewModel">
+  <ScrollViewer>
+    <StackPanel Spacing="12" MaxWidth="600">
+      <TextBlock Text="门店信息" FontSize="20" FontWeight="Bold" />
+      <TextBlock Text="{Binding StateText}" FontSize="14"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+
+      <TextBlock Text="店名（必填，小票上会打印）" FontSize="14" />
+      <input:TouchTextBox Text="{Binding StoreName}" Watermark="比如：老王牛肉面" />
+      <TextBlock Text="{Binding ValidationError}" Foreground="{DynamicResource DangerBrush}"
+                 FontSize="14" />
+
+      <TextBlock Text="地址" FontSize="14" />
+      <input:TouchTextBox Text="{Binding Address}" Watermark="比如：中山路 123 号" />
+
+      <TextBlock Text="电话" FontSize="14" />
+      <input:TouchTextBox Text="{Binding Phone}" Watermark="比如：13800000000" />
+
+      <TextBlock Text="店面 Logo（小票上显示，自动压缩到 200KB 以内）" FontSize="14" />
+      <Border Background="{DynamicResource BackgroundBrush}" CornerRadius="8"
+              Padding="16" MinHeight="120">
+        <TextBlock Text="点击上传 logo（PNG/JPG）" HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Foreground="{DynamicResource TextSecondaryBrush}" />
+      </Border>
+
+      <btn:PosButton Content="保存门店信息" Variant="Primary"
+                     HorizontalAlignment="Left" MinWidth="160" MinHeight="48" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

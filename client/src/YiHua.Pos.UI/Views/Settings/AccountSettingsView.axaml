@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             x:Class="YiHua.Pos.UI.Views.Settings.AccountSettingsView">
+  <ScrollViewer>
+    <StackPanel Spacing="12" MaxWidth="600">
+      <TextBlock Text="账号与权限" FontSize="20" FontWeight="Bold" />
+      <TextBlock Text="复用 T-301 登录/权限体系" FontSize="14"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+      <TextBlock Text="禁用账号后，历史订单的操作人仍可查询（财务凭证保留）"
+                 FontSize="14" Foreground="{DynamicResource WarningBrush}" TextWrapping="Wrap" />
+      <btn:PosButton Content="添加账号" Variant="Primary"
+                     HorizontalAlignment="Left" MinWidth="140" MinHeight="44" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

@@ -1,0 +1,18 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Settings"
+             x:Class="YiHua.Pos.UI.Views.Settings.DiagnosticReportView"
+             x:DataType="vm:DiagnosticReportViewModel">
+  <Grid RowDefinitions="Auto,*,Auto" Margin="0">
+    <TextBlock Grid.Row="0" Text="诊断报告" FontSize="20" FontWeight="Bold" Margin="0,0,0,8" />
+    <ScrollViewer Grid.Row="1">
+      <TextBlock Text="{Binding ReportContent}" FontFamily="Consolas,Monospace"
+                 FontSize="13" TextWrapping="Wrap" />
+    </ScrollViewer>
+    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12" Margin="0,12,0,0">
+      <btn:PosButton Content="重新生成" Variant="Secondary" MinWidth="120" />
+      <btn:PosButton Content="保存到文件" Variant="Primary" MinWidth="120" />
+    </StackPanel>
+  </Grid>
+</UserControl>
