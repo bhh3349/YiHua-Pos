@@ -29,6 +29,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\YiHua.Pos.UI\YiHua.Pos.UI.csproj" />
+    <!-- App 需要 PosDbContext / 仓储实现才能做 DI 注册。
+         之前漏了这个引用，RegisterTypes 里什么都注册不了，
+         87 个界面全部接不上，启动页只能显示占位文字。 -->
+    <ProjectReference Include="..\YiHua.Pos.Data\YiHua.Pos.Data.csproj" />
     <ProjectReference Include="..\YiHua.Pos.Domain\YiHua.Pos.Domain.csproj" />
   </ItemGroup>
 

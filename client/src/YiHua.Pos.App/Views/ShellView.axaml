@@ -1,0 +1,85 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:YiHua.Pos.App.ViewModels"
+        x:Class="YiHua.Pos.App.Views.ShellView"
+        x:DataType="vm:ShellViewModel"
+        Title="逸华餐饮收银"
+        Width="1366" Height="768"
+        MinWidth="1024" MinHeight="640"
+        WindowStartupLocation="CenterScreen"
+        Background="#F2F4F7">
+
+  <Window.Styles>
+    <!-- 导航项：已接线正常色，未接线置灰（避免「点了没反应」） -->
+    <Style Selector="Button.nav">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Foreground" Value="#1A2233" />
+    </Style>
+    <Style Selector="Button.nav:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#EEF4FF" />
+    </Style>
+    <Style Selector="Button.nav:pressed /template/ ContentPresenter">
+      <Setter Property="Background" Value="#E2EBFF" />
+    </Style>
+  </Window.Styles>
+
+  <Grid ColumnDefinitions="Auto,*">
+
+    <!-- ===== 左侧导航 ===== -->
+    <!-- 宽 160：能放下「交接班」不换行，又不挤压点单区商品网格 -->
+    <Border Grid.Column="0" Width="160" Background="#FFFFFF"
+            BorderBrush="#E4E7EC" BorderThickness="0,0,1,0">
+      <Grid RowDefinitions="Auto,*,Auto">
+
+        <StackPanel Grid.Row="0" Margin="16,16,16,12">
+          <TextBlock Text="逸华收银" FontSize="17" FontWeight="SemiBold"
+                     Foreground="#1A2233" />
+          <TextBlock Text="YiHua POS" FontSize="11" Foreground="#98A2B3"
+                     Margin="0,2,0,0" />
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+          <ItemsControl ItemsSource="{Binding NavItems}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:NavItem">
+                <Button Classes="nav"
+                        Height="38"
+                        Margin="8,1"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Left"
+                        Padding="12,0"
+                        IsEnabled="{Binding IsWired}"
+                        Command="{Binding $parent[Window].((vm:ShellViewModel)DataContext).NavigateCommand}"
+                        CommandParameter="{Binding Key}">
+                  <TextBlock Text="{Binding Title}" FontSize="14" />
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+
+        <TextBlock Grid.Row="2" Margin="16,12" FontSize="11"
+                   Foreground="#98A2B3" Text="v1.0.0" />
+      </Grid>
+    </Border>
+
+    <!-- ===== 内容区 ===== -->
+    <Grid Grid.Column="1" RowDefinitions="Auto,*">
+
+      <Border Grid.Row="0" Height="48" Background="#FFFFFF"
+              BorderBrush="#E4E7EC" BorderThickness="0,0,0,1">
+        <StackPanel Orientation="Horizontal" Margin="20,0" Spacing="10"
+                    VerticalAlignment="Center">
+          <TextBlock Text="{Binding Current.Title}" FontSize="16" FontWeight="SemiBold"
+                     Foreground="#1A2233" />
+          <TextBlock Text="{Binding Current.Hint}" FontSize="13"
+                     Foreground="#98A2B3" VerticalAlignment="Center" />
+        </StackPanel>
+      </Border>
+
+      <!-- 真实页面挂这里 -->
+      <ContentControl Grid.Row="1" Margin="16" Content="{Binding Page}" />
+    </Grid>
+  </Grid>
+</Window>

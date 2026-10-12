@@ -24,6 +24,13 @@ public sealed class PosDbContext : IDisposable
             throw new ArgumentException("数据库路径不能为空", nameof(databasePath));
 
         DatabasePath = databasePath;
+
+        // SQLite 不会自动创建目录，目录不存在时建库会报
+        // "unable to open database file"（Error 14），首次启动必现。
+        var dir = Path.GetDirectoryName(Path.GetFullPath(databasePath));
+        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            Directory.CreateDirectory(dir);
+
         var db = new SqlSugarClient(new ConnectionConfig
         {
             ConnectionString = $"Data Source={databasePath}",
