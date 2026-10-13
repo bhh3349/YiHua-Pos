@@ -9,7 +9,7 @@
             BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0">
       <StackPanel Margin="8">
         <TextBlock Text="设置" FontSize="20" FontWeight="Bold" Margin="8,8,8,16" />
-        <ItemsControl ItemsSource="{Binding Items}">
+        <ItemsControl ItemsSource="{Binding Items}" x:Name="NavItems">
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="vm:SettingsNavItem">
               <Border Padding="12,10" Margin="0,0,0,4" CornerRadius="8"
@@ -26,6 +26,6 @@
       </StackPanel>
     </Border>
     <!-- 右侧内容 -->
-    <ContentControl Grid.Column="1" x:Name="ContentArea" Margin="16" />
+    <ContentControl Grid.Column="1" x:Name="ContentArea" Margin="16" Content="{Binding SelectedPage}" />
   </Grid>
 </UserControl>

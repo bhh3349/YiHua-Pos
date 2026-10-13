@@ -19,6 +19,14 @@ public interface ILoginCache
     Task SaveLastStoreIdAsync(string storeId);
     Task<CachedLogin?> GetCredentialAsync(string username);
     Task SaveCredentialAsync(CachedLogin credential);
+
+    /// <summary>
+    /// 本机是否已有任何账号。
+    /// 用来区分「首次使用（本机还没有任何账号，第一次登录即创建本地管理员）」
+    /// 和「已有账号但用户名输错」—— 这两种情况的处理方式完全不同，
+    /// 不能都报「首次使用需要联网激活」。
+    /// </summary>
+    Task<bool> HasAnyCredentialAsync();
 }
 
 /// <summary>
@@ -165,6 +173,11 @@ public class LoginService : ILoginService
         }
         else if (result.ErrorKind is LoginErrorKind.WrongPassword or LoginErrorKind.UserNotFound)
         {
+            // 工号或密码没填全属于「输入不完整」，不是一次失败尝试。
+            // 如果这里也计数，收银员手抖点两下「登录」就把 5 次机会耗掉一半。
+            if (username.Length == 0 || string.IsNullOrEmpty(password))
+                return result;
+
             _tracker.RecordFailure(username);
             int remain = _tracker.GetRemainingAttempts(username);
             if (remain == 0)

@@ -23,6 +23,7 @@ public class LoginServiceTests
         public Task SaveLastStoreIdAsync(string id) => Task.CompletedTask;
         public Task<CachedLogin?> GetCredentialAsync(string u) => Task.FromResult<CachedLogin?>(null);
         public Task SaveCredentialAsync(CachedLogin c) => Task.CompletedTask;
+        public Task<bool> HasAnyCredentialAsync() => Task.FromResult(false);
     }
 
     private static LoginService Create(Func<string, string, LoginResult> loginFunc) =>
@@ -92,5 +93,41 @@ public class LoginServiceTests
             last = await service.LoginAsync("S1", "001", "wrong");
         Assert.Equal(LoginErrorKind.WrongPassword, last!.ErrorKind);
         Assert.False(service.IsLocked("001"));
+    }
+
+    [Fact]
+    public async Task 空工号_不消耗尝试次数()
+    {
+        var service = Create((u, p) => LoginResult.Fail(LoginErrorKind.UserNotFound, "请输入工号"));
+
+        for (int i = 0; i < 10; i++)
+            await service.LoginAsync("S1", "", "");
+
+        // 输入不完整不是一次「失败尝试」，不该被锁
+        Assert.False(service.IsLocked(""));
+        Assert.Equal(5, new LoginAttemptTracker().GetRemainingAttempts(""));
+    }
+
+    [Fact]
+    public async Task 空密码_不消耗尝试次数()
+    {
+        var service = Create((u, p) => LoginResult.Fail(LoginErrorKind.WrongPassword, "请输入密码"));
+
+        for (int i = 0; i < 10; i++)
+            await service.LoginAsync("S1", "001", "");
+
+        Assert.False(service.IsLocked("001"));
+    }
+
+    [Fact]
+    public async Task 真实密码错误_仍然消耗尝试次数()
+    {
+        var service = Create((u, p) => LoginResult.Fail(LoginErrorKind.WrongPassword, "密码错误"));
+
+        var r1 = await service.LoginAsync("S1", "001", "wrong1");
+        var r2 = await service.LoginAsync("S1", "001", "wrong2");
+
+        Assert.Contains("还剩 4 次", r1.ErrorMessage);
+        Assert.Contains("还剩 3 次", r2.ErrorMessage);
     }
 }

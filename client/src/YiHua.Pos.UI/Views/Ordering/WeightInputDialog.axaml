@@ -54,8 +54,8 @@
                  Foreground="{DynamicResource PrimaryBrush}"
                  VerticalAlignment="Center" />
       <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
-        <Button Content="取消" MinWidth="110" MinHeight="52" />
-        <Button Content="确定" MinWidth="110" MinHeight="52" />
+        <Button Content="取消" MinWidth="110" MinHeight="52" Click="OnCancel" />
+        <Button Content="确定" MinWidth="110" MinHeight="52" Click="OnConfirm" />
       </StackPanel>
     </Grid>
   </Grid>

@@ -1,8 +1,14 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Desk"
-             x:Class="YiHua.Pos.UI.Views.Desk.DeskOpenDialog"
-             x:DataType="vm:DeskOpenViewModel">
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Desk"
+        x:Class="YiHua.Pos.UI.Views.Desk.DeskOpenDialog"
+        x:DataType="vm:DeskOpenViewModel"
+        Title="开台"
+        Width="420"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BackgroundBrush}">
   <StackPanel Spacing="16" Margin="24">
     <TextBlock Text="{Binding Desk.Name, StringFormat='开台 · {0}'}"
                FontSize="{DynamicResource FontSizeTitle}"
@@ -22,4 +28,4 @@
       <Button Content="确认开台" Click="OnConfirm" MinHeight="48" MinWidth="120" />
     </StackPanel>
   </StackPanel>
-</UserControl>
+</Window>

@@ -65,6 +65,15 @@ public class DeskMapViewModel : ViewModelBase
 
     private List<DeskEntity> _allDesks = new();
 
+    public async Task<DeskEntity?> GetDeskAsync(long id, CancellationToken ct = default)
+        => await _deskRepository.GetByIdAsync(id, ct).ConfigureAwait(false);
+
+    public async Task<DeskEntity?> GetFirstIdleDeskAsync(CancellationToken ct = default)
+    {
+        var all = await _deskRepository.GetDesksAsync(null, ct).ConfigureAwait(false);
+        return all.FirstOrDefault(d => d.Status == DeskStatus.Idle);
+    }
+
     public async Task LoadAsync(CancellationToken ct = default)
     {
         IsLoading = true;

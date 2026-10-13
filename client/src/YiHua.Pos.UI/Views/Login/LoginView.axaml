@@ -48,6 +48,7 @@
                 MinHeight="48" MinWidth="120" />
         <Button Content="登录"
                 Click="OnLogin"
+                IsEnabled="{Binding LoginForm.CanLogin}"
                 MinHeight="48" MinWidth="120" />
       </StackPanel>
     </StackPanel>

@@ -23,6 +23,7 @@ public class LoginStateMachineTests
         public Task SaveLastStoreIdAsync(string id) => Task.CompletedTask;
         public Task<CachedLogin?> GetCredentialAsync(string u) => Task.FromResult<CachedLogin?>(null);
         public Task SaveCredentialAsync(CachedLogin c) => Task.CompletedTask;
+        public Task<bool> HasAnyCredentialAsync() => Task.FromResult(false);
     }
 
     [Fact]

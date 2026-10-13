@@ -23,13 +23,21 @@ public class LoginFormViewModel : ViewModelBase
     public string Username
     {
         get => _username;
-        set => SetProperty(ref _username, value);
+        set
+        {
+            if (SetProperty(ref _username, value))
+                RaisePropertyChanged(nameof(CanLogin));
+        }
     }
 
     public string Password
     {
         get => _password;
-        set => SetProperty(ref _password, value);
+        set
+        {
+            if (SetProperty(ref _password, value))
+                RaisePropertyChanged(nameof(CanLogin));
+        }
     }
 
     /// <summary>密码明文/密文切换</summary>
@@ -47,6 +55,7 @@ public class LoginFormViewModel : ViewModelBase
             SetProperty(ref _state, value);
             RaisePropertyChanged(nameof(IsLoading));
             RaisePropertyChanged(nameof(HasError));
+            RaisePropertyChanged(nameof(CanLogin));
         }
     }
 

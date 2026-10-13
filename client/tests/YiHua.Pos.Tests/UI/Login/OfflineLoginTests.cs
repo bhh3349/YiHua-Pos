@@ -27,6 +27,7 @@ public class OfflineLoginTests
         public Task<CachedLogin?> GetCredentialAsync(string u) =>
             Task.FromResult(_creds.TryGetValue(u, out var c) ? c : null);
         public Task SaveCredentialAsync(CachedLogin c) { _creds[c.Username] = c; return Task.CompletedTask; }
+        public Task<bool> HasAnyCredentialAsync() => Task.FromResult(_creds.Count > 0);
     }
 
     [Fact]

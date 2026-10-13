@@ -176,8 +176,14 @@ public class NetworkSyncViewModel : SettingsViewModelBase
 /// <summary>
 /// 设置导航 ViewModel。
 /// </summary>
-public class SettingsNavigationViewModel
+public class SettingsNavigationViewModel : System.ComponentModel.INotifyPropertyChanged
 {
+    private SettingsNavItem? _selected;
+    private object? _selectedPage;
+
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+    public event EventHandler<SettingsNavItem>? SelectionChanged;
+
     public List<SettingsNavItem> Items { get; } = new()
     {
         new("门店信息", "店名/地址/电话/logo"),
@@ -188,7 +194,27 @@ public class SettingsNavigationViewModel
         new("网络与同步", "服务器地址/同步状态"),
     };
 
-    public SettingsNavItem? Selected { get; set; }
+    public virtual SettingsNavItem? Selected
+    {
+        get => _selected;
+        set
+        {
+            if (ReferenceEquals(_selected, value)) return;
+            _selected = value;
+            PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Selected)));
+            SelectionChanged?.Invoke(this, value!);
+        }
+    }
+
+    public object? SelectedPage
+    {
+        get => _selectedPage;
+        protected set
+        {
+            _selectedPage = value;
+            PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(SelectedPage)));
+        }
+    }
 }
 
 public class SettingsNavItem

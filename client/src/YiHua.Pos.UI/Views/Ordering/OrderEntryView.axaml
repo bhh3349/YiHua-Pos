@@ -6,6 +6,7 @@
              xmlns:display="clr-namespace:YiHua.Pos.UI.Controls.Display"
              xmlns:buttons="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
              xmlns:feedback="clr-namespace:YiHua.Pos.UI.Controls.Feedback"
+              xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
              x:Class="YiHua.Pos.UI.Views.Ordering.OrderEntryView"
              x:DataType="vm:OrderEntryViewModel"
              Background="{DynamicResource BackgroundBrush}">
@@ -43,7 +44,7 @@
           <buttons:PosButton Content="换台" />
           <buttons:PosButton Content="并台" />
           <buttons:PosButton Content="清台" />
-          <buttons:PosButton Content="结账" Variant="Primary" />
+          <buttons:PosButton Content="结账" Variant="Primary" Click="OnCheckout" />
         </StackPanel>
       </Grid>
     </Border>
@@ -81,7 +82,7 @@
             <ItemsControl.ItemTemplate>
               <DataTemplate>
                 <cards:ProductCard ProductName="{Binding Name}"
-                                   Price="{Binding Price}"
+                                   Price="{Binding Price}" Tag="{Binding}"
                                    UnitName="{Binding UnitName}"
                                    Margin="0,0,12,12" />
               </DataTemplate>
@@ -120,7 +121,7 @@
                 <lists:OrderItemRow ProductName="{Binding ProductName}"
                                     SpecText="{Binding SpecText}"
                                     Quantity="{Binding Qty}"
-                                    UnitPrice="{Binding Price}"
+                                    UnitPrice="{Binding Price}" Tag="{Binding}"
                                     IsGift="{Binding IsGift}"
                                     IsRefunded="{Binding IsRefunded}" />
               </DataTemplate>
@@ -168,7 +169,7 @@
 
           <!-- 明细操作 -->
           <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8" Margin="16,0,16,16">
-            <buttons:PosButton Content="挂单" />
+            <buttons:PosButton Content="挂单" Click="OnHang" />
             <buttons:PosButton Content="备注" />
             <buttons:PosButton Content="退菜" Variant="Danger" />
           </StackPanel>
@@ -196,7 +197,7 @@
                    VerticalAlignment="Center" />
         <!-- 提交按钮：大而固定，提交中有处理中状态 -->
         <buttons:PosButton Grid.Column="2"
-                           Content="提交下单"
+                           Content="提交下单" Click="OnSubmit"
                            Variant="Primary"
                            MinWidth="200"
                            MinHeight="56"

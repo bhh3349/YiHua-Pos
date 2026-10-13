@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:YiHua.Pos.App.ViewModels"
+        xmlns:login="clr-namespace:YiHua.Pos.UI.Views.Login;assembly=YiHua.Pos.UI"
         x:Class="YiHua.Pos.App.Views.ShellView"
         x:DataType="vm:ShellViewModel"
         Title="逸华餐饮收银"
@@ -24,7 +25,19 @@
     </Style>
   </Window.Styles>
 
-  <Grid ColumnDefinitions="Auto,*">
+  <Grid>
+    <!--
+      未登录：显示登录界面。
+      ⚠️ 必须直接放 LoginView 并绑 DataContext，不能写成
+      <ContentControl Content="{Binding Login}"/> —— ContentControl 需要 DataTemplate
+      才能把 ViewModel 映射成 View，没注册模板时它会退化成 ToString()，
+      界面上就只显示一行 "YiHua.Pos.UI.ViewModels.Login.LoginViewModel"。
+    -->
+    <!-- 外层 Panel 保持 Window 的 DataContext，IsVisible 才绑得到 ShellViewModel -->
+    <Panel IsVisible="{Binding !IsLoggedIn}">
+      <login:LoginView DataContext="{Binding Login}" />
+    </Panel>
+    <Grid ColumnDefinitions="Auto,*" IsVisible="{Binding IsLoggedIn}">
 
     <!-- ===== 左侧导航 ===== -->
     <!-- 宽 160：能放下「交接班」不换行，又不挤压点单区商品网格 -->
@@ -49,7 +62,6 @@
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Left"
                         Padding="12,0"
-                        IsEnabled="{Binding IsWired}"
                         Command="{Binding $parent[Window].((vm:ShellViewModel)DataContext).NavigateCommand}"
                         CommandParameter="{Binding Key}">
                   <TextBlock Text="{Binding Title}" FontSize="14" />
@@ -79,7 +91,23 @@
       </Border>
 
       <!-- 真实页面挂这里 -->
-      <ContentControl Grid.Row="1" Margin="16" Content="{Binding Page}" />
+      <Panel Grid.Row="1" Margin="16">
+        <ContentControl Content="{Binding Page}" />
+        <!-- 页面打不开时给明确提示，空白界面会让商家以为软件坏了 -->
+        <Border IsVisible="{Binding PageError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                Background="#FEF3F2" BorderBrush="#F04438" BorderThickness="1"
+                CornerRadius="8" Padding="20" VerticalAlignment="Top" Margin="0,40,0,0">
+          <StackPanel Spacing="8">
+            <TextBlock Text="页面打开失败" FontSize="15" FontWeight="SemiBold"
+                       Foreground="#B42318" />
+            <TextBlock Text="{Binding PageError}" FontSize="13"
+                       Foreground="#B42318" TextWrapping="Wrap" />
+            <TextBlock Text="详细信息已写入日志目录，可在「关于」页导出诊断报告。"
+                       FontSize="12" Foreground="#98A2B3" />
+          </StackPanel>
+        </Border>
+      </Panel>
+    </Grid>
     </Grid>
   </Grid>
 </Window>

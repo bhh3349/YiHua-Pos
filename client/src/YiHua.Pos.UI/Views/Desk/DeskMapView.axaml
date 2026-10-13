@@ -16,7 +16,7 @@
 
     <!-- 桌台网格 -->
     <ScrollViewer Grid.Row="1" Margin="16,0">
-      <ItemsControl ItemsSource="{Binding Desks}">
+      <ItemsControl x:Name="DeskItems" ItemsSource="{Binding Desks}">
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
             <WrapPanel Orientation="Horizontal" />
@@ -29,7 +29,7 @@
                             CurrentAmount="{Binding CurrentAmount}"
                             ElapsedText="{Binding ElapsedText}"
                             Status="{Binding Status, Converter={StaticResource DeskStatusConverter}}"
-                            Margin="8" />
+                             Margin="8" />
           </DataTemplate>
         </ItemsControl.ItemTemplate>
       </ItemsControl>

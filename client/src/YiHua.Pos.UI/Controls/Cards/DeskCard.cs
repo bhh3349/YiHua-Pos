@@ -59,7 +59,18 @@ public partial class DeskCard : UserControl
         set => SetValue(StatusProperty, value);
     }
 
-    /// <summary>点击桌台时触发（开台/查看）。</summary>
+    /// <summary>
+    /// 点击桌台（冒泡路由事件）。
+    ///
+    /// 为什么用路由事件而不是普通 CLR 事件：桌台卡片在 ItemsControl 里，
+    /// 数据是异步加载的，控件实例什么时候生成、生成几次都不确定。
+    /// 逐个去挂 CLR 事件会漏（OnLoaded 时列表还是空的，等数据回来卡片才出现），
+    /// 结果就是「点桌台没反应」。路由事件由父级一次性订阅，卡片后建也能收到。
+    /// </summary>
+    public static readonly RoutedEvent<RoutedEventArgs> CardClickEvent =
+        RoutedEvent.Register<DeskCard, RoutedEventArgs>("CardClick", RoutingStrategies.Bubble);
+
+    /// <summary>点击桌台时触发（CLR 事件，保留给直接持有卡片实例的调用方）。</summary>
     public event EventHandler? CardClicked;
 
     /// <summary>长按请求操作菜单时触发。</summary>
@@ -113,8 +124,15 @@ public partial class DeskCard : UserControl
         }
         else
         {
-            CardClicked?.Invoke(this, EventArgs.Empty);
+            RaiseCardClick();
         }
+    }
+
+    /// <summary>触发一次「点击桌台」：CLR 事件 + 冒泡路由事件都发。</summary>
+    public void RaiseCardClick()
+    {
+        CardClicked?.Invoke(this, EventArgs.Empty);
+        RaiseEvent(new RoutedEventArgs(CardClickEvent, this));
     }
 
     /// <summary>供测试/外部触发菜单请求。</summary>

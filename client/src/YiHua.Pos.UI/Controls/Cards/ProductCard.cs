@@ -57,6 +57,14 @@ public partial class ProductCard : UserControl
         set => SetValue(StateProperty, value);
     }
 
+    /// <summary>
+    /// 点击商品（冒泡路由事件）。
+    /// 同 DeskCard：商品卡片在 ItemsControl 里异步生成，CLR 事件容易漏挂，
+    /// 用路由事件让父级一次性订阅。
+    /// </summary>
+    public static readonly RoutedEvent<RoutedEventArgs> CardClickEvent =
+        RoutedEvent.Register<ProductCard, RoutedEventArgs>("CardClick", RoutingStrategies.Bubble);
+
     /// <summary>点击商品时触发。</summary>
     public event EventHandler? CardClicked;
 
@@ -89,8 +97,10 @@ public partial class ProductCard : UserControl
 
     private void OnCardClick(object? sender, RoutedEventArgs e)
     {
-        if (State != ProductCardState.SoldOut)
-            CardClicked?.Invoke(this, EventArgs.Empty);
+        if (State == ProductCardState.SoldOut)
+            return;
+        CardClicked?.Invoke(this, EventArgs.Empty);
+        RaiseEvent(new RoutedEventArgs(CardClickEvent, this));
     }
 
     /// <summary>状态标签文本（可测试的纯逻辑）。</summary>
