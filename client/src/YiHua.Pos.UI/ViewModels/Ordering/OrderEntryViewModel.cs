@@ -498,6 +498,12 @@ public sealed class OrderEntryViewModel : ViewModelBase
             }
 
             var order = BuildOrder(clientOrderNo);
+
+            // 订单号必须在这里生成：它是查单、补打小票、退款的唯一凭据。
+            // 之前 BuildOrder 没设 OrderNo，导致每张单的订单号都是空的 ——
+            // 收银台打出来的小票上印不出单号，客人拿着小票回来对账也没法查。
+            order.OrderNo = await _orderRepo.NextOrderNoAsync(ct).ConfigureAwait(false);
+
             long id = await _orderRepo.InsertAsync(order, ct).ConfigureAwait(false);
 
             // 写 outbox（断网补传）

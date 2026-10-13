@@ -746,13 +746,119 @@ public sealed class ShellViewModel : BindableBase
         var vm = new OrderListViewModel(_orders);
         var view = new OrderListView { DataContext = vm };
         await vm.LoadAsync();
-        view.OrderSelected += async (_, row) =>
-        {
-            var detail = new OrderDetailView { DataContext = new OrderDetailViewModel(_orders) };
-            await ((OrderDetailViewModel)detail.DataContext!).LoadAsync(row.Id);
-            Page = detail;
-        };
+        view.OrderSelected += async (_, row) => await OpenOrderDetailAsync(row.Id);
         return view;
+    }
+
+    /// <summary>打开订单详情，并接上参考端 C000100019 的那组操作。</summary>
+    private async Task OpenOrderDetailAsync(long orderId)
+    {
+        var detailVm = new OrderDetailViewModel(_orders);
+        await detailVm.LoadAsync(orderId);
+
+        var detail = new OrderDetailView { DataContext = detailVm };
+        detail.RefundRequested += async (_, _) => await RefundOrderAsync(orderId);
+        detail.ReverseRequested += async (_, _) => await ReverseSettleAsync(orderId);
+        detail.ReprintRequested += (_, _) => StatusMessage =
+            "补打需要先配好小票打印机（设置 → 打印机管理），当前没有可用打印机。";
+        detail.SkipRequested += async (_, _) => await SkipOrderAsync(orderId);
+
+        Page = detail;
+    }
+
+    /// <summary>退菜：把已结账的订单退回待结，或对未结订单做部分退（走退款页）。</summary>
+    private async Task RefundOrderAsync(long orderId)
+    {
+        var order = await _orders.GetByIdAsync(orderId);
+        if (order == null) { StatusMessage = "订单不存在。"; return; }
+
+        if (order.Status == OrderStatus.Void)
+        {
+            StatusMessage = "已作废的订单不能再退。";
+            return;
+        }
+
+        // 未结账：退菜只是把菜去掉，不涉及退款
+        if (order.Status == OrderStatus.Pending)
+        {
+            var shift = await _shiftRepository.GetCurrentAsync();
+            var vm = new YiHua.Pos.UI.ViewModels.Refund.RefundOrderViewModel(
+                order, _operatorName, _permissions.CurrentRole, shift?.Id ?? 0,
+                _refunds, _refundPolicy, _kitchen);
+            var view = new YiHua.Pos.UI.Views.Refund.RefundOrderView { DataContext = vm };
+            Page = view;
+            return;
+        }
+
+        // 已结账：先反结账回到待结，再退菜（避免出现「结了又退」的中间态）
+        StatusMessage = "已结账的订单请先「反结账」回到待结，再退菜。";
+    }
+
+    /// <summary>
+    /// 反结账：把订单退回待结账，并冲掉这笔支付对班次的影响。
+    ///
+    /// 必须同时把班次累计减回去 —— 只改订单不改班次，
+    /// 交班时钱箱应有金额就会多算这一单，账对不上。
+    /// </summary>
+    private async Task ReverseSettleAsync(long orderId)
+    {
+        var order = await _orders.GetByIdAsync(orderId);
+        if (order == null) { StatusMessage = "订单不存在。"; return; }
+
+        if (order.Status != OrderStatus.Settled)
+        {
+            StatusMessage = "只有已结账的订单能反结账。";
+            return;
+        }
+
+        var paid = order.AmountPay;
+        var wasCash = order.Payments.Any(p => p.PayType == PayType.Cash);
+
+        order.Status = OrderStatus.Pending;
+        order.SettleTime = null;
+        order.AmountReceived = 0;
+        order.AmountChange = 0;
+        order.Payments.Clear();
+        order.Remark = $"{order.Remark} [反结账] {_operatorName} {DateTime.Now:MM-dd HH:mm}".Trim();
+        await _orders.UpdateAsync(order);
+
+        // 班次累计回退
+        if (order.ShiftId > 0)
+        {
+            var shift = await _shiftRepository.GetByIdAsync(order.ShiftId);
+            if (shift != null)
+            {
+                shift.OrderCount = Math.Max(0, shift.OrderCount - 1);
+                shift.AmountTotal = Math.Max(0m, shift.AmountTotal - paid);
+                shift.CashShould = Math.Max(0m, shift.CashShould - paid);
+                if (wasCash) shift.CashAmount = Math.Max(0m, shift.CashAmount - paid);
+                else shift.CustomAmount = Math.Max(0m, shift.CustomAmount - paid);
+                await _shiftRepository.UpdateAsync(shift);
+            }
+        }
+
+        StatusMessage = $"已反结账：{order.OrderNo} 退回待结，¥{paid:F2} 已从班次冲回。";
+        await OpenOrderDetailAsync(orderId);
+    }
+
+    /// <summary>跳单（参考端 orderOrderCancelOrder 的轻量版）：标记作废，不动钱。</summary>
+    private async Task SkipOrderAsync(long orderId)
+    {
+        var order = await _orders.GetByIdAsync(orderId);
+        if (order == null) { StatusMessage = "订单不存在。"; return; }
+
+        if (order.Status != OrderStatus.Pending)
+        {
+            StatusMessage = "只有待结账的订单能跳单。";
+            return;
+        }
+
+        order.Status = OrderStatus.Void;
+        order.Remark = $"{order.Remark} [跳单] {_operatorName} {DateTime.Now:MM-dd HH:mm}".Trim();
+        await _orders.UpdateAsync(order);
+
+        StatusMessage = $"{order.OrderNo} 已跳单（作废）。";
+        await OpenOrderDetailAsync(orderId);
     }
 
     private HangOrderView CreateHangOrderView()
@@ -761,12 +867,16 @@ public sealed class ShellViewModel : BindableBase
         return new HangOrderView { DataContext = new YiHua.Pos.UI.ViewModels.HangOrder.HangOrderViewModel(Get<IHangOrderRepository>(_services)) };
     }
 
+    /// <summary>
+    /// 退款入口。参考端把「退款」放在订单组里（orderOrderRefund），
+    /// 流程是「从订单列表找到那一单 → 打开 → 退款」。
+    /// 所以这里直接给订单列表，而不是一个点了没反应的空退款页。
+    /// </summary>
     private UserControl CreateRefundLanding()
     {
-        var root = new StackPanel { Spacing = 12, Margin = new Thickness(24) };
-        root.Children.Add(new TextBlock { Text = "退款与冲正", FontSize = 24 });
-        root.Children.Add(new TextBlock { Text = "从订单页选择订单后，点击退菜或反结账。" });
-        return new UserControl { Content = root };
+        var list = CreateOrderListViewAsync().GetAwaiter().GetResult();
+        StatusMessage = "在列表里找到要退的那一单，点开后有「退菜」「反结账」。";
+        return list;
     }
 
     /// <summary>交接班页：开班 / 当班 / 交班 / 交班记录，按有没有进行中的班自动切换。</summary>

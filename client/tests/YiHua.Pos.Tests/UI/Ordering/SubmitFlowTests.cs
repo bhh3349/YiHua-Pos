@@ -37,6 +37,11 @@ public class SubmitFlowTests
         Assert.Equal(OrderType.DineIn, order.OrderType);
         Assert.Single(order.Items);
 
+        // 订单号必须有值：它是查单、补打小票、退款的唯一凭据。
+        // 之前 BuildOrder 没设 OrderNo，每张单的订单号都是空的，
+        // 小票上印不出单号，客人拿小票回来也对不了账。
+        Assert.False(string.IsNullOrWhiteSpace(order.OrderNo));
+
         // outbox 有记录
         Assert.Single(outbox.Items);
         Assert.Equal(result.ClientOrderNo, outbox.Items[0].ClientOrderNo);
