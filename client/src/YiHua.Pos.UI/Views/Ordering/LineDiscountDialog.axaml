@@ -1,0 +1,61 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+        xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Ordering"
+        x:Class="YiHua.Pos.UI.Views.Ordering.LineDiscountDialog"
+        x:DataType="vm:LineDiscountViewModel"
+        Title="打折 / 减免"
+        Width="440" Height="460"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BackgroundBrush}">
+  <StackPanel Margin="24,20" Spacing="14">
+    <TextBlock Text="{Binding ProductName}" FontSize="18" FontWeight="SemiBold" />
+
+    <!-- 原价与小计并排显示，避免收银员按错数量级 -->
+    <Border Background="{DynamicResource PrimaryLightBrush}" CornerRadius="8" Padding="16,12">
+      <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="单价"
+                   Foreground="{DynamicResource TextSecondaryBrush}" />
+        <TextBlock Grid.Row="0" Grid.Column="1"
+                   Text="{Binding Price, StringFormat='¥{0:F2}'}" HorizontalAlignment="Right" />
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="小计"
+                   Foreground="{DynamicResource TextSecondaryBrush}" />
+        <TextBlock Grid.Row="1" Grid.Column="1"
+                   Text="{Binding Subtotal, StringFormat='¥{0:F2}'}"
+                   FontWeight="SemiBold" HorizontalAlignment="Right" />
+      </Grid>
+    </Border>
+
+    <TextBlock Text="减免金额（元）" Foreground="{DynamicResource TextSecondaryBrush}" />
+    <TextBox Text="{Binding Discount, StringFormat='{}{0:F2}'}"
+             FontSize="20" MinHeight="48" HorizontalContentAlignment="Right" />
+
+    <ItemsControl ItemsSource="{Binding QuickAmounts}">
+      <ItemsControl.ItemsPanel>
+        <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+      </ItemsControl.ItemsPanel>
+      <ItemsControl.ItemTemplate>
+        <DataTemplate>
+          <Button Content="{Binding StringFormat='减 {0:F0} 元'}"
+                  Click="OnQuickAmount" Tag="{Binding}"
+                  MinWidth="90" MinHeight="44" Margin="0,0,8,8" />
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <Grid ColumnDefinitions="*,Auto">
+      <TextBlock Grid.Column="0" Text="减免后" VerticalAlignment="Center"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+      <TextBlock Grid.Column="1" Text="{Binding Payable, StringFormat='¥{0:F2}'}"
+                 FontSize="22" FontWeight="Bold" HorizontalAlignment="Right" />
+    </Grid>
+
+    <TextBlock x:Name="ErrorText" Text="{Binding ErrorMessage}"
+               Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap" />
+
+    <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
+      <btn:PosButton Content="取消" Variant="Secondary" Click="OnCancel" MinWidth="110" />
+      <btn:PosButton Content="确定减免" Variant="Primary" Click="OnConfirm" MinWidth="140" />
+    </StackPanel>
+  </StackPanel>
+</Window>

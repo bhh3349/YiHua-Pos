@@ -49,8 +49,8 @@
                IsVisible="{Binding Confirmed}" />
 
     <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
-      <Button Content="取消" MinWidth="110" MinHeight="52" />
-      <Button Content="确定改价" MinWidth="140" MinHeight="52" />
+      <Button Content="取消" Click="OnCancel" MinWidth="110" MinHeight="52" />
+      <Button Content="确定改价" Click="OnConfirm" MinWidth="140" MinHeight="52" />
     </StackPanel>
   </StackPanel>
 </Window>

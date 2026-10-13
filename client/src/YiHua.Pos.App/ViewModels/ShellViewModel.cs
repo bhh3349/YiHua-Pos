@@ -16,6 +16,7 @@ using YiHua.Pos.UI.Services.Ordering;
 using YiHua.Pos.UI.Services.Payment;
 using YiHua.Pos.UI.Services.Printing;
 using YiHua.Pos.UI.Services.Report;
+using YiHua.Pos.UI.Views.Cashier;
 using YiHua.Pos.UI.Services.Settings;
 using YiHua.Pos.UI.Services.Shift;
 using YiHua.Pos.UI.Services.Refund;
@@ -138,16 +139,16 @@ public sealed class ShellViewModel : BindableBase
 
         NavItems = new ObservableCollection<NavItem>
         {
+            // 导航按参考端的菜单分组排：经营在前、管理在后
+            // （参考端：经营=桌台/直接点餐/接单叫号/订单/菜品/沽清/交班，管理=统计/会员/打印/设置）
             new("desk", "桌台", "开台、清台、换台", p => CreateDeskView()),
-            new("ordering", "点单", "堂食点餐", p => CreateOrderingView()),
-            new("fastfood", "快餐", "外带、叫号、预点", p => CreateFastFoodView()),
-            new("payment", "收银", "结算、支付方式", p => CreatePaymentView()),
+            new("cashier", "收银", "点菜、改单、收款", p => CreateCashierView()),
             new("order", "订单", "查单、补打、退菜", p => CreateOrderListViewAsync().GetAwaiter().GetResult()),
+            new("product", "菜品", "菜品、分类、沽清", p => CreateProductViewAsync().GetAwaiter().GetResult()),
+            new("shift", "交班", "开班、交班、查班次", p => CreateShiftHub()),
+            new("report", "统计", "营业额、商品排行、时段", p => CreateReportViewAsync().GetAwaiter().GetResult()),
             new("hangorder", "挂单", "暂存、取回、拆单", p => CreateHangOrderView()),
             new("refund", "退款", "退菜、冲正", p => CreateRefundLanding()),
-            new("shift", "交接班", "开班、交班、查班次", p => CreateShiftHub()),
-            new("report", "报表", "营业额、商品排行、时段", p => CreateReportViewAsync().GetAwaiter().GetResult()),
-            new("product", "商品", "菜品、分类、沽清", p => CreateProductViewAsync().GetAwaiter().GetResult()),
             new("settings", "设置", "门店、打印机、收银规则", p => CreateSettingsView()),
             new("about", "关于 / 诊断", "版本、诊断报告", p => CreateDiagnosticView()),
         };
@@ -574,6 +575,215 @@ public sealed class ShellViewModel : BindableBase
         };
 
         await window.ShowDialog(_shellWindow);
+    }
+
+    /// <summary>
+    /// 收银主界面（参考端同款单屏布局）。
+    /// 桌台模式用当前开台，快餐模式没有桌台。
+    /// </summary>
+    private CashierView CreateCashierView()
+    {
+        _ordering ??= CreateOrderingViewModel(_currentDesk);
+        var view = new CashierView { DataContext = _ordering };
+
+        view.ProductClicked += (_, product) => HandleProductClick(product);
+        view.StatusMessage += (_, message) => StatusMessage = message;
+
+        view.HangRequested += (_, _) => HangCurrentOrder();
+        view.OpenOrdersRequested += (_, _) => Navigate("order");
+
+        view.LineRemarkRequested += async (_, line) => await ShowLineRemarkAsync(line);
+        view.OrderRemarkRequested += async (_, _) => await ShowOrderRemarkAsync();
+
+        view.EditPriceRequested += async (_, line) => await ShowEditPriceAsync(line);
+        view.LineDiscountRequested += async (_, line) => await ShowLineDiscountAsync(line);
+        view.OrderDiscountRequested += async (_, _) => await ShowOrderDiscountAsync();
+
+        view.SpecRequested += async (_, product) => await ShowSpecDialogAsync(product);
+        view.IngredientRequested += (_, _) => StatusMessage =
+            "加料需要独立的加料表（参考端 IngredientDto），还没建，排在菜品表之后。";
+
+        view.PayRequested += async (_, kind) => await StartSettlementAsync(kind);
+
+        return view;
+    }
+
+    /// <summary>
+    /// 收款：先把单落库（拿订单号），再弹结账面板。
+    ///
+    /// 为什么先落库：结账页要显示订单号，客人问「我那一单」时也得有号可查。
+    /// 参考端也是这样 —— 收款动作本身就把单提交了。
+    /// </summary>
+    private async Task StartSettlementAsync(PaymentMethodKindLite kind)
+    {
+        if (_ordering == null) return;
+
+        if (!_ordering.HasLines)
+        {
+            StatusMessage = "明细是空的，先点菜。";
+            return;
+        }
+
+        // 已有未结订单（挂单取回/改单）就直接结，不重复下单
+        if (_currentOrder == null)
+        {
+            var result = await _ordering.SubmitAsync();
+            if (!result.IsSuccess || result.OrderId == null)
+            {
+                StatusMessage = result.IsConflict
+                    ? "桌台订单状态已变化，请刷新后重试。"
+                    : $"下单失败：{result.Error ?? "未知原因"}";
+                return;
+            }
+
+            _currentOrder = await _orders.GetByIdAsync(result.OrderId.Value);
+            if (_currentOrder == null) { StatusMessage = "订单落库后读不到，请刷新。"; return; }
+            _ordering.ClearAfterSubmit();
+        }
+
+        await ShowSettlementDialogAsync(kind);
+    }
+
+    private async Task ShowSettlementDialogAsync(PaymentMethodKindLite kind)
+    {
+        if (_currentOrder == null) return;
+
+        var page = CreatePaymentView();
+        if (page.DataContext is not PaymentViewModel vm) return;
+
+        // 按收银页点的按钮预选支付方式
+        vm.SelectMethod(kind switch
+        {
+            PaymentMethodKindLite.Cash => PaymentMethodKind.Cash,
+            PaymentMethodKindLite.CustomQr => PaymentMethodKind.CustomQr,
+            _ => PaymentMethodKind.Cash,
+        });
+
+        var window = new Window
+        {
+            Title = $"结账 · {_currentDesk?.Name ?? "快餐"}",
+            Content = page,
+            Width = 980,
+            Height = 720,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+        };
+
+        var settled = false;
+        page.SettleRequested += async (_, request) =>
+        {
+            settled = true;
+            await SettleCurrentOrderAsync(request);
+            window.Close();
+        };
+
+        await window.ShowDialog(_shellWindow);
+
+        if (settled)
+        {
+            // 结完账回桌台（收银员下一件事通常是招呼下一位客人）
+            Navigate("desk");
+        }
+    }
+
+    // ---------- 收银页的几个小弹窗 ----------
+
+    private async Task ShowOrderRemarkAsync()
+    {
+        if (_ordering == null) return;
+
+        var vm = new RemarkViewModel("整单", _ordering.OrderRemark);
+        var dialog = new RemarkDialog { DataContext = vm };
+        dialog.Confirmed += (_, text) =>
+        {
+            _ordering.OrderRemark = text;
+            StatusMessage = string.IsNullOrWhiteSpace(text) ? "已清空整单备注" : $"整单备注：{text}";
+        };
+        await dialog.ShowDialog(_shellWindow);
+    }
+
+    private async Task ShowEditPriceAsync(OrderLineViewModel line)
+    {
+        if (_ordering == null) return;
+
+        var vm = new PriceEditViewModel(line.ProductName, line.Price);
+        var dialog = new PriceEditDialog { DataContext = vm };
+        dialog.Confirmed += (_, newPrice) =>
+        {
+            if (_ordering.TryEditPrice(line, newPrice, out var deny))
+            {
+                StatusMessage = $"「{line.ProductName}」单价改为 ¥{newPrice:F2}";
+                (Page as CashierView)?.Refresh();
+            }
+            else StatusMessage = deny ?? "改价失败";
+        };
+        await dialog.ShowDialog(_shellWindow);
+    }
+
+    private async Task ShowLineDiscountAsync(OrderLineViewModel line)
+    {
+        if (_ordering == null) return;
+
+        var vm = new LineDiscountViewModel(line.ProductName, line.Price, line.Qty);
+        var dialog = new LineDiscountDialog { DataContext = vm };
+        dialog.Confirmed += (_, discount) =>
+        {
+            if (_ordering.TrySetLineDiscount(line, discount, out var deny))
+            {
+                StatusMessage = $"「{line.ProductName}」已减免 ¥{discount:F2}";
+                (Page as CashierView)?.Refresh();
+            }
+            else StatusMessage = deny ?? "折扣失败";
+        };
+        await dialog.ShowDialog(_shellWindow);
+    }
+
+    private async Task ShowOrderDiscountAsync()
+    {
+        if (_ordering == null) return;
+
+        var vm = new OrderDiscountViewModel(_ordering.Totals.OriginalTotal, _ordering.OrderDiscountRate);
+        var dialog = new OrderDiscountDialog { DataContext = vm };
+        dialog.Confirmed += (_, rate) =>
+        {
+            if (_ordering.TrySetOrderDiscountRate(rate, out var deny))
+            {
+                StatusMessage = rate >= 1m ? "已取消整单折扣" : $"整单 {rate * 10:F1} 折";
+                (Page as CashierView)?.Refresh();
+            }
+            else StatusMessage = deny ?? "整单折扣失败";
+        };
+        await dialog.ShowDialog(_shellWindow);
+    }
+
+    private async Task ShowSpecDialogAsync(Product product)
+    {
+        // 规格明细表还没建，现在只能把 SpecGroupName 拆成选项
+        var options = product.SpecGroupName
+            .Split(new[] { ',', '/', '#' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(x => new YiHua.Pos.UI.ViewModels.Ordering.SpecOption { Group = "规格", Value = x })
+            .ToList();
+
+        if (options.Count == 0)
+        {
+            StatusMessage = $"{product.Name} 没有配规格（到「菜品」页给商品加规格组）";
+            return;
+        }
+
+        var vm = new SpecSelectViewModel(product.Name, options);
+        var dialog = new SpecSelectDialog { DataContext = vm };
+        var resultTask = vm.WaitResultAsync();
+        await dialog.ShowDialog(_shellWindow);
+
+        var result = await resultTask;
+        if (result != null && _ordering != null)
+        {
+            _ordering.AddLine(new OrderLineViewModel
+            {
+                ProductId = product.Id, ProductName = product.Name, UnitName = product.UnitName,
+                Price = product.Price + result.PriceDelta, Qty = 1, SpecText = result.SpecText,
+            });
+            (Page as CashierView)?.Refresh();
+        }
     }
 
     private async Task<FastFoodEntryView> CreateFastFoodViewAsync()

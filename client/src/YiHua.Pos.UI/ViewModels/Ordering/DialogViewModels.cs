@@ -252,3 +252,108 @@ public sealed class RefundReasonViewModel : ViewModelBase
     public string? Reason => !string.IsNullOrWhiteSpace(CustomReason) ? CustomReason.Trim() : SelectedReason;
     public bool HasReason => !string.IsNullOrWhiteSpace(Reason);
 }
+
+/// <summary>
+/// 单品打折 / 减免弹窗。
+/// 显示原价和小计，避免收银员按错数量级。
+/// </summary>
+public sealed class LineDiscountViewModel : ViewModelBase
+{
+    private decimal _discount;
+
+    public LineDiscountViewModel(string productName, decimal price, decimal qty)
+    {
+        ProductName = productName;
+        Price = price;
+        Quantity = qty;
+        Subtotal = price * qty;
+    }
+
+    public string ProductName { get; }
+    public decimal Price { get; }
+    public decimal Quantity { get; }
+
+    /// <summary>这一行的小计（打折前）。</summary>
+    public decimal Subtotal { get; }
+
+    /// <summary>减免金额（元）。</summary>
+    public decimal Discount
+    {
+        get => _discount;
+        set
+        {
+            // 减免不能超过小计，否则这一行会变成负数金额
+            var clamped = value < 0m ? 0m : (value > Subtotal ? Subtotal : value);
+            SetProperty(ref _discount, decimal.Round(clamped, 2, MidpointRounding.AwayFromZero));
+            RaisePropertyChanged(nameof(DiscountAmount));
+            RaisePropertyChanged(nameof(Payable));
+            RaisePropertyChanged(nameof(ErrorMessage));
+        }
+    }
+
+    /// <summary>减免后应付。</summary>
+    public decimal Payable => Subtotal - Discount;
+
+    /// <summary>折扣额。</summary>
+    public decimal DiscountAmount => Discount;
+
+    public string? ErrorMessage => Discount >= Subtotal && Subtotal > 0
+        ? "减免不能超过小计"
+        : null;
+
+    /// <summary>快捷减免额（按小计的常见档位）。</summary>
+    public IReadOnlyList<decimal> QuickAmounts
+    {
+        get
+        {
+            var list = new List<decimal>();
+            foreach (var candidate in new[] { 1m, 2m, 5m, 10m })
+                if (candidate <= Subtotal) list.Add(candidate);
+            return list;
+        }
+    }
+}
+
+/// <summary>
+/// 整单打折弹窗。
+/// 收银员习惯说「打九折」，也可能直接填 9 —— 两种都认。
+/// </summary>
+public sealed class OrderDiscountViewModel : ViewModelBase
+{
+    private decimal _rate;
+
+    public OrderDiscountViewModel(decimal originalTotal, decimal currentRate)
+    {
+        OriginalTotal = originalTotal;
+        _rate = currentRate >= 1m ? 1m : currentRate;
+    }
+
+    public decimal OriginalTotal { get; }
+
+    /// <summary>折扣率：0.9 = 九折，1 = 不打折。</summary>
+    public decimal Rate
+    {
+        get => _rate;
+        set
+        {
+            var v = value;
+            // 填 9 也当成九折
+            if (v > 1m) v /= 10m;
+            var clamped = v <= 0m ? 0.01m : (v > 1m ? 1m : v);
+            SetProperty(ref _rate, decimal.Round(clamped, 3, MidpointRounding.AwayFromZero));
+            RaisePropertyChanged(nameof(RateText));
+            RaisePropertyChanged(nameof(Payable));
+            RaisePropertyChanged(nameof(DiscountAmount));
+        }
+    }
+
+    public string RateText => Rate >= 1m ? "不打折" : $"{Rate * 10:F1} 折";
+
+    public decimal Payable => decimal.Round(OriginalTotal * Rate, 2, MidpointRounding.AwayFromZero);
+
+    public decimal DiscountAmount => OriginalTotal - Payable;
+
+    public IReadOnlyList<decimal> QuickRates { get; } = new[] { 0.95m, 0.9m, 0.88m, 0.8m, 0.5m };
+}
+
+/// <summary>退菜原因弹窗（原有，补齐字段说明）。</summary>
