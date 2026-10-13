@@ -36,6 +36,11 @@ public partial class OrderEntryView : UserControl
     public event EventHandler<OrderLineViewModel>? RefundLineRequested;
     public event EventHandler<string>? StatusMessage;
 
+    // 桌台操作（参考端 C000100016：开台 / 并台 / 换台）
+    public event EventHandler? DeskChangeRequested;
+    public event EventHandler? DeskMergeRequested;
+    public event EventHandler? DeskClearRequested;
+
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
@@ -101,4 +106,8 @@ public partial class OrderEntryView : UserControl
     private void OnSubmit(object? sender, RoutedEventArgs e) => SubmitRequested?.Invoke(this, EventArgs.Empty);
 
     private void OnCheckout(object? sender, RoutedEventArgs e) => CheckoutRequested?.Invoke(this, EventArgs.Empty);
+
+    private void OnDeskChange(object? sender, RoutedEventArgs e) => DeskChangeRequested?.Invoke(this, EventArgs.Empty);
+    private void OnDeskMerge(object? sender, RoutedEventArgs e) => DeskMergeRequested?.Invoke(this, EventArgs.Empty);
+    private void OnDeskClear(object? sender, RoutedEventArgs e) => DeskClearRequested?.Invoke(this, EventArgs.Empty);
 }

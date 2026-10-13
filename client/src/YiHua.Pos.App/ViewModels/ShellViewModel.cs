@@ -326,6 +326,9 @@ public sealed class ShellViewModel : BindableBase
         view.HangRequested += (_, _) => HangCurrentOrder();
         view.RemarkRequested += async (_, line) => await ShowLineRemarkAsync(line);
         view.RefundLineRequested += async (_, line) => await ShowLineRefundAsync(line);
+        view.DeskChangeRequested += async (_, _) => await ChangeDeskAsync();
+        view.DeskMergeRequested += async (_, _) => await MergeDeskAsync();
+        view.DeskClearRequested += async (_, _) => await ClearDeskAsync();
         view.StatusMessage += (_, message) => StatusMessage = message;
         return view;
     }
@@ -449,6 +452,126 @@ public sealed class ShellViewModel : BindableBase
         }
         _currentOrder = await _orders.GetByIdAsync(result.OrderId.Value);
         StatusMessage = $"已下单：{_currentOrder?.OrderNo ?? result.ClientOrderNo}";
+    }
+
+    /// <summary>
+    /// 把一个 UserControl 对话框包成模态 Window 显示。
+    /// UI 层那几个对话框是 UserControl（方便内嵌与测试），
+    /// ShowDialog 需要 Window，所以在这里统一包一层。
+    /// </summary>
+    private static Window WrapDialog(UserControl content, string title, double width = 460) => new()
+    {
+        Title = title,
+        Content = content,
+        Width = width,
+        SizeToContent = SizeToContent.Height,
+        CanResize = false,
+        WindowStartupLocation = WindowStartupLocation.CenterOwner,
+    };
+
+    // ---------- 桌台操作（参考端 C000100016：开台 / 并台 / 换台）----------
+
+    /// <summary>
+    /// 重建当前页面。
+    /// 换台/并台之后桌号变了，但页面是之前用旧桌台建好的 ——
+    /// 不重建的话页头还显示原来那张桌，收银员会往错的桌上菜。
+    /// </summary>
+    private void RebuildCurrentPage()
+    {
+        if (_current != null)
+            Activate(_current);
+    }
+
+    private async Task ChangeDeskAsync()
+    {
+        if (_currentDesk == null) { StatusMessage = "先开台，再换台。"; return; }
+
+        var source = _currentDesk;
+        var all = await _desks.GetDesksAsync();
+        var vm = new DeskChangeViewModel(_desks, source)
+        {
+            AvailableTargets = all.Where(d => d.Id != source.Id && d.Status == DeskStatus.Idle).ToList(),
+        };
+
+        if (vm.AvailableTargets.Count == 0)
+        {
+            StatusMessage = "没有其他空闲桌可以换过去。";
+            return;
+        }
+
+        var dialog = new DeskChangeDialog { DataContext = vm };
+        var window = WrapDialog(dialog, $"换台 · {source.Name}");
+
+        dialog.Cancelled += (_, _) => window.Close();
+        dialog.Confirmed += async (_, _) =>
+        {
+            window.Close();
+            _currentDesk = vm.TargetDesk;
+            _ordering = CreateOrderingViewModel(_currentDesk);
+            StatusMessage = $"{source.Name} 已换到 {vm.TargetDesk?.Name}";
+            RebuildCurrentPage();
+            await Task.CompletedTask;
+        };
+
+        await window.ShowDialog(_shellWindow);
+    }
+
+    private async Task MergeDeskAsync()
+    {
+        if (_currentDesk == null) { StatusMessage = "先开台，再并台。"; return; }
+
+        var source = _currentDesk;
+        var all = await _desks.GetDesksAsync();
+        var vm = new DeskMergeViewModel(_desks, source)
+        {
+            AvailableTargets = all.Where(d => d.Id != source.Id).ToList(),
+        };
+
+        if (vm.AvailableTargets.Count == 0)
+        {
+            StatusMessage = "没有其他桌可以并。";
+            return;
+        }
+
+        var dialog = new DeskMergeDialog { DataContext = vm };
+        var window = WrapDialog(dialog, $"并台 · {source.Name}");
+
+        dialog.Cancelled += (_, _) => window.Close();
+        dialog.Confirmed += async (_, _) =>
+        {
+            window.Close();
+            _currentDesk = vm.TargetDesk;
+            _ordering = CreateOrderingViewModel(_currentDesk);
+            StatusMessage = $"{source.Name} 已并入 {vm.TargetDesk?.Name}";
+            RebuildCurrentPage();
+            await Task.CompletedTask;
+        };
+
+        await window.ShowDialog(_shellWindow);
+    }
+
+    private async Task ClearDeskAsync()
+    {
+        if (_currentDesk == null) { StatusMessage = "当前没有开台。"; return; }
+
+        var desk = _currentDesk;
+        var vm = new DeskClearViewModel(_desks, desk, _operatorName);
+        var dialog = new DeskClearDialog { DataContext = vm };
+        var window = WrapDialog(dialog, $"清台 · {desk.Name}");
+
+        dialog.Cancelled += (_, _) => window.Close();
+        dialog.Confirmed += async (_, _) =>
+        {
+            window.Close();
+            _currentDesk = null;
+            _currentOrder = null;
+            _ordering = null;
+            StatusMessage = $"{desk.Name} 已清台";
+            Navigate("desk");
+            await Task.CompletedTask;
+        };
+
+        await window.ShowDialog(_shellWindow);
     }
 
     private async Task<FastFoodEntryView> CreateFastFoodViewAsync()
