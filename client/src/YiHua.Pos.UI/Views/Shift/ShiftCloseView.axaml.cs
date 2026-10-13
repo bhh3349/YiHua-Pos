@@ -34,10 +34,13 @@ public partial class ShiftCloseView : UserControl
 
     private void OnCancel(object? s, RoutedEventArgs e) => Cancelled?.Invoke(this, EventArgs.Empty);
 
+    /// <summary>交班成功。</summary>
+    public event EventHandler? Closed;
+
     private async void OnConfirm(object? s, RoutedEventArgs e)
     {
-        if (ViewModel != null)
-            await ViewModel.ConfirmAsync(OperatorName);
+        if (ViewModel != null && await ViewModel.ConfirmAsync(OperatorName))
+            Closed?.Invoke(this, EventArgs.Empty);
     }
 
     protected override void OnLoaded(RoutedEventArgs e)

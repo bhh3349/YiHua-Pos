@@ -16,9 +16,12 @@ public partial class ShiftOpenView : UserControl
     public string OperatorName { get; set; } = string.Empty;
     public string TerminalNo { get; set; } = string.Empty;
 
+    /// <summary>开班成功。</summary>
+    public event EventHandler? Opened;
+
     private async void OnConfirm(object? s, RoutedEventArgs e)
     {
-        if (ViewModel != null)
-            await ViewModel.ConfirmAsync(OperatorId, OperatorName, TerminalNo);
+        if (ViewModel != null && await ViewModel.ConfirmAsync(OperatorId, OperatorName, TerminalNo))
+            Opened?.Invoke(this, EventArgs.Empty);
     }
 }

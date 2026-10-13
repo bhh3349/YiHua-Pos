@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using YiHua.Pos.App.Services;
+using YiHua.Pos.App.Views;
 using YiHua.Pos.Domain.Entities;
 using YiHua.Pos.Domain.Enums;
 using YiHua.Pos.Domain.Interfaces;
@@ -143,7 +144,7 @@ public sealed class ShellViewModel : BindableBase
             new("order", "订单", "查单、补打、退菜", p => CreateOrderListViewAsync().GetAwaiter().GetResult()),
             new("hangorder", "挂单", "暂存、取回、拆单", p => CreateHangOrderView()),
             new("refund", "退款", "退菜、冲正", p => CreateRefundLanding()),
-            new("shift", "交接班", "开班、交班、查班次", p => CreateShiftView()),
+            new("shift", "交接班", "开班、交班、查班次", p => CreateShiftHub()),
             new("report", "报表", "营业额、商品排行、时段", p => CreateReportViewAsync().GetAwaiter().GetResult()),
             new("product", "商品", "菜品、分类、沽清", p => CreateProductViewAsync().GetAwaiter().GetResult()),
             new("settings", "设置", "门店、打印机、收银规则", p => CreateSettingsView()),
@@ -768,10 +769,13 @@ public sealed class ShellViewModel : BindableBase
         return new UserControl { Content = root };
     }
 
-    private ShiftCurrentView CreateShiftView() => new()
+    /// <summary>交接班页：开班 / 当班 / 交班 / 交班记录，按有没有进行中的班自动切换。</summary>
+    private ShiftHubView CreateShiftHub()
     {
-        DataContext = new YiHua.Pos.UI.ViewModels.Shift.ShiftCurrentViewModel(_shiftService, _orders),
-    };
+        var view = new ShiftHubView(_shiftService, _orders, 1, _operatorName, Environment.MachineName);
+        view.StatusMessage += (_, message) => StatusMessage = message;
+        return view;
+    }
 
     private async Task<ReportHomeView> CreateReportViewAsync()
     {

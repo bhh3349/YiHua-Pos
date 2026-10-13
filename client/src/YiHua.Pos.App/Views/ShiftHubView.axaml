@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons;assembly=YiHua.Pos.UI"
+             x:Class="YiHua.Pos.App.Views.ShiftHubView">
+  <Grid RowDefinitions="Auto,Auto,*">
+
+    <!-- 页签：当班 / 交班记录 -->
+    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="16,16,16,0">
+      <Button x:Name="TabCurrent" Content="当班" Click="OnTabCurrent" MinHeight="44" MinWidth="110" />
+      <Button x:Name="TabHistory" Content="交班记录" Click="OnTabHistory" MinHeight="44" MinWidth="110" />
+    </StackPanel>
+
+    <!-- 当班时的操作条 -->
+    <StackPanel x:Name="ActionBar" Grid.Row="1" Orientation="Horizontal" Spacing="8"
+                Margin="16,12,16,0">
+      <btn:PosButton x:Name="CloseShiftButton" Content="去交班" Variant="Primary"
+                     Click="OnCloseShift" MinWidth="140" MinHeight="48" />
+      <btn:PosButton Content="开钱箱" Variant="Secondary"
+                     Click="OnOpenCashBox" MinWidth="120" MinHeight="48" />
+      <TextBlock x:Name="HintText" VerticalAlignment="Center" Margin="8,0,0,0"
+                 Foreground="{DynamicResource TextSecondaryBrush}" FontSize="14" />
+    </StackPanel>
+
+    <!-- 内容区：开班 / 当班 / 交班 / 历史 四选一 -->
+    <ContentControl Grid.Row="2" x:Name="ContentHost" Margin="0,12,0,0" />
+  </Grid>
+</UserControl>
