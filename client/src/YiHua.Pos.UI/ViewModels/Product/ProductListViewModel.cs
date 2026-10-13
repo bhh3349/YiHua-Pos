@@ -3,8 +3,12 @@ namespace YiHua.Pos.UI.ViewModels.Product;
 /// <summary>
 /// 商品列表 ViewModel：分类筛选 + 关键词搜索（名称/别名/拼音/编码）+ 状态筛选 + 批量操作。
 /// 数据经 IProductDataSource 获取（App 层用 IProductRepository 实现）。
+///
+/// 实现 INotifyPropertyChanged 是必须的：底部「共 N 个商品」和空状态
+/// 都绑在 AllProducts / IsEmpty 上，不通知的话载入完还显示「共 0 个商品」
+/// 和「还没有商品」—— 明明列表里已经有菜了。
 /// </summary>
-public class ProductListViewModel
+public class ProductListViewModel : System.ComponentModel.INotifyPropertyChanged
 {
     private readonly IProductDataSource _dataSource;
 
@@ -13,16 +17,67 @@ public class ProductListViewModel
         _dataSource = dataSource;
     }
 
-    public List<ProductDto> AllProducts { get; private set; } = new();
-    public List<CategoryDto> Categories { get; private set; } = new();
-    public List<UnitDto> Units { get; private set; } = new();
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
 
-    public long? SelectedCategoryId { get; set; }
-    public string SearchKeyword { get; set; } = string.Empty;
-    public ProductStatusFilter StatusFilter { get; set; } = ProductStatusFilter.All;
+    private void Raise(string name)
+        => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(name));
 
-    public bool IsLoading { get; private set; }
-    public string? ErrorMessage { get; private set; }
+    private List<ProductDto> _allProducts = new();
+    private List<CategoryDto> _categories = new();
+    private List<UnitDto> _units = new();
+    private bool _isLoading;
+    private string? _errorMessage;
+    private long? _selectedCategoryId;
+    private string _searchKeyword = string.Empty;
+    private ProductStatusFilter _statusFilter = ProductStatusFilter.All;
+
+    public List<ProductDto> AllProducts
+    {
+        get => _allProducts;
+        private set { _allProducts = value; Raise(nameof(AllProducts)); Raise(nameof(IsEmpty)); }
+    }
+
+    public List<CategoryDto> Categories
+    {
+        get => _categories;
+        private set { _categories = value; Raise(nameof(Categories)); }
+    }
+
+    public List<UnitDto> Units
+    {
+        get => _units;
+        private set { _units = value; Raise(nameof(Units)); }
+    }
+
+    public long? SelectedCategoryId
+    {
+        get => _selectedCategoryId;
+        set { _selectedCategoryId = value; Raise(nameof(SelectedCategoryId)); }
+    }
+
+    public string SearchKeyword
+    {
+        get => _searchKeyword;
+        set { _searchKeyword = value; Raise(nameof(SearchKeyword)); }
+    }
+
+    public ProductStatusFilter StatusFilter
+    {
+        get => _statusFilter;
+        set { _statusFilter = value; Raise(nameof(StatusFilter)); }
+    }
+
+    public bool IsLoading
+    {
+        get => _isLoading;
+        private set { _isLoading = value; Raise(nameof(IsLoading)); Raise(nameof(IsEmpty)); }
+    }
+
+    public string? ErrorMessage
+    {
+        get => _errorMessage;
+        private set { _errorMessage = value; Raise(nameof(ErrorMessage)); Raise(nameof(IsEmpty)); }
+    }
 
     /// <summary>别名索引：别名 → 商品（由编辑页保存时注册）。</summary>
     private readonly Dictionary<string, List<ProductDto>> _aliasIndex = new();
@@ -163,6 +218,13 @@ public class ProductListViewModel
     }
 
     public bool IsEmpty => !IsLoading && ErrorMessage == null && GetFiltered().Count == 0;
+
+    /// <summary>筛选条件变化后刷新依赖它的界面（空状态、计数）。</summary>
+    public void RefreshView()
+    {
+        Raise(nameof(IsEmpty));
+        Raise(nameof(AllProducts));
+    }
 }
 
 public enum ProductStatusFilter

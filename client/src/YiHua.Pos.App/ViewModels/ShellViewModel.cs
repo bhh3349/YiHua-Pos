@@ -168,20 +168,35 @@ public sealed class ShellViewModel : BindableBase
     public NavItem? Current
     {
         get => _current;
-        set
+        set => Activate(value);
+    }
+
+    /// <summary>
+    /// 切到某个导航项并重建它的页面。
+    ///
+    /// **每次点击都要重建**，不能因为「还是同一个导航项」就跳过 ——
+    /// 商品页下面还挂着「分类管理」「编辑商品」这些二级页，
+    /// 从二级页想回列表，靠的就是再点一次「商品」。
+    /// 之前用 SetProperty 的「值没变就返回」，结果点了没反应，
+    /// 进去就出不来。
+    /// </summary>
+    private void Activate(NavItem? value)
+    {
+        var changed = !ReferenceEquals(_current, value);
+        _current = value;
+        if (changed)
+            RaisePropertyChanged(nameof(Current));
+
+        try
         {
-            if (!SetProperty(ref _current, value)) return;
-            try
-            {
-                Page = value?.Factory(_services);
-                Diagnostics.AppLog.Info($"切换到页面 {value?.Key}");
-            }
-            catch (Exception ex)
-            {
-                Diagnostics.AppLog.Error($"页面 {value?.Key} 打开失败: {ex}");
-                Page = null;
-                PageError = $"页面「{value?.Title}」打开失败：{ex.Message}";
-            }
+            Page = value?.Factory(_services);
+            Diagnostics.AppLog.Info($"切换到页面 {value?.Key}");
+        }
+        catch (Exception ex)
+        {
+            Diagnostics.AppLog.Error($"页面 {value?.Key} 打开失败: {ex}");
+            Page = null;
+            PageError = $"页面「{value?.Title}」打开失败：{ex.Message}";
         }
     }
 
@@ -507,8 +522,58 @@ public sealed class ShellViewModel : BindableBase
     private async Task<ProductListView> CreateProductViewAsync()
     {
         var view = new ProductListView { DataContext = new ProductListViewModel(_productData) };
-        await ((ProductListViewModel)view.DataContext).LoadAsync();
+
+        view.NewProductRequested += async (_, _) => await OpenProductEditAsync(null);
+        view.CategoryManageRequested += async (_, _) => await OpenCategoryManageAsync();
+        view.ProductSelected += async (_, dto) => await OpenProductEditAsync(dto);
+
+        await view.LoadAsync();
         return view;
+    }
+
+    /// <summary>打开商品编辑页（product 为 null 表示新建）。</summary>
+    private async Task OpenProductEditAsync(ProductDto? product)
+    {
+        var vm = new ProductEditViewModel(_productEdit, _productData);
+        await vm.LoadAsync(product);
+
+        var view = new ProductEditView { DataContext = vm };
+        view.Saved += async (_, _) =>
+        {
+            StatusMessage = product == null ? $"已新增商品「{vm.Model.Name}」" : $"已保存「{vm.Model.Name}」";
+            await ShowProductListAsync();
+        };
+        view.Cancelled += async (_, _) => await ShowProductListAsync();
+
+        Page = view;
+    }
+
+    private async Task OpenCategoryManageAsync()
+    {
+        var vm = new CategoryManageViewModel(_productData, _productEdit);
+        var view = new CategoryManageView { DataContext = vm };
+        view.CloseRequested += async (_, _) => await ShowProductListAsync();
+
+        Page = view;
+    }
+
+    /// <summary>回到商品列表并刷新（新增/编辑/改分类之后都要刷）。</summary>
+    private async Task ShowProductListAsync()
+    {
+        var list = await CreateProductViewAsync();
+        Page = list;
+        NavigateToNavItem("product");
+    }
+
+    /// <summary>只改左侧高亮，不重建页面（避免把刚建好的页面又冲掉）。</summary>
+    private void NavigateToNavItem(string key)
+    {
+        var target = NavItems.FirstOrDefault(n => n.Key == key);
+        if (target != null && !ReferenceEquals(_current, target))
+        {
+            _current = target;
+            RaisePropertyChanged(nameof(Current));
+        }
     }
 
     private SettingsHomeView CreateSettingsView()

@@ -4,26 +4,46 @@
              xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
              xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Product"
              x:Class="YiHua.Pos.UI.Views.Product.CategoryManageView">
-  <Grid RowDefinitions="Auto,*">
-    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="16,16,16,8">
-      <input:TouchTextBox x:Name="NewCategoryBox" Watermark="新分类名称" MinWidth="200" />
-      <btn:PosButton Content="+ 新建分类" Variant="Primary" />
+  <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+    <TextBlock Grid.Row="0" Text="分类管理" FontSize="20" FontWeight="Bold" Margin="16,16,16,4" />
+    <TextBlock Grid.Row="1" Text="先建分类，再往分类里加菜。分类下还有商品时不能删。"
+               FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="16,0,16,12" />
+
+    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8" Margin="16,0,16,12">
+      <input:TouchTextBox x:Name="NewCategoryBox" Watermark="新分类名称，如：热菜" MinWidth="240" />
+      <btn:PosButton Content="+ 新建分类" Variant="Primary" Click="OnAdd" MinWidth="140" />
+      <btn:PosButton Content="返回商品列表" Variant="Secondary" Click="OnBack" MinWidth="140" />
     </StackPanel>
-    <ItemsControl Grid.Row="1" x:Name="CategoryList" Margin="16,0,16,16">
-      <ItemsControl.ItemTemplate>
-        <DataTemplate x:DataType="vm:CategoryDto">
-          <Border Background="{DynamicResource SurfaceBrush}"
-                  BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1"
-                  Padding="0,12">
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
-              <TextBlock Text="{Binding Name}" FontSize="16" VerticalAlignment="Center" />
-              <btn:PosButton Grid.Column="1" Content="重命名" Variant="Secondary" />
-              <btn:PosButton Grid.Column="2" Content="隐藏" Variant="Secondary" />
-              <btn:PosButton Grid.Column="3" Content="删除" Variant="Danger" />
-            </Grid>
-          </Border>
-        </DataTemplate>
-      </ItemsControl.ItemTemplate>
-    </ItemsControl>
+
+    <ScrollViewer Grid.Row="3" Margin="16,0,16,0">
+      <ItemsControl x:Name="CategoryList">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:CategoryDto">
+            <Border Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1"
+                    Padding="0,10">
+              <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+                <input:TouchTextBox Grid.Column="0" Text="{Binding Name}" MinWidth="200" />
+                <btn:PosButton Grid.Column="1" Content="重命名" Variant="Secondary"
+                               Click="OnRename" MinWidth="100" />
+                <btn:PosButton Grid.Column="2" Content="隐藏" Variant="Secondary"
+                               Click="OnHide" MinWidth="90" />
+                <btn:PosButton Grid.Column="3" Content="删除" Variant="Danger"
+                               Click="OnDelete" MinWidth="90" />
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <StackPanel Grid.Row="4" Margin="16,8,16,16" Spacing="4">
+      <TextBlock x:Name="ErrorText" Foreground="{DynamicResource DangerBrush}"
+                 FontSize="14" TextWrapping="Wrap" />
+      <TextBlock x:Name="InfoText" Foreground="{DynamicResource SuccessBrush}"
+                 FontSize="14" TextWrapping="Wrap" />
+      <TextBlock Text="「隐藏」是前台不再显示这个分类，历史订单和商品都保留；「删除」是彻底移除。"
+                 FontSize="12" Foreground="{DynamicResource TextDisabledBrush}" TextWrapping="Wrap" />
+    </StackPanel>
   </Grid>
 </UserControl>

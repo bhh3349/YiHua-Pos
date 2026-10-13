@@ -3,13 +3,14 @@
              xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
              xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
              xmlns:layout="clr-namespace:YiHua.Pos.UI.Controls.Layout"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Product"
              x:Class="YiHua.Pos.UI.Views.Product.ProductEditView">
   <Grid RowDefinitions="Auto,*,Auto">
     <!-- 分段导航 -->
     <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="16,16,16,8">
-      <Button Content="基础信息" Classes="section-tab" />
-      <Button Content="规格设置" Classes="section-tab" />
-      <Button Content="套餐" Classes="section-tab" />
+      <Button Content="基础信息" Click="OnSectionBasic" MinHeight="44" />
+      <Button Content="规格设置" Click="OnSectionSpecs" MinHeight="44" />
+      <Button Content="套餐" Click="OnSectionBundle" MinHeight="44" />
     </StackPanel>
 
     <!-- 表单区（滚动） -->
@@ -25,11 +26,25 @@
           <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
             <StackPanel Grid.Column="0" Spacing="8">
               <TextBlock Text="分类 *" FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" />
-              <ComboBox x:Name="CategoryBox" MinHeight="48" HorizontalAlignment="Stretch" />
+              <ComboBox x:Name="CategoryBox" MinHeight="48" HorizontalAlignment="Stretch"
+                        PlaceholderText="请选择分类">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:CategoryDto">
+                    <TextBlock Text="{Binding Name}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
             </StackPanel>
             <StackPanel Grid.Column="1" Spacing="8">
               <TextBlock Text="单位 *" FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" />
-              <ComboBox x:Name="UnitBox" MinHeight="48" HorizontalAlignment="Stretch" />
+              <ComboBox x:Name="UnitBox" MinHeight="48" HorizontalAlignment="Stretch"
+                        PlaceholderText="请选择单位">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:UnitDto">
+                    <TextBlock Text="{Binding Name}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
             </StackPanel>
           </Grid>
           <TextBlock Text="价格" FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" />
@@ -56,8 +71,10 @@
         <TextBlock Grid.Column="0" x:Name="ErrorText"
                    Foreground="{DynamicResource DangerBrush}" FontSize="14"
                    VerticalAlignment="Center" TextWrapping="Wrap" />
-        <btn:PosButton Grid.Column="1" Content="取消" Variant="Secondary" />
-        <btn:PosButton Grid.Column="2" Content="保存" Variant="Primary" MinWidth="120" />
+        <btn:PosButton Grid.Column="1" Content="取消" Variant="Secondary"
+                       Click="OnCancel" MinWidth="100" />
+        <btn:PosButton Grid.Column="2" Content="保存" Variant="Primary"
+                       Click="OnSave" MinWidth="120" />
       </Grid>
     </Border>
   </Grid>

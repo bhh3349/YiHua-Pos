@@ -4,23 +4,33 @@
              xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
              xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
              xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Product"
-             x:Class="YiHua.Pos.UI.Views.Product.ProductListView">
-  <Grid RowDefinitions="Auto,Auto,*">
+             x:Class="YiHua.Pos.UI.Views.Product.ProductListView"
+             x:DataType="vm:ProductListViewModel">
+  <Grid RowDefinitions="Auto,Auto,*,Auto">
     <!-- 工具栏：分类 + 新建 -->
     <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="16,16,16,8">
       <TextBlock Text="分类：" VerticalAlignment="Center" FontSize="16" />
-      <!-- CategoryTab 由代码动态生成 -->
-      <StackPanel x:Name="CategoryTabs" Orientation="Horizontal" Spacing="8" />
-      <btn:PosButton Content="+ 新建商品" Variant="Primary" HorizontalAlignment="Right" />
+      <!-- 分类标签由代码动态生成（分类是运行时从库里读的） -->
+      <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
+                    MaxWidth="720">
+        <StackPanel x:Name="CategoryTabs" Orientation="Horizontal" Spacing="8" />
+      </ScrollViewer>
+      <btn:PosButton Content="分类管理" Variant="Secondary"
+                     Click="OnCategoryManage" MinWidth="110" />
+      <btn:PosButton Content="+ 新建商品" Variant="Primary"
+                     Click="OnNewProduct" MinWidth="140" />
     </StackPanel>
 
     <!-- 搜索 + 状态筛选 -->
     <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12" Margin="16,0,16,8">
-      <input:TouchTextBox x:Name="SearchBox" Watermark="搜索商品名/别名/拼音" MinWidth="240" />
-      <ComboBox x:Name="StatusFilter" SelectedIndex="0" MinHeight="48" VerticalAlignment="Center">
+      <input:TouchTextBox x:Name="SearchBox" Watermark="搜索商品名/别名/拼音"
+                          MinWidth="240" TextChanged="OnSearchChanged" />
+      <ComboBox x:Name="StatusFilter" SelectedIndex="0" MinHeight="48" VerticalAlignment="Center"
+                SelectionChanged="OnStatusChanged">
         <ComboBoxItem>全部</ComboBoxItem>
         <ComboBoxItem>在售</ComboBoxItem>
         <ComboBoxItem>沽清</ComboBoxItem>
+        <ComboBoxItem>已下架</ComboBoxItem>
       </ComboBox>
     </StackPanel>
 
@@ -32,15 +42,29 @@
             <WrapPanel Orientation="Horizontal" />
           </ItemsPanelTemplate>
         </ItemsControl.ItemsPanel>
-        <ItemsControl.ItemTemplate>
-          <DataTemplate x:DataType="vm:ProductDto">
-            <cards:ProductCard ProductName="{Binding Name}"
-                               Price="{Binding Price}"
-                               UnitName="{Binding UnitName}"
-                               Width="160" Margin="0,0,12,12" />
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
       </ItemsControl>
     </ScrollViewer>
+
+    <!-- 空状态 -->
+    <StackPanel Grid.Row="2" IsVisible="{Binding IsEmpty}"
+                VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
+      <TextBlock Text="还没有商品" FontSize="{DynamicResource FontSizeTitle}"
+                 HorizontalAlignment="Center" />
+      <TextBlock Text="点右上角「+ 新建商品」加第一道菜"
+                 Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" />
+      <btn:PosButton Content="+ 新建商品" Variant="Primary"
+                     Click="OnNewProduct" MinWidth="160" HorizontalAlignment="Center" />
+    </StackPanel>
+
+    <!-- 错误 -->
+    <TextBlock Grid.Row="2" Text="{Binding ErrorMessage}"
+               IsVisible="{Binding !!ErrorMessage}"
+               VerticalAlignment="Center" HorizontalAlignment="Center"
+               Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap" />
+
+    <TextBlock Grid.Row="3" Margin="16,8"
+               FontSize="{DynamicResource FontSizeSmall}"
+               Foreground="{DynamicResource TextSecondaryBrush}"
+               Text="{Binding AllProducts.Count, StringFormat='共 {0} 个商品'}" />
   </Grid>
 </UserControl>

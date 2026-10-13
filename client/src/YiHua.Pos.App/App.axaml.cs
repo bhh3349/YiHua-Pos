@@ -38,6 +38,7 @@ public partial class App : PrismApplication
         CurrentContainer = Container;
         Container.Resolve<DbInitializer>();
         SeedDeskIfEmpty();
+        SeedUnitsIfEmpty();
         return Container.Resolve<ShellView>();
     }
 
@@ -58,6 +59,27 @@ public partial class App : PrismApplication
             Sort = i,
         }).ToList();
         repo.ReplaceAllAsync(new[] { area }, desks).GetAwaiter().GetResult();
+    }
+
+    /// <summary>
+    /// 预置标准计量单位。
+    /// 单位不是商家的业务数据（份/例/杯/斤是通用度量），预置好能省掉
+    /// 「装完软件 → 想加菜 → 发现没单位 → 满世界找单位管理」这一趟。
+    /// 分类不预置：那是商家自己的菜单结构，替他决定反而不对。
+    /// </summary>
+    private void SeedUnitsIfEmpty()
+    {
+        var repo = Container.Resolve<IUnitRepository>();
+        if (repo.GetAllAsync().GetAwaiter().GetResult().Count != 0) return;
+
+        var names = new[] { "份", "例", "碗", "盘", "杯", "瓶", "只", "条", "个", "串", "斤", "两", "kg" };
+        var units = names.Select((n, i) => new YiHua.Pos.Domain.Entities.ProductUnit
+        {
+            Id = i + 1,
+            Name = n,
+            Sort = i + 1,
+        }).ToList();
+        repo.ReplaceAllAsync(units).GetAwaiter().GetResult();
     }
 
     protected override void RegisterTypes(IContainerRegistry containerRegistry)
