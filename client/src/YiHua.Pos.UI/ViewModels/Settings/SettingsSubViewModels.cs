@@ -226,4 +226,12 @@ public class SettingsNavItem
     }
     public string Title { get; }
     public string Subtitle { get; }
+
+    /// <summary>
+    /// 返回标题。
+    /// 不重写的话 ListBox 会把整个类型名当成这一项的名字 ——
+    /// 屏幕阅读器念出来是「YiHua.Pos.UI.ViewModels.Settings.SettingsNavItem」，
+    /// 自动化测试也点不中这一项。
+    /// </summary>
+    public override string ToString() => Title;
 }

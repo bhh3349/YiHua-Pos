@@ -83,14 +83,17 @@ public static class PrinterDiscovery
         }
         else if (OperatingSystem.IsWindows())
         {
-            // Windows：COM 口
+            // Windows 的正路是走系统打印队列：打印机在「设备和打印机」里装好后，
+            // 用设备名 RAW 直发 ESC/POS。这样不用管是 USB 还是网口还是蓝牙。
+            SafeAddWindowsPrinters(results);
+
+            // COM 口留着：有些老票据机只暴露串口，驱动装不上
             for (int i = 1; i <= 8; i++)
             {
                 var port = $"COM{i}";
                 results.Add(new DiscoveredPrinterDto { DisplayName = $"串口 {port}", DevicePath = port, Kind = "串口" });
             }
-            results.Add(new DiscoveredPrinterDto { DisplayName = "USB 打印机（系统已安装）", DevicePath = "USB", Kind = "USB" });
-            results.Add(new DiscoveredPrinterDto { DisplayName = "网络共享打印机（需填共享名）", DevicePath = @"\\SERVER\Printer", Kind = "网络" });
+            results.Add(new DiscoveredPrinterDto { DisplayName = "网络打印机（填 IP，端口 9100）", DevicePath = "tcp://192.168.1.100:9100", Kind = "网络" });
         }
         else if (OperatingSystem.IsMacOS())
         {
@@ -101,11 +104,38 @@ public static class PrinterDiscovery
         return results;
     }
 
-    private static void SafeAddUsbPrinters(List<DiscoveredPrinterDto> results)
+    /// <summary>
+    /// 列出 Windows 系统里已安装的打印机。
+    /// 这是商家真正能用的那批设备 —— 装好驱动就能打，
+    /// 比让他在一堆 COM1..COM8 里猜哪个是自己的机器强得多。
+    /// </summary>
+    private static void SafeAddWindowsPrinters(List<DiscoveredPrinterDto> results)
     {
         try
         {
-            if (Directory.Exists("/dev/usb"))
+            var defaultName = YiHua.Pos.Hardware.Platforms.Windows.WindowsRawPrinter.GetDefaultPrinterName();
+
+            foreach (var name in YiHua.Pos.Hardware.Platforms.Windows.WindowsRawPrinter.ListInstalledPrinters())
+            {
+                var isDefault = string.Equals(name, defaultName, StringComparison.OrdinalIgnoreCase);
+                results.Add(new DiscoveredPrinterDto
+                {
+                    DisplayName = isDefault ? $"{name}（系统默认）" : name,
+                    DevicePath = name,
+                    Kind = "系统打印机",
+                });
+            }
+        }
+        catch
+        {
+            // 拿不到列表不影响其它发现方式（COM 口、网络）
+        }
+    }
+
+    private static void SafeAddUsbPrinters(List<DiscoveredPrinterDto> results)
+    {
+        try
+        {            if (Directory.Exists("/dev/usb"))
                 foreach (var path in Directory.GetFiles("/dev/usb", "lp*"))
                     results.Add(new DiscoveredPrinterDto { DisplayName = $"USB 打印机 ({Path.GetFileName(path)})", DevicePath = path, Kind = "USB" });
             foreach (var path in SafeGetFiles("/dev", "ttyUSB*"))

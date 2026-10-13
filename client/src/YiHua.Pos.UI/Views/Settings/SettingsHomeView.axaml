@@ -4,27 +4,35 @@
              x:Class="YiHua.Pos.UI.Views.Settings.SettingsHomeView"
              x:DataType="vm:SettingsNavigationViewModel">
   <Grid ColumnDefinitions="240,*">
-    <!-- 左侧导航 -->
+    <!--
+      左侧导航用 ListBox 而不是 ItemsControl：
+      ItemsControl 里的 Border 不会响应点击，之前点了没反应，
+      商家永远停在「门店信息」，进不去打印机、收银规则。
+      ListBox 自带选中态和键盘上下键，触控和键盘都能用。
+    -->
     <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}"
             BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0">
-      <StackPanel Margin="8">
-        <TextBlock Text="设置" FontSize="20" FontWeight="Bold" Margin="8,8,8,16" />
-        <ItemsControl ItemsSource="{Binding Items}" x:Name="NavItems">
-          <ItemsControl.ItemTemplate>
+      <Grid RowDefinitions="Auto,*">
+        <TextBlock Grid.Row="0" Text="设置" FontSize="20" FontWeight="Bold" Margin="16,16,16,8" />
+        <ListBox Grid.Row="1" x:Name="NavItems"
+                 ItemsSource="{Binding Items}"
+                 SelectedItem="{Binding Selected}"
+                 Background="Transparent"
+                 BorderThickness="0"
+                 Margin="8,0">
+          <ListBox.ItemTemplate>
             <DataTemplate x:DataType="vm:SettingsNavItem">
-              <Border Padding="12,10" Margin="0,0,0,4" CornerRadius="8"
-                      Background="Transparent">
-                <StackPanel>
-                  <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" />
-                  <TextBlock Text="{Binding Subtitle}" FontSize="13"
-                             Foreground="{DynamicResource TextSecondaryBrush}" />
-                </StackPanel>
-              </Border>
+              <StackPanel Margin="0,4">
+                <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding Subtitle}" FontSize="13"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+              </StackPanel>
             </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </StackPanel>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </Grid>
     </Border>
+
     <!-- 右侧内容 -->
     <ContentControl Grid.Column="1" x:Name="ContentArea" Margin="16" Content="{Binding SelectedPage}" />
   </Grid>

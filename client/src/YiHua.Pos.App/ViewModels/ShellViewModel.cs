@@ -14,6 +14,7 @@ using YiHua.Pos.UI.Services.FastFood;
 using YiHua.Pos.UI.Services.HangOrder;
 using YiHua.Pos.UI.Services.Ordering;
 using YiHua.Pos.UI.Services.Payment;
+using YiHua.Pos.UI.Services.Printing;
 using YiHua.Pos.UI.Services.Report;
 using YiHua.Pos.UI.Services.Settings;
 using YiHua.Pos.UI.Services.Shift;
@@ -719,6 +720,12 @@ public sealed class ShellViewModel : BindableBase
             var change = order.AmountChange > 0 ? $"，找零 ¥{order.AmountChange:F2}" : string.Empty;
             StatusMessage = $"结账完成：应收 ¥{payable:F2}，{DescribeMethod(request.Method)}{change}";
 
+            // 打小票。打不出来必须让收银员当场知道 ——
+            // 客人拿不到凭证、后厨拿不到单，等发现已经过了好几桌。
+            var (printed, printMessage) = await PrintReceiptForOrderAsync(order, request);
+            if (!printed)
+                StatusMessage += $"　⚠ {printMessage}";
+
             // 结完账回桌台：收银员下一件事通常是招呼下一位客人，
             // 留在结账页看着一张已经结掉的单只会让人以为没结成功。
             Navigate("desk");
@@ -729,8 +736,45 @@ public sealed class ShellViewModel : BindableBase
         }
     }
 
-    private static string DescribeMethod(PaymentMethodKind method) => method switch
+    /// <summary>结账后打印小票。失败不抛异常，把说明带回去让收银员知道。</summary>
+    private async Task<(bool Ok, string Message)> PrintReceiptForOrderAsync(Order order, SettlementRequest request)
     {
+        try
+        {
+            var service = Get<ReceiptPrintService>(_services);
+
+            var data = new ReceiptData
+            {
+                OrderNo = order.OrderNo,
+                DeskInfo = _currentDesk?.Name ?? "快餐",
+                TotalAmount = order.AmountTotal,
+                DiscountAmount = order.AmountDiscount,
+                PayableAmount = order.AmountPay,
+                ReceivedAmount = order.AmountReceived,
+                ChangeAmount = order.AmountChange,
+                PayMethodName = DescribeMethod(request.Method),
+                PayTime = order.SettleTime ?? DateTime.Now,
+            };
+
+            foreach (var item in order.Items)
+                data.Items.Add(new ReceiptItem
+                {
+                    Name = item.ProductName,
+                    SpecText = item.SpecText,
+                    Quantity = item.Qty,
+                    Price = item.Price,
+                    Amount = item.Amount,
+                });
+
+            return await service.PrintReceiptAsync(data);
+        }
+        catch (Exception ex)
+        {
+            return (false, $"小票打印异常：{ex.Message}");
+        }
+    }
+
+    private static string DescribeMethod(PaymentMethodKind method) => method switch    {
         PaymentMethodKind.Cash => "现金",
         PaymentMethodKind.CustomQr => "自定义收款",
         PaymentMethodKind.Credit => "挂账",

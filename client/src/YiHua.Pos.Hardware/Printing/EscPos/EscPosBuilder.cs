@@ -209,6 +209,28 @@ public class EscPosBuilder
     /// <summary>输出最终字节流</summary>
     public byte[] Build() => _buffer.ToArray();
 
+    /// <summary>
+    /// 通用测试页。任何实现都能用它验证「这台机器通不通」，
+    /// 不用各自复制一份排版代码。
+    /// </summary>
+    public static byte[] SimpleTestPage(string printerName)
+    {
+        var b = new EscPosBuilder();
+        b.Init()
+         .Charset(CharsetType.Gb18030)
+         .Align(AlignStyle.Center)
+         .Bold(true)
+         .TextLine("逸华餐饮 打印测试")
+         .Bold(false)
+         .Align(AlignStyle.Left)
+         .TextLine($"打印机：{printerName}")
+         .TextLine($"时间：{DateTime.Now:yyyy-MM-dd HH:mm:ss}")
+         .TextLine("如果您看到这张纸，说明打印机能用。")
+         .Feed(3)
+         .Cut(CutMode.Full);
+        return b.Build();
+    }
+
     /// <summary>字节流转十六进制字符串（调试用），如 "1B 40"</summary>
     public static string ToHexString(byte[] data)
     {

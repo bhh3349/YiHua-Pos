@@ -14,6 +14,7 @@ using YiHua.Pos.UI.Services;
 using YiHua.Pos.UI.Services.FastFood;
 using YiHua.Pos.UI.Services.HangOrder;
 using YiHua.Pos.UI.Services.Report;
+using YiHua.Pos.UI.Services.Printing;
 using YiHua.Pos.UI.Services.Settings;
 using YiHua.Pos.UI.Services.Shift;
 using YiHua.Pos.UI.Services.Refund;
@@ -124,6 +125,11 @@ public partial class App : PrismApplication
         containerRegistry.RegisterSingleton<KitchenNotifyService>(_ => new KitchenNotifyService());
         containerRegistry.RegisterSingleton<SettingsPageHost>(_ => new SettingsPageHost(
             Container.Resolve<ISettingsStore>(), Container.Resolve<IBackupFileProvider>(), Container.Resolve<DiagnosticInfoProvider>()));
+
+        // 打印：工厂按配置创建打印机实现，服务负责取小票机配置并出纸
+        containerRegistry.RegisterSingleton<IPrinterFactory>(_ => new AppPrinterFactory());
+        containerRegistry.RegisterSingleton<ReceiptPrintService>(_ =>
+            new ReceiptPrintService(Container.Resolve<ISettingsStore>(), Container.Resolve<IPrinterFactory>()));
 
         containerRegistry.RegisterSingleton<ShellViewModel>();
         containerRegistry.RegisterSingleton<ShellView>();
