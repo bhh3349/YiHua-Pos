@@ -1,84 +1,176 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:disp="clr-namespace:YiHua.Pos.UI.Controls.Display"
              xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:disp="clr-namespace:YiHua.Pos.UI.Controls.Display"
              xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Report"
              x:Class="YiHua.Pos.UI.Views.Report.ReportHomeView"
              x:DataType="vm:ReportHomeViewModel">
-  <ScrollViewer Margin="16">
-    <StackPanel Spacing="16" MaxWidth="800">
-      <!-- 日期标题 -->
-      <TextBlock Text="{Binding ReportDate, StringFormat='{}{0:yyyy-MM-dd}（今天）'}"
-                 FontSize="20" FontWeight="Bold" />
+  <!--
+    报表页。布局对齐参考端实测结构：
+      左 119px 页签 │ 右内容区
+      内容：标题 + 时间范围 + 指标卡 + 未结账统计 + 分布
+  -->
+  <Grid ColumnDefinitions="140,*">
 
-      <!-- 核心指标 -->
-      <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
-        <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}"
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                CornerRadius="10" Padding="16">
-          <StackPanel Spacing="4">
-            <TextBlock Text="营业额" FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" />
-            <TextBlock Text="{Binding Turnover, StringFormat='¥{0:F2}'}"
-                       FontSize="28" FontWeight="Bold" />
-            <TextBlock Text="{Binding TurnoverGrowth, StringFormat='较昨日 {0:P1}'}" FontSize="14" />
-          </StackPanel>
-        </Border>
-        <Border Grid.Column="1" Background="{DynamicResource SurfaceBrush}"
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                CornerRadius="10" Padding="16">
-          <StackPanel Spacing="4">
-            <TextBlock Text="订单数" FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" />
-            <TextBlock Text="{Binding OrderCount, StringFormat='{}{0} 笔'}"
-                       FontSize="28" FontWeight="Bold" />
-            <TextBlock Text="{Binding OrderCountGrowth, StringFormat='较昨日 {0:P1}'}" FontSize="14" />
-          </StackPanel>
-        </Border>
-        <Border Grid.Column="2" Background="{DynamicResource SurfaceBrush}"
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                CornerRadius="10" Padding="16">
-          <StackPanel Spacing="4">
-            <TextBlock Text="客单价" FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" />
-            <TextBlock Text="{Binding AvgTicket, StringFormat='¥{0:F2}'}"
-                       FontSize="28" FontWeight="Bold" />
-          </StackPanel>
-        </Border>
+    <!-- 左侧页签 -->
+    <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0">
+      <StackPanel x:Name="TabStack" Margin="8,16,8,8" Spacing="4">
+        <Button x:Name="TabBusiness" Content="营业报表" Click="OnTabBusiness"
+                MinHeight="48" HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Left" Padding="12,0" />
+        <Button x:Name="TabPayment" Content="收款报表" Click="OnTabPayment"
+                MinHeight="48" HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Left" Padding="12,0" />
+      </StackPanel>
+    </Border>
+
+    <!-- 内容区 -->
+    <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*" Margin="16,16,16,0">
+
+      <!-- 标题 + 时间范围 -->
+      <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,12">
+        <TextBlock Grid.Column="0" x:Name="TitleText" Text="营业报表"
+                   FontSize="22" FontWeight="Bold" VerticalAlignment="Center" />
+        <TextBlock Grid.Column="1" x:Name="RangeText" Margin="16,0,0,0"
+                   FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}"
+                   VerticalAlignment="Center" />
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
+          <Button Content="今日" Click="OnRangeToday" MinHeight="40" MinWidth="72" />
+          <Button Content="昨天" Click="OnRangeYesterday" MinHeight="40" MinWidth="72" />
+          <Button Content="本周" Click="OnRangeThisWeek" MinHeight="40" MinWidth="72" />
+          <Button Content="本月" Click="OnRangeThisMonth" MinHeight="40" MinWidth="72" />
+          <Button Content="近7天" Click="OnRangeLast7" MinHeight="40" MinWidth="80" />
+        </StackPanel>
       </Grid>
 
-      <!-- 优惠/实收 -->
-      <Border Background="{DynamicResource BackgroundBrush}" CornerRadius="10" Padding="16">
-        <StackPanel Spacing="8">
-          <disp:KeyValueRow Key="优惠金额" Value="{Binding DiscountTotal, StringFormat='¥{0:F2}'}" />
-          <disp:KeyValueRow Key="实收" Value="{Binding NetReceived, StringFormat='¥{0:F2}'}" IsAmount="True" />
+      <ScrollViewer Grid.Row="1" Grid.RowSpan="2">
+        <StackPanel Spacing="16" MaxWidth="1100" HorizontalAlignment="Left">
+
+          <!-- 指标卡：参考端是「净营业额(含退款) / 订单笔数(含退款笔数) / 折后笔单价 / 订单优惠」 -->
+          <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="12">
+            <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="10" Padding="16">
+              <StackPanel Spacing="6">
+                <TextBlock Text="净营业额" FontSize="14"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                <TextBlock x:Name="NetTurnoverText" FontSize="26" FontWeight="Bold" />
+                <TextBlock x:Name="RefundText" FontSize="12"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+              </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1" Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="10" Padding="16">
+              <StackPanel Spacing="6">
+                <TextBlock Text="订单笔数" FontSize="14"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                <TextBlock x:Name="OrderCountText" FontSize="26" FontWeight="Bold" />
+                <TextBlock x:Name="RefundCountText" FontSize="12"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+              </StackPanel>
+            </Border>
+
+            <Border Grid.Column="2" Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="10" Padding="16">
+              <StackPanel Spacing="6">
+                <TextBlock Text="折后笔单价" FontSize="14"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                <TextBlock x:Name="AvgTicketText" FontSize="26" FontWeight="Bold" />
+                <TextBlock x:Name="GrowthText" FontSize="12"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+              </StackPanel>
+            </Border>
+
+            <Border Grid.Column="3" Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="10" Padding="16">
+              <StackPanel Spacing="6">
+                <TextBlock Text="订单优惠" FontSize="14"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                <TextBlock x:Name="DiscountText" FontSize="26" FontWeight="Bold" />
+                <TextBlock x:Name="ReceivedText" FontSize="12"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+              </StackPanel>
+            </Border>
+          </Grid>
+
+          <!-- 未结账订单统计（参考端单独一块） -->
+          <Border Background="{DynamicResource BackgroundBrush}" CornerRadius="10" Padding="16">
+            <StackPanel Spacing="12">
+              <TextBlock Text="未结账订单统计" FontSize="16" FontWeight="SemiBold" />
+              <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="12">
+                <StackPanel Grid.Column="0" Spacing="4">
+                  <TextBlock Text="未结账订单" FontSize="13"
+                             Foreground="{DynamicResource TextSecondaryBrush}" />
+                  <TextBlock x:Name="PendingCountText" FontSize="20" FontWeight="SemiBold" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="4">
+                  <TextBlock Text="未结账订单金额" FontSize="13"
+                             Foreground="{DynamicResource TextSecondaryBrush}" />
+                  <TextBlock x:Name="PendingAmountText" FontSize="20" FontWeight="SemiBold" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" Spacing="4">
+                  <TextBlock Text="已支付金额" FontSize="13"
+                             Foreground="{DynamicResource TextSecondaryBrush}" />
+                  <TextBlock x:Name="PendingPaidText" FontSize="20" FontWeight="SemiBold" />
+                </StackPanel>
+                <StackPanel Grid.Column="3" Spacing="4">
+                  <TextBlock Text="待支付金额" FontSize="13"
+                             Foreground="{DynamicResource TextSecondaryBrush}" />
+                  <TextBlock x:Name="PendingUnpaidText" FontSize="20" FontWeight="SemiBold" />
+                </StackPanel>
+              </Grid>
+            </StackPanel>
+          </Border>
+
+          <!-- 收款方式分布（条形，不用饼图 —— 饼图看绝对值费劲） -->
+          <TextBlock Text="收款方式分布" FontSize="16" FontWeight="SemiBold" />
+          <ItemsControl x:Name="PayTypeList">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:PayTypeShareDto">
+                <Grid ColumnDefinitions="110,*,110" ColumnSpacing="10" Margin="0,5">
+                  <TextBlock Text="{Binding Name}" FontSize="14" VerticalAlignment="Center" />
+                  <ProgressBar Grid.Column="1" Value="{Binding Share}" Maximum="1" Height="18"
+                               Foreground="{DynamicResource PrimaryBrush}"
+                               Background="{DynamicResource DividerBrush}" />
+                  <TextBlock Grid.Column="2" Text="{Binding Amount, StringFormat='¥{0:F2}'}"
+                             FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <!-- 订单类型分布 -->
+          <TextBlock Text="订单类型分布" FontSize="16" FontWeight="SemiBold" />
+          <ItemsControl x:Name="OrderTypeList">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:OrderTypeShareDto">
+                <disp:KeyValueRow Key="{Binding Name}" Value="{Binding Amount, StringFormat='¥{0:F2}'}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <!-- 空状态 -->
+          <Border x:Name="EmptyBox" IsVisible="False"
+                  Background="{DynamicResource BackgroundBrush}" CornerRadius="10"
+                  Padding="32">
+            <StackPanel Spacing="8" HorizontalAlignment="Center">
+              <TextBlock x:Name="EmptyTitle" Text="这段时间没有营业数据"
+                         FontSize="16" HorizontalAlignment="Center" />
+              <TextBlock Text="换个时间范围看看，或者先去收银台开一单"
+                         FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
+                         HorizontalAlignment="Center" />
+            </StackPanel>
+          </Border>
+
+          <TextBlock x:Name="ErrorText" Foreground="{DynamicResource DangerBrush}"
+                     FontSize="14" TextWrapping="Wrap" />
         </StackPanel>
-      </Border>
-
-      <!-- 支付方式分布（条形图，不用饼图） -->
-      <TextBlock Text="支付方式" FontSize="16" FontWeight="SemiBold" />
-      <ItemsControl ItemsSource="{Binding PayTypeBreakdown}">
-        <ItemsControl.ItemTemplate>
-          <DataTemplate x:DataType="vm:PayTypeShareDto">
-            <Grid ColumnDefinitions="80,*,90" ColumnSpacing="8" Margin="0,6,0,6">
-              <TextBlock Text="{Binding Name}" FontSize="14" VerticalAlignment="Center" />
-              <ProgressBar Value="{Binding Share}" Maximum="1" Height="20"
-                           Foreground="{DynamicResource PrimaryBrush}"
-                           Background="{DynamicResource DividerBrush}" />
-              <TextBlock Grid.Column="2"
-                         Text="{Binding Amount, StringFormat='¥{0:F0}'}"
-                         FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" />
-            </Grid>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
-
-      <!-- 订单类型分布 -->
-      <TextBlock Text="订单类型" FontSize="16" FontWeight="SemiBold" />
-      <ItemsControl ItemsSource="{Binding OrderTypeBreakdown}">
-        <ItemsControl.ItemTemplate>
-          <DataTemplate x:DataType="vm:OrderTypeShareDto">
-            <disp:KeyValueRow Key="{Binding Name}" Value="{Binding Amount, StringFormat='¥{0:F2}'}" />
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
-    </StackPanel>
-  </ScrollViewer>
+      </ScrollViewer>
+    </Grid>
+  </Grid>
 </UserControl>

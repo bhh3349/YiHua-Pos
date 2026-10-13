@@ -19,16 +19,32 @@ public static class ReportCalculator
     /// 营业额：有效订单的 (应付 - 已退) 之和。
     /// 作废单排除；冲正单（负数应付）计入。
     /// </summary>
+    /// <summary>
+    /// 营业额：Σ (应付 - 已退) ，**只算已结账和已退单**。
+    ///
+    /// ⚠️ 未结账订单不算营业额。之前这里只排除作废单，
+    /// 把还没收到钱的单也算进去了 —— 老板看到「今天做了 800」，
+    /// 实际钱箱里只有 500，差额是两桌还没结的。
+    /// 营业额是「已经收到的钱」，不是「开了多少单」。
+    ///
+    /// 冲正单（负数应付）计入，作废单排除。
+    /// </summary>
     public static decimal CalcTurnover(IEnumerable<ReportOrderDto> orders)
     {
         decimal total = 0;
         foreach (var o in orders)
         {
-            if (o.IsVoid) continue;
+            if (!IsRevenueOrder(o)) continue;
             total += o.AmountPay - o.AmountRefund;
         }
         return Round(total);
     }
+
+    /// <summary>
+    /// 是否计入营业额：已结账(1) 或 已退单(2)。
+    /// 待结账(0) 和 作废(3) 都不算。
+    /// </summary>
+    public static bool IsRevenueOrder(ReportOrderDto o) => o.Status is 1 or 2;
 
     /// <summary>
     /// 客单价：营业额 / 有效订单数。分母用订单数。
@@ -53,10 +69,24 @@ public static class ReportCalculator
         => Round(orders.Where(o => !o.IsVoid).Sum(o => o.AmountReceived));
 
     /// <summary>
-    /// 有效订单数（作废单排除）。
+    /// 成交笔数：只算已结账(1)。
+    ///
+    /// 退款单(2)不算「成交」—— 它是一笔冲销，不是一次销售。
+    /// 分子分母口径要能对上：
+    ///   净营业额 = Σ已结账 + Σ退款(负数)
+    ///   成交笔数 = 已结账笔数
+    ///   笔单价   = 净营业额 / 成交笔数  →  「平均每单收多少钱」
+    ///
+    /// 如果把退款单也算进笔数，分母被撑大、分子还减了，
+    /// 笔单价会被双重压低，老板会以为客单价掉了。
+    /// 退款笔数单独用 CountRefundOrders 显示。
     /// </summary>
     public static int CountValidOrders(IEnumerable<ReportOrderDto> orders)
-        => orders.Count(o => !o.IsVoid);
+        => orders.Count(o => o.Status == 1);
+
+    /// <summary>退款笔数。</summary>
+    public static int CountRefundOrders(IEnumerable<ReportOrderDto> orders)
+        => orders.Count(o => o.Status == 2);
 
     /// <summary>
     /// 同比：(本期 - 上期) / 上期。上期为 0 时返回 0（不抛异常）。

@@ -1,4 +1,5 @@
 using YiHua.Pos.Domain.Entities;
+using YiHua.Pos.Domain.Enums;
 using YiHua.Pos.Domain.Interfaces;
 using YiHua.Pos.UI.Services.Report;
 
@@ -86,11 +87,27 @@ internal sealed class OrderDataProvider : IOrderDataProvider
             dto.Payments.Add(new ReportPaymentDto
             {
                 PayType = (int)pay.PayType,
-                PayTypeName = pay.PayType.ToString(),
+                // 用订单上存的中文名（「现金」「挂账」…）。
+                // 直接 ToString() 会把枚举名 "Cash" 报给老板看 ——
+                // 报表上出现英文枚举名，一看就是没做完。
+                PayTypeName = string.IsNullOrWhiteSpace(pay.PayTypeName)
+                    ? DescribePayType(pay.PayType)
+                    : pay.PayTypeName,
                 Amount = pay.Amount,
             });
         }
 
         return dto;
     }
+
+    /// <summary>支付方式中文名（订单上没存名字时的兜底）。</summary>
+    private static string DescribePayType(PayType type) => type switch
+    {
+        PayType.Cash => "现金",
+        PayType.Custom => "自定义收款",
+        PayType.Member => "会员卡",
+        PayType.Bank => "银行卡",
+        PayType.QrCode => "扫码支付",
+        _ => "其他",
+    };
 }

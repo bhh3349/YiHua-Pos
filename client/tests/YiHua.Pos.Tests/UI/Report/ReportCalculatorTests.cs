@@ -45,6 +45,66 @@ public class ReportCalculatorTests
     }
 
     [Fact]
+    public void CalcTurnover_不含未结账订单()
+    {
+        // 营业额是「已经收到的钱」，不是「开了多少单」。
+        // 之前只排除作废单，把还没收到钱的单也算进去了 ——
+        // 老板看到「今天做了 300」，钱箱里只有 100。
+        var orders = new[]
+        {
+            MakeOrder(100m, status: 1),  // 已结账
+            MakeOrder(200m, status: 0),  // 待结账 —— 不算
+        };
+
+        Assert.Equal(100m, ReportCalculator.CalcTurnover(orders));
+        Assert.Equal(1, ReportCalculator.CountValidOrders(orders));
+    }
+
+    [Fact]
+    public void 退款单_计入营业额但是负数()
+    {
+        var orders = new[]
+        {
+            MakeOrder(100m, status: 1),
+            MakeOrder(-30m, status: 2), // 退款单
+        };
+
+        Assert.Equal(70m, ReportCalculator.CalcTurnover(orders));
+    }
+
+    [Fact]
+    public void 成交笔数_不含退款单()
+    {
+        // 退款单是冲销不是销售，算进笔数会双重压低客单价
+        var orders = new[]
+        {
+            MakeOrder(100m, status: 1),
+            MakeOrder(50m, status: 1),
+            MakeOrder(-30m, status: 2),
+        };
+
+        Assert.Equal(2, ReportCalculator.CountValidOrders(orders));
+        Assert.Equal(1, ReportCalculator.CountRefundOrders(orders));
+    }
+
+    [Fact]
+    public void 笔单价_分子分母口径一致()
+    {
+        var orders = new[]
+        {
+            MakeOrder(100m, status: 1),
+            MakeOrder(50m, status: 1),
+            MakeOrder(-30m, status: 2),
+        };
+
+        var turnover = ReportCalculator.CalcTurnover(orders);   // 120
+        var count = ReportCalculator.CountValidOrders(orders);  // 2
+
+        // 平均每单收 60 元
+        Assert.Equal(60m, ReportCalculator.CalcAvgTicket(turnover, count));
+    }
+
+    [Fact]
     public void CalcTurnover_NegativeOrder_Counts()
     {
         // 冲正单（负数）计入

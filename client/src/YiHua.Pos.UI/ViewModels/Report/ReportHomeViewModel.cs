@@ -32,6 +32,43 @@ public class ReportHomeViewModel
     public string? ErrorMessage { get; private set; }
     public bool IsEmpty => !IsLoading && ErrorMessage == null && OrderCount == 0;
 
+    // ---------- 参考端「营业报表」的补充口径 ----------
+
+    /// <summary>退款金额（已退单的金额绝对值）。</summary>
+    public decimal RefundAmount { get; private set; }
+
+    /// <summary>退款笔数。</summary>
+    public int RefundCount { get; private set; }
+
+    /// <summary>未结账订单数。</summary>
+    public int PendingOrderCount { get; private set; }
+
+    /// <summary>未结账订单金额。</summary>
+    public decimal PendingAmount { get; private set; }
+
+    /// <summary>未结账订单中已支付的部分。</summary>
+    public decimal PendingPaidAmount { get; private set; }
+
+    /// <summary>未结账订单中待支付的部分。</summary>
+    public decimal PendingUnpaidAmount { get; private set; }
+
+    /// <summary>
+    /// 净营业额。
+    ///
+    /// 直接取 Turnover —— 它已经是「已结账实收 - 退款」了
+    /// （CalcTurnover 把冲正单当负数应付计入）。
+    /// 不要再减一次 RefundAmount，那是重复扣减。
+    /// RefundAmount 只是拿来单独显示「其中退了多少」。
+    /// </summary>
+    public decimal NetTurnover => Turnover;
+
+    /// <summary>折后笔单价 = 净营业额 / 订单笔数。</summary>
+    public decimal AvgTicketAfterDiscount =>
+        OrderCount == 0 ? 0m : decimal.Round(NetTurnover / OrderCount, 2, MidpointRounding.AwayFromZero);
+
+    /// <summary>当前时间范围描述（界面标题用）。</summary>
+    public string RangeLabel { get; private set; } = "今日";
+
     public async Task LoadAsync(CancellationToken ct = default)
     {
         IsLoading = true;
@@ -40,20 +77,63 @@ public class ReportHomeViewModel
         {
             var start = ReportDate.Date;
             var end = start.AddDays(1);
+            await LoadRangeAsync(start, end, "今日", ct);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"加载报表失败：{ex.Message}，点击重试";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    /// <summary>按任意时间范围加载（参考端的时间范围切换走这里）。</summary>
+    public async Task LoadRangeAsync(DateTime start, DateTime end, string label, CancellationToken ct = default)
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        try
+        {
+            ReportDate = start.Date;
+            RangeLabel = label;
+
             var orders = await _dataSource.GetOrdersAsync(start, end, ct);
 
             Turnover = ReportCalculator.CalcTurnover(orders);
             OrderCount = ReportCalculator.CountValidOrders(orders);
-            AvgTicket = ReportCalculator.CalcAvgTicket(Turnover, OrderCount);
             DiscountTotal = ReportCalculator.CalcDiscountTotal(orders);
             NetReceived = ReportCalculator.CalcNetReceived(orders);
 
-            // 较昨日同比
-            var prevOrders = await _dataSource.GetOrdersAsync(start.AddDays(-1), start, ct);
-            var prevTurnover = ReportCalculator.CalcTurnover(prevOrders);
-            var prevCount = ReportCalculator.CountValidOrders(prevOrders);
-            TurnoverGrowth = ReportCalculator.CalcGrowthRate(Turnover, prevTurnover);
-            OrderCountGrowth = ReportCalculator.CalcGrowthRate(OrderCount, prevCount);
+            // 退款：已退单按绝对值统计，笔数单独算
+            var refunded = orders.Where(o => o.Status == 2).ToList();
+            RefundAmount = Math.Abs(refunded.Sum(o => o.AmountPay));
+            RefundCount = refunded.Count;
+            AvgTicket = ReportCalculator.CalcAvgTicket(NetTurnover, OrderCount);
+
+            // 未结账订单统计（参考端单独一块）
+            var pending = orders.Where(o => o.Status == 0 && !o.IsVoid).ToList();
+            PendingOrderCount = pending.Count;
+            PendingAmount = pending.Sum(o => o.AmountPay);
+            PendingPaidAmount = pending.Sum(o => o.AmountReceived);
+            PendingUnpaidAmount = Math.Max(0m, PendingAmount - PendingPaidAmount);
+
+            // 同比：只有「今日」才有意义，其它范围跳过
+            if (label == "今日")
+            {
+                var span = end - start;
+                var prevOrders = await _dataSource.GetOrdersAsync(start - span, start, ct);
+                TurnoverGrowth = ReportCalculator.CalcGrowthRate(
+                    NetTurnover, ReportCalculator.CalcTurnover(prevOrders));
+                OrderCountGrowth = ReportCalculator.CalcGrowthRate(
+                    OrderCount, ReportCalculator.CountValidOrders(prevOrders));
+            }
+            else
+            {
+                TurnoverGrowth = 0m;
+                OrderCountGrowth = 0m;
+            }
 
             PayTypeBreakdown = ReportCalculator.PayTypeBreakdown(orders)
                 .Select(x => new PayTypeShareDto
