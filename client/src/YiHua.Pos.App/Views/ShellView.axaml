@@ -77,7 +77,7 @@
     </Border>
 
     <!-- ===== 内容区 ===== -->
-    <Grid Grid.Column="1" RowDefinitions="Auto,*">
+    <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto">
 
       <Border Grid.Row="0" Height="48" Background="#FFFFFF"
               BorderBrush="#E4E7EC" BorderThickness="0,0,0,1">
@@ -107,6 +107,18 @@
           </StackPanel>
         </Border>
       </Panel>
+
+      <!--
+        状态栏：结账/退菜/挂单/下架这些操作的结果都在这里说。
+        没有它的话，收银员点完「确认结账」屏幕上什么变化都没有，
+        只能靠猜「到底成了没有」。
+      -->
+      <Border Grid.Row="2" Height="34" Background="{DynamicResource SurfaceBrush}"
+              BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
+        <TextBlock Text="{Binding StatusMessage}" Margin="20,0" FontSize="13"
+                   Foreground="{DynamicResource TextSecondaryBrush}"
+                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+      </Border>
     </Grid>
     </Grid>
   </Grid>

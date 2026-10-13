@@ -88,15 +88,28 @@ public static class SettingsValidator
 public static class RoundingCalculator
 {
     /// <summary>
-    /// 应用抹零规则。显式 AwayFromZero。
+    /// 应用抹零规则。**向下抹掉**，不是四舍五入。
+    ///
+    /// 抹到角：¥38.54 → ¥38.50
+    /// 抹到元：¥38.50 → ¥38.00
+    ///
+    /// ⚠️ 必须用 Floor。用 Math.Round 会变成「往上凑整」——
+    /// ¥38.54 抹到角变 ¥38.60，等于多收客人 6 分钱。
+    /// 这是收银口径问题，不是精度问题。
     /// </summary>
-    public static decimal ApplyRounding(decimal amount, RoundingRule rule) => rule switch
+    public static decimal ApplyRounding(decimal amount, RoundingRule rule)
     {
-        RoundingRule.None => Round(amount),
-        RoundingRule.ToJiao => Math.Round(amount, 1, MidpointRounding.AwayFromZero),
-        RoundingRule.ToYuan => Math.Round(amount, 0, MidpointRounding.AwayFromZero),
-        _ => Round(amount),
-    };
+        if (amount <= 0m)
+            return 0m;
+
+        return rule switch
+        {
+            RoundingRule.None => Round(amount),
+            RoundingRule.ToJiao => Round(Math.Floor(amount * 10m) / 10m),
+            RoundingRule.ToYuan => Round(Math.Floor(amount)),
+            _ => Round(amount),
+        };
+    }
 
     /// <summary>
     /// 预览文本：输入 ¥38.5，按规则显示「抹到元 → ¥38.0」。

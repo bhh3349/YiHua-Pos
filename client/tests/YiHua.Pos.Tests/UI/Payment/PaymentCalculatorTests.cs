@@ -40,19 +40,44 @@ public class PaymentCalculatorTests
     }
 
     [Fact]
-    public void ApplyRoundingDiscount_ToJiao()
+    public void ApplyRoundingDiscount_抹分_向下抹掉分()
     {
         var (payable, discount, original) = PaymentCalculator.ApplyRoundingDiscount(74.57m, toYuan: false);
-        Assert.Equal(74.60m, payable); // AwayFromZero：74.57 → 74.6
-        Assert.Equal(-0.03m, discount); // 注意：四舍五入可能为负（74.57→74.6 是加了 0.03）
+
+        // 抹分 = 抹掉分，保留到角：74.57 → 74.50
+        Assert.Equal(74.50m, payable);
+        Assert.Equal(0.07m, discount);
         Assert.Equal(74.57m, original);
+
+        // 优惠额永远是正的：抹零只会让客人少付，不会多付
+        Assert.True(discount >= 0m);
     }
 
     [Fact]
-    public void ApplyRoundingDiscount_ToYuan()
+    public void ApplyRoundingDiscount_抹角_向下抹掉角()
     {
-        var (payable, _, _) = PaymentCalculator.ApplyRoundingDiscount(74.57m, toYuan: true);
-        Assert.Equal(75m, payable); // AwayFromZero
+        var (payable, discount, _) = PaymentCalculator.ApplyRoundingDiscount(74.57m, toYuan: true);
+
+        // 抹角 = 抹掉角，保留到元：74.57 → 74.00
+        Assert.Equal(74m, payable);
+        Assert.Equal(0.57m, discount);
+        Assert.True(discount >= 0m);
+    }
+
+    [Fact]
+    public void ApplyRoundingDiscount_抹零后不会比原价高()
+    {
+        // 这是收银口径的底线：抹零是让利，不是往上凑整。
+        // 之前用四舍五入，74.57 抹到角变成 74.60 —— 多收客人 3 分钱。
+        foreach (var amount in new[] { 0.01m, 0.05m, 38.55m, 74.57m, 128.99m })
+        {
+            foreach (var toYuan in new[] { false, true })
+            {
+                var (payable, discount, _) = PaymentCalculator.ApplyRoundingDiscount(amount, toYuan);
+                Assert.True(payable <= amount, $"{amount} 抹零后变成 {payable}");
+                Assert.True(discount >= 0m, $"{amount} 抹零产生了负优惠 {discount}");
+            }
+        }
     }
 
     [Fact]

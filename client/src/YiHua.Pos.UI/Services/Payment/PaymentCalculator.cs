@@ -32,17 +32,28 @@ public static class PaymentCalculator
     }
 
     /// <summary>
-    /// 抹零：抹掉分（保留到角）或抹到元。
+    /// 抹零：**向下抹掉**，不是四舍五入。
+    ///
+    /// 抹分：抹掉分，保留到角 → ¥128.57 → ¥128.50
+    /// 抹角：抹掉角，保留到元 → ¥128.50 → ¥128.00
+    ///
+    /// ⚠️ 这里必须用 Floor。用 Math.Round 会把 128.57 变成 128.60、
+    /// 把 128.50 变成 129.00 —— 那是「往上凑整」，等于多收客人钱，
+    /// 收银员还会被客人当场质疑。
     /// </summary>
     /// <param name="total">原价</param>
-    /// <param name="toYuan">true=抹到元，false=抹到角</param>
+    /// <param name="toYuan">true=抹角（到元），false=抹分（到角）</param>
     /// <returns>(应收, 抹零额, 原价)</returns>
     public static (decimal Payable, decimal Discount, decimal Original) ApplyRoundingDiscount(decimal total, bool toYuan)
     {
+        if (total <= 0m)
+            return (0m, 0m, total);
+
         var payable = toYuan
-            ? Math.Round(total, 0, MidpointRounding.AwayFromZero)
-            : Math.Round(total, 1, MidpointRounding.AwayFromZero);
-        return (payable, total - payable, total);
+            ? Math.Floor(total)
+            : Math.Floor(total * 10m) / 10m;
+
+        return (Round(payable), Round(total - payable), total);
     }
 
     /// <summary>
@@ -83,29 +94,60 @@ public static class PaymentCalculator
 }
 
 /// <summary>
-/// 折扣类型。
+/// 折扣类型。编号与参考端 t_order_discount.activityId 对齐，
+/// 报表按活动分类统计优惠时才对得上。
 /// </summary>
 public enum DiscountType
 {
-    /// <summary>按比例（如 9折）。</summary>
-    Rate,
-    /// <summary>直接减（如减 10 元）。</summary>
-    Fixed,
-    /// <summary>抹零到角。</summary>
-    RoundToJiao,
-    /// <summary>抹零到元。</summary>
-    RoundToYuan,
+    /// <summary>1 抹分（抹掉分，保留到角）：¥128.57 → ¥128.50</summary>
+    RoundToJiao = 1,
+
+    /// <summary>2 抹角（抹掉角，保留到元）：¥128.50 → ¥128.00</summary>
+    RoundToYuan = 2,
+
+    /// <summary>3 整单改价：直接把应收改成指定金额</summary>
+    Override = 3,
+
+    /// <summary>4 整单减免：减固定金额</summary>
+    Fixed = 4,
+
+    /// <summary>5 整单打折：按比例（0.9 = 九折）</summary>
+    Rate = 5,
+
+    /// <summary>6 赠菜（记在明细行上，不在这里算金额）</summary>
+    Gift = 6,
+
+    /// <summary>7 菜品打折（记在明细行上）</summary>
+    ItemRate = 7,
+
+    /// <summary>8 菜品减免（记在明细行上）</summary>
+    ItemFixed = 8,
+
+    /// <summary>9 支付优惠（第三方平台补贴，如扫码立减）</summary>
+    Payment = 9,
+
+    /// <summary>免单：整单 100% 优惠，实收 0</summary>
+    Free = 100,
 }
 
 /// <summary>
-/// 折扣申请（记录谁、何时、哪种折扣，用于审计）。
+/// 折扣申请（记录谁、何时、哪种折扣，用于审计与报表分类）。
 /// </summary>
 public class DiscountRequest
 {
     public DiscountType Type { get; set; }
-    public decimal Value { get; set; } // Rate: 0.9=9折；Fixed: 金额
+
+    /// <summary>Rate/ItemRate: 0.9=九折；Fixed/ItemFixed: 减免金额；Override: 改后的应收</summary>
+    public decimal Value { get; set; }
+
     public long OperatorId { get; set; }
     public string OperatorName { get; set; } = string.Empty;
+
+    /// <summary>是否店长。折扣/抹零/免单是敏感操作，默认只有店长能做。</summary>
     public bool IsManager { get; set; }
+
     public string Reason { get; set; } = string.Empty;
+
+    /// <summary>参考端的 activityId（1~9），报表按它分类。</summary>
+    public int ActivityId => (int)Type;
 }

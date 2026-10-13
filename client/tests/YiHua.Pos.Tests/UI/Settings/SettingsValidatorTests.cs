@@ -99,17 +99,36 @@ public class RoundingCalculatorTests
     }
 
     [Fact]
-    public void ApplyRounding_ToJiao()
+    public void ApplyRounding_ToJiao_向下抹掉分()
     {
+        // 抹零是「抹掉」，不是四舍五入：
+        // 38.54 抹到角是 38.50；38.59 也是 38.50（不是 38.60）
         Assert.Equal(38.5m, RoundingCalculator.ApplyRounding(38.54m, RoundingRule.ToJiao));
-        Assert.Equal(38.6m, RoundingCalculator.ApplyRounding(38.55m, RoundingRule.ToJiao)); // AwayFromZero
+        Assert.Equal(38.5m, RoundingCalculator.ApplyRounding(38.59m, RoundingRule.ToJiao));
+        Assert.Equal(38.5m, RoundingCalculator.ApplyRounding(38.5m, RoundingRule.ToJiao));
     }
 
     [Fact]
-    public void ApplyRounding_ToYuan()
+    public void ApplyRounding_ToYuan_向下抹掉角()
     {
+        // 38.5 抹到元是 38，不是 39 —— 往上凑整等于多收客人钱
         Assert.Equal(38m, RoundingCalculator.ApplyRounding(38.4m, RoundingRule.ToYuan));
-        Assert.Equal(39m, RoundingCalculator.ApplyRounding(38.5m, RoundingRule.ToYuan)); // AwayFromZero
+        Assert.Equal(38m, RoundingCalculator.ApplyRounding(38.5m, RoundingRule.ToYuan));
+        Assert.Equal(38m, RoundingCalculator.ApplyRounding(38.99m, RoundingRule.ToYuan));
+    }
+
+    [Fact]
+    public void ApplyRounding_抹零不会让金额变大()
+    {
+        // 无论哪个规则，抹零后都不可能比原价高
+        foreach (var amount in new[] { 0.01m, 9.99m, 38.55m, 128.57m, 999.99m })
+        {
+            foreach (var rule in new[] { RoundingRule.ToJiao, RoundingRule.ToYuan })
+            {
+                var rounded = RoundingCalculator.ApplyRounding(amount, rule);
+                Assert.True(rounded <= amount, $"{amount} 抹零后变成 {rounded}，比原价还高");
+            }
+        }
     }
 
     [Fact]
@@ -117,6 +136,6 @@ public class RoundingCalculatorTests
     {
         var preview = RoundingCalculator.Preview(38.5m, RoundingRule.ToYuan);
         Assert.Contains("抹到元", preview);
-        Assert.Contains("39", preview); // 38.5 AwayFromZero → 39
+        Assert.Contains("38", preview); // 38.5 向下抹到元 → 38
     }
 }

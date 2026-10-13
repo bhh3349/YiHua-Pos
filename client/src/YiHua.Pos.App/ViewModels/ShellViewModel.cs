@@ -12,6 +12,7 @@ using YiHua.Pos.UI.Services;
 using YiHua.Pos.UI.Services.FastFood;
 using YiHua.Pos.UI.Services.HangOrder;
 using YiHua.Pos.UI.Services.Ordering;
+using YiHua.Pos.UI.Services.Payment;
 using YiHua.Pos.UI.Services.Report;
 using YiHua.Pos.UI.Services.Settings;
 using YiHua.Pos.UI.Services.Shift;
@@ -92,6 +93,9 @@ public sealed class ShellViewModel : BindableBase
     private bool _isLoggedIn;
     private bool _isOffline;
     private string? _statusMessage;
+
+    /// <summary>结账中标志：防重复提交（连点两下不能收两次钱）。</summary>
+    private bool _settling;
 
     private static T Get<T>(IServiceProvider p) where T : class =>
         (T)(p.GetService(typeof(T)) ?? throw new InvalidOperationException($"容器缺少服务 {typeof(T).Name}"));
@@ -468,85 +472,150 @@ public sealed class ShellViewModel : BindableBase
     }
     private PaymentView CreatePaymentView()
     {
-        if (_currentOrder == null && _ordering != null)
-        {
-            StatusMessage = "先提交点菜单，再进入收银。";
-            return new PaymentView { DataContext = new PaymentViewModel() };
-        }
         var vm = new PaymentViewModel();
-        if (_currentOrder != null)
+
+        if (_currentOrder == null)
         {
-            vm.OrderNo = _currentOrder.OrderNo;
-            vm.DeskInfo = _currentDesk?.Name ?? "快餐";
-            foreach (var i in _currentOrder.Items)
-                vm.Items.Add(new PaymentOrderItemDto { ProductName = i.ProductName, SpecText = i.SpecText, Quantity = i.Qty, Price = i.Price, Amount = i.Amount });
-            vm.SubmitMachine.StateChanged += (_, state) =>
-            {
-                if (state == PaymentSubmitState.Succeeded && _currentOrder != null)
-                    _ = SettleCurrentOrderAsync(vm.SelectedMethod,
-                        vm.SelectedMethod == PaymentMethodKind.Cash ? vm.Items.Sum(i => i.Amount) : vm.Items.Sum(i => i.Amount),
-                        vm.SelectedMethod.ToString());
-            };
+            // 还没下单就进收银：给明确指引，不要显示一个空白的结账页
+            vm.DeskInfo = "没有待结账的订单";
+            var empty = new PaymentView { DataContext = vm };
+            return empty;
         }
-        return new PaymentView { DataContext = vm };
+
+        vm.OrderNo = _currentOrder.OrderNo;
+        vm.DeskInfo = _currentDesk?.Name ?? "快餐";
+        foreach (var i in _currentOrder.Items)
+            vm.Items.Add(new PaymentOrderItemDto
+            {
+                ProductName = i.ProductName,
+                SpecText = i.SpecText,
+                Quantity = i.Qty,
+                Price = i.Price,
+                Amount = i.Amount,
+                IsGift = i.IsGift,
+            });
+
+        var view = new PaymentView { DataContext = vm };
+        view.SettleRequested += async (_, request) => await SettleCurrentOrderAsync(request);
+        return view;
     }
 
-    private async Task SettleCurrentOrderAsync(PaymentMethodKind method, decimal received, string methodName)
+    /// <summary>
+    /// 结账落单。
+    ///
+    /// 金额恒等式必须成立：原价 - 优惠 = 应收。
+    /// 所以这里不累加、直接按结账页算出来的应收倒推优惠额 ——
+    /// 累加很容易在「先抹零再打折」这类操作后对不上账。
+    /// </summary>
+    private async Task SettleCurrentOrderAsync(SettlementRequest request)
     {
         if (_currentOrder == null) return;
-        var order = await _orders.GetByIdAsync(_currentOrder.Id);
-        if (order == null) { StatusMessage = "订单已不存在，刷新后重试。"; return; }
-        if (order.Status != OrderStatus.Pending) { StatusMessage = "订单已结算或状态已变更。"; return; }
 
-        var shift = await _shiftRepository.GetCurrentAsync();
-        if (shift == null)
+        // 防重复提交：结账是花钱的动作，连点两下不能收两次钱
+        if (_settling) return;
+        _settling = true;
+        try
         {
-            shift = await _shiftService.OpenAsync(0m, 1, _operatorName, Environment.MachineName);
+            var order = await _orders.GetByIdAsync(_currentOrder.Id);
+            if (order == null) { StatusMessage = "订单已不存在，刷新后重试。"; return; }
+            if (order.Status != OrderStatus.Pending)
+            {
+                StatusMessage = "这一单已经结过账了，不要重复收钱。";
+                return;
+            }
+
+            var shift = await _shiftRepository.GetCurrentAsync()
+                        ?? await _shiftService.OpenAsync(0m, 1, _operatorName, Environment.MachineName);
+
+            var payType = request.Method switch
+            {
+                PaymentMethodKind.Cash => PayType.Cash,
+                PaymentMethodKind.MemberCard => PayType.Member,
+                _ => PayType.Custom,
+            };
+
+            var payable = request.PayableAmount;
+            var received = request.ReceivedAmount;
+
+            if (request.Method == PaymentMethodKind.Cash && received < payable)
+            {
+                StatusMessage = "实收金额不足，结账未提交。";
+                return;
+            }
+            if (request.Method != PaymentMethodKind.Cash)
+                received = payable;
+
+            order.AmountPay = payable;
+            order.AmountDiscount = PaymentCalculator.Round(order.AmountTotal - payable);
+            if (order.AmountDiscount < 0) order.AmountDiscount = 0m;
+            order.AmountReceived = received;
+            order.AmountChange = Math.Max(0m, PaymentCalculator.Round(received - payable));
+            order.Status = OrderStatus.Settled;
+            order.SettleTime = DateTime.Now;
+            order.ShiftId = shift.Id;
+            order.OperatorId = 1;
+            order.Payments.Add(new Payment
+            {
+                PayType = payType,
+                PayTypeName = DescribeMethod(request.Method),
+                Amount = payable,
+                OperatorId = 1,
+                PayTime = DateTime.Now,
+            });
+
+            await _orders.UpdateAsync(order);
+
+            // 班次累计
+            shift.OrderCount++;
+            shift.AmountTotal += payable;
+            shift.CashShould += payable;
+            if (payType == PayType.Cash) shift.CashAmount += payable;
+            else shift.CustomAmount += payable;
+            await _shiftRepository.UpdateAsync(shift);
+
+            // 结完账桌台释放
+            if (order.DeskId > 0)
+            {
+                var desk = await _desks.GetByIdAsync(order.DeskId);
+                if (desk != null)
+                {
+                    desk.Status = DeskStatus.Idle;
+                    desk.CurrentOrderId = 0;
+                    desk.CurrentAmount = 0;
+                    desk.GuestCount = 0;
+                    desk.OpenTime = null;
+                    await _desks.UpdateAsync(desk);
+                }
+            }
+
+            _currentOrder = null;
+            _currentDesk = null;
+            _ordering = null;
+
+            var change = order.AmountChange > 0 ? $"，找零 ¥{order.AmountChange:F2}" : string.Empty;
+            StatusMessage = $"结账完成：应收 ¥{payable:F2}，{DescribeMethod(request.Method)}{change}";
+
+            // 结完账回桌台：收银员下一件事通常是招呼下一位客人，
+            // 留在结账页看着一张已经结掉的单只会让人以为没结成功。
+            Navigate("desk");
         }
-
-        var payType = method switch
+        finally
         {
-            PaymentMethodKind.Cash => PayType.Cash,
-            PaymentMethodKind.CustomQr => PayType.Custom,
-            PaymentMethodKind.Credit => PayType.Custom,
-            _ => PayType.Custom,
-        };
-        if (method == PaymentMethodKind.Cash && received < order.AmountPay)
-        {
-            StatusMessage = "实收金额不足，结账未提交。";
-            return;
-        }
-        if (method != PaymentMethodKind.Cash && received != order.AmountPay)
-        {
-            StatusMessage = "该收款方式要求实收等于应收。";
-            return;
-        }
-
-        order.Payments.Add(new Payment { PayType = payType, PayTypeName = methodName, Amount = order.AmountPay, OperatorId = 1, PayTime = DateTime.Now });
-        order.AmountReceived = received;
-        order.AmountChange = Math.Max(0m, received - order.AmountPay);
-        order.Status = OrderStatus.Settled;
-        order.SettleTime = DateTime.Now;
-        order.ShiftId = shift.Id;
-        await _orders.UpdateAsync(order);
-
-        shift.OrderCount++;
-        shift.AmountTotal += order.AmountPay;
-        if (payType == PayType.Cash) shift.CashAmount += order.AmountPay;
-        else shift.CustomAmount += order.AmountPay;
-        shift.CashShould += order.AmountPay;
-        await _shiftRepository.UpdateAsync(shift);
-
-        _currentOrder = order;
-        StatusMessage = $"结账完成：应收 ¥{order.AmountPay:F2}，找零 ¥{order.AmountChange:F2}";
-        _currentDesk = await _desks.GetByIdAsync(order.DeskId);
-        if (_currentDesk != null)
-        {
-            _currentDesk.CurrentAmount = order.AmountPay;
-            _currentDesk.CurrentOrderId = order.Id;
-            await _desks.UpdateAsync(_currentDesk);
+            _settling = false;
         }
     }
+
+    private static string DescribeMethod(PaymentMethodKind method) => method switch
+    {
+        PaymentMethodKind.Cash => "现金",
+        PaymentMethodKind.CustomQr => "自定义收款",
+        PaymentMethodKind.Credit => "挂账",
+        PaymentMethodKind.MemberCard => "会员卡",
+        PaymentMethodKind.GroupBuy => "团购券",
+        PaymentMethodKind.QrCode => "扫码支付",
+        PaymentMethodKind.Bank => "银行卡",
+        _ => method.ToString(),
+    };
 
     private async Task<OrderListView> CreateOrderListViewAsync()
     {
