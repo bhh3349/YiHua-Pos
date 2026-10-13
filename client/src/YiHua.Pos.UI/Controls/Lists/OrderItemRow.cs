@@ -7,9 +7,11 @@ using Avalonia.Media;
 namespace YiHua.Pos.UI.Controls.Lists;
 
 /// <summary>
-/// 订单明细行：商品名 / 规格 / 数量 / 单价 / 小计。
+/// 订单明细行：商品名 / 规格 / 数量加减 / 小计 / 删除。
 /// 赠菜有明显标记（不计价），退菜有删除线。
-/// 操作（改量/改价/赠菜/删除）通过事件暴露，由页面决定交互形式。
+///
+/// 操作走**冒泡路由事件**：明细行是随订单变化反复生成的，
+/// 父级订阅一次就能收到所有行的操作，不会漏挂（卡片那边踩过这个坑）。
 /// </summary>
 public partial class OrderItemRow : UserControl
 {
@@ -30,6 +32,25 @@ public partial class OrderItemRow : UserControl
 
     public static readonly StyledProperty<bool> IsRefundedProperty =
         AvaloniaProperty.Register<OrderItemRow, bool>(nameof(IsRefunded));
+
+    public static readonly StyledProperty<bool> IsWeightedProperty =
+        AvaloniaProperty.Register<OrderItemRow, bool>(nameof(IsWeighted));
+
+    /// <summary>界面显示的数量文本（称重商品显示重量）。</summary>
+    public static readonly StyledProperty<string> DisplayQtyProperty =
+        AvaloniaProperty.Register<OrderItemRow, string>(nameof(DisplayQty), "1");
+
+    /// <summary>数量加一（冒泡）。</summary>
+    public static readonly RoutedEvent<RoutedEventArgs> IncreaseQtyEvent =
+        RoutedEvent.Register<OrderItemRow, RoutedEventArgs>("IncreaseQty", RoutingStrategies.Bubble);
+
+    /// <summary>数量减一（冒泡）。</summary>
+    public static readonly RoutedEvent<RoutedEventArgs> DecreaseQtyEvent =
+        RoutedEvent.Register<OrderItemRow, RoutedEventArgs>("DecreaseQty", RoutingStrategies.Bubble);
+
+    /// <summary>删除整行（冒泡）。</summary>
+    public static readonly RoutedEvent<RoutedEventArgs> DeleteLineEvent =
+        RoutedEvent.Register<OrderItemRow, RoutedEventArgs>("DeleteLine", RoutingStrategies.Bubble);
 
     public string ProductName
     {
@@ -69,18 +90,23 @@ public partial class OrderItemRow : UserControl
         set => SetValue(IsRefundedProperty, value);
     }
 
+    /// <summary>称重商品：数量显示为重量，加减按钮不生效（要改重量得重新称）。</summary>
+    public bool IsWeighted
+    {
+        get => GetValue(IsWeightedProperty);
+        set => SetValue(IsWeightedProperty, value);
+    }
+
+    public string DisplayQty
+    {
+        get => GetValue(DisplayQtyProperty);
+        set => SetValue(DisplayQtyProperty, value);
+    }
+
     /// <summary>小计：赠菜/退菜不计价。</summary>
     public decimal Subtotal => (IsGift || IsRefunded) ? 0m : Quantity * UnitPrice;
 
-    public event EventHandler? ChangeQuantityRequested;
-    public event EventHandler? ChangePriceRequested;
-    public event EventHandler? ToggleGiftRequested;
-    public event EventHandler? DeleteRequested;
-
-    public OrderItemRow()
-    {
-        InitializeComponent();
-    }
+    public OrderItemRow() => InitializeComponent();
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 
@@ -114,17 +140,29 @@ public partial class OrderItemRow : UserControl
         var nameBlock = this.FindControl<TextBlock>("NameText");
         if (nameBlock != null)
             nameBlock.TextDecorations = IsRefunded ? TextDecorations.Strikethrough : null;
+
         var giftTag = this.FindControl<Control>("GiftTag");
         if (giftTag != null)
             giftTag.IsVisible = IsGift;
     }
 
-    /// <summary>小计文本（可测试的纯逻辑）：赠菜显示"赠"。</summary>
+    /// <summary>小计文本（可测试的纯逻辑）：赠菜显示「赠」。</summary>
     public static string FormatSubtotal(decimal subtotal, bool isGift)
         => isGift ? "赠" : $"¥{subtotal:F2}";
 
-    private void OnQtyClick(object? sender, RoutedEventArgs e) => ChangeQuantityRequested?.Invoke(this, EventArgs.Empty);
-    private void OnPriceClick(object? sender, RoutedEventArgs e) => ChangePriceRequested?.Invoke(this, EventArgs.Empty);
-    private void OnGiftClick(object? sender, RoutedEventArgs e) => ToggleGiftRequested?.Invoke(this, EventArgs.Empty);
-    private void OnDeleteClick(object? sender, RoutedEventArgs e) => DeleteRequested?.Invoke(this, EventArgs.Empty);
+    private void OnIncreaseClick(object? sender, RoutedEventArgs e)
+    {
+        // 称重商品不能靠加一改量，必须重新称
+        if (IsWeighted) return;
+        RaiseEvent(new RoutedEventArgs(IncreaseQtyEvent, this));
+    }
+
+    private void OnDecreaseClick(object? sender, RoutedEventArgs e)
+    {
+        if (IsWeighted) return;
+        RaiseEvent(new RoutedEventArgs(DecreaseQtyEvent, this));
+    }
+
+    private void OnDeleteClick(object? sender, RoutedEventArgs e)
+        => RaiseEvent(new RoutedEventArgs(DeleteLineEvent, this));
 }

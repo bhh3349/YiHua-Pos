@@ -5,47 +5,86 @@
   <Border Background="{DynamicResource SurfaceBrush}"
           BorderBrush="{DynamicResource DividerBrush}"
           BorderThickness="0,0,0,1"
-          Padding="16,12">
-    <Grid ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto">
-      <!-- 商品名 + 赠菜标记 -->
-      <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal" Spacing="8">
-        <TextBlock x:Name="NameText"
-                   Text="{Binding ProductName, RelativeSource={RelativeSource AncestorType=lists:OrderItemRow}}"
-                   FontSize="{DynamicResource FontSizeBody}"
-                   FontWeight="SemiBold"
-                   Foreground="{DynamicResource TextPrimaryBrush}"
-                   VerticalAlignment="Center" />
-        <Border x:Name="GiftTag"
-                Background="{DynamicResource SuccessBrush}"
-                CornerRadius="4"
-                Padding="6,2"
-                VerticalAlignment="Center"
-                IsVisible="False">
-          <TextBlock Text="赠" FontSize="12" Foreground="White" />
-        </Border>
+          Padding="12,10">
+    <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="6">
+      <!-- 商品名 + 赠菜标记 + 规格 -->
+      <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBlock x:Name="NameText"
+                     Text="{Binding ProductName, RelativeSource={RelativeSource AncestorType=lists:OrderItemRow}}"
+                     FontSize="{DynamicResource FontSizeBody}"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextPrimaryBrush}"
+                     TextWrapping="Wrap"
+                     VerticalAlignment="Center" />
+          <Border x:Name="GiftTag"
+                  Background="{DynamicResource SuccessBrush}"
+                  CornerRadius="4"
+                  Padding="6,2"
+                  VerticalAlignment="Center"
+                  IsVisible="False">
+            <TextBlock Text="赠" FontSize="12" Foreground="White" />
+          </Border>
+        </StackPanel>
+        <TextBlock Text="{Binding SpecText, RelativeSource={RelativeSource AncestorType=lists:OrderItemRow}}"
+                   FontSize="{DynamicResource FontSizeSmall}"
+                   Foreground="{DynamicResource TextSecondaryBrush}"
+                   TextWrapping="Wrap" />
       </StackPanel>
-      <!-- 规格 -->
-      <TextBlock Grid.Column="0" Grid.Row="1"
-                 Text="{Binding SpecText, RelativeSource={RelativeSource AncestorType=lists:OrderItemRow}}"
-                 FontSize="{DynamicResource FontSizeSmall}"
-                 Foreground="{DynamicResource TextSecondaryBrush}" />
-      <!-- 数量 × 单价 -->
-      <Button Grid.Column="1" Grid.Row="0" Grid.RowSpan="2"
-              Content="{Binding Quantity, RelativeSource={RelativeSource AncestorType=lists:OrderItemRow}, StringFormat='×{0}'}"
-              FontSize="{DynamicResource FontSizeBody}"
-              Background="Transparent" BorderThickness="0"
-              Foreground="{DynamicResource TextSecondaryBrush}"
-              VerticalAlignment="Center" Margin="8,0"
-              Click="OnQtyClick" />
+
+      <!-- 减数量：触控目标 44px -->
+      <Button Grid.Column="1"
+              Content="−"
+              Click="OnDecreaseClick"
+              MinWidth="44" MinHeight="44"
+              FontSize="20"
+              Background="{DynamicResource BackgroundBrush}"
+              BorderBrush="{DynamicResource BorderBrush}"
+              BorderThickness="1"
+              CornerRadius="6"
+              VerticalAlignment="Center" />
+
+      <!-- 数量（称重商品显示重量） -->
+      <TextBlock Grid.Column="2"
+                 Text="{Binding DisplayQty, RelativeSource={RelativeSource AncestorType=lists:OrderItemRow}}"
+                 FontSize="{DynamicResource FontSizeBody}"
+                 FontWeight="SemiBold"
+                 MinWidth="46"
+                 TextAlignment="Center"
+                 VerticalAlignment="Center" />
+
+      <!-- 加数量 -->
+      <Button Grid.Column="3"
+              Content="＋"
+              Click="OnIncreaseClick"
+              MinWidth="44" MinHeight="44"
+              FontSize="20"
+              Background="{DynamicResource BackgroundBrush}"
+              BorderBrush="{DynamicResource BorderBrush}"
+              BorderThickness="1"
+              CornerRadius="6"
+              VerticalAlignment="Center" />
+
       <!-- 小计 -->
       <TextBlock x:Name="SubtotalText"
-                 Grid.Column="2" Grid.Row="0" Grid.RowSpan="2"
+                 Grid.Column="4"
                  FontSize="{DynamicResource FontSizeBody}"
                  FontWeight="Bold"
                  Foreground="{DynamicResource TextPrimaryBrush}"
                  VerticalAlignment="Center"
-                 MinWidth="80"
+                 MinWidth="86"
                  TextAlignment="Right" />
+
+      <!-- 删除整行 -->
+      <Button Grid.Column="5"
+              Content="×"
+              Click="OnDeleteClick"
+              MinWidth="44" MinHeight="44"
+              FontSize="18"
+              Background="Transparent"
+              BorderThickness="0"
+              Foreground="{DynamicResource TextDisabledBrush}"
+              VerticalAlignment="Center" />
     </Grid>
   </Border>
 </UserControl>

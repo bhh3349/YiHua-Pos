@@ -319,7 +319,59 @@ public sealed class ShellViewModel : BindableBase
         view.ProductClicked += (_, product) => HandleProductClick(product);
         view.SubmitRequested += async (_, _) => await SubmitOrderAsync();
         view.CheckoutRequested += async (_, _) => await NavigateToPaymentForCurrentOrderAsync();
+        view.HangRequested += (_, _) => HangCurrentOrder();
+        view.RemarkRequested += async (_, line) => await ShowLineRemarkAsync(line);
+        view.RefundLineRequested += async (_, line) => await ShowLineRefundAsync(line);
+        view.StatusMessage += (_, message) => StatusMessage = message;
         return view;
+    }
+
+    /// <summary>挂单：把当前明细存成快照，界面清空，等客人回来再取。</summary>
+    private void HangCurrentOrder()
+    {
+        if (_ordering == null || !_ordering.HasLines)
+        {
+            StatusMessage = "明细为空，没有可挂起的订单。";
+            return;
+        }
+
+        var hangId = _ordering.HangCurrentOrder();
+        StatusMessage = $"已挂起 {_ordering.DeskName} 的单（挂单号 {hangId[..Math.Min(8, hangId.Length)]}），可在「挂单」页取回。";
+    }
+
+    /// <summary>菜品备注（最多 30 字）。</summary>
+    private async Task ShowLineRemarkAsync(OrderLineViewModel line)
+    {
+        if (_ordering == null) return;
+
+        var vm = new RemarkViewModel(line.ProductName, line.Remark);
+        var dialog = new RemarkDialog { DataContext = vm };
+        dialog.Confirmed += (_, text) =>
+        {
+            _ordering.SetLineRemark(line, text);
+            StatusMessage = string.IsNullOrWhiteSpace(text)
+                ? $"已清空「{line.ProductName}」的备注"
+                : $"「{line.ProductName}」备注：{text}";
+        };
+        await dialog.ShowDialog(_shellWindow);
+    }
+
+    /// <summary>退菜：必须选原因。未提交的行直接删掉，已提交的行标记退菜。</summary>
+    private async Task ShowLineRefundAsync(OrderLineViewModel line)
+    {
+        if (_ordering == null) return;
+
+        var vm = new RefundReasonViewModel();
+        var dialog = new RefundReasonDialog { DataContext = vm };
+        dialog.Confirmed += (_, reason) =>
+        {
+            var isSubmitted = _currentOrder != null;
+            if (_ordering.TryRefundLine(line, reason, isSubmitted, out var denyReason))
+                StatusMessage = $"已退「{line.ProductName}」：{reason}";
+            else
+                StatusMessage = denyReason ?? "退菜失败";
+        };
+        await dialog.ShowDialog(_shellWindow);
     }
 
     private void HandleProductClick(Product product)
@@ -331,38 +383,55 @@ public sealed class ShellViewModel : BindableBase
         else if (action == AddProductAction.NeedSpec) ShowSpecDialog(product);
     }
 
-    private void ShowWeightDialog(Product product)
+    private async void ShowWeightDialog(Product product)
     {
         var vm = new WeightInputViewModel(product.Name, product.Price);
         var dialog = new WeightInputDialog { DataContext = vm };
         dialog.Closed += (_, _) =>
         {
-            if (vm.TryConfirm(out _))
+            if (vm.TryConfirm(out _) && vm.WeightKg > 0m)
                 _ordering?.AddLine(new OrderLineViewModel
                 {
                     ProductId = product.Id, ProductName = product.Name, UnitName = product.UnitName,
                     Price = product.Price, IsWeighted = true, WeightKg = vm.WeightKg, Qty = vm.WeightKg,
                 });
         };
-        _ = dialog.ShowDialog((Window)Application.Current!.ApplicationLifetime!.GetType().GetProperty("MainWindow")!.GetValue(Application.Current.ApplicationLifetime)!);
+        await dialog.ShowDialog(_shellWindow);
     }
 
-    private void ShowSpecDialog(Product product)
+    private async void ShowSpecDialog(Product product)
     {
-        var options = product.SpecGroupName.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Select(x => new YiHua.Pos.UI.ViewModels.Ordering.SpecOption { Group = "规格", Value = x }).ToList();
+        // Domain 目前只有 SpecGroupName 单字符串（「辣度」），
+        // 还没建规格明细表，所以这里只能把逗号分隔的组名当选项。
+        // 参考端是多规格表 + 做法分组，见未完成清单。
+        var options = product.SpecGroupName
+            .Split(new[] { ',', '/', '#' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(x => new YiHua.Pos.UI.ViewModels.Ordering.SpecOption { Group = "规格", Value = x })
+            .ToList();
+
+        if (options.Count == 0)
+        {
+            // 没有可选规格就直接加一行，不要弹一个空窗让收银员干瞪眼
+            _ordering?.AddLine(new OrderLineViewModel
+            {
+                ProductId = product.Id, ProductName = product.Name, UnitName = product.UnitName,
+                Price = product.Price, Qty = 1,
+            });
+            return;
+        }
+
         var vm = new SpecSelectViewModel(product.Name, options);
         var dialog = new SpecSelectDialog { DataContext = vm };
-        _ = dialog.ShowDialog((Window)Application.Current!.ApplicationLifetime!.GetType().GetProperty("MainWindow")!.GetValue(Application.Current.ApplicationLifetime)!);
-        _ = vm.WaitResultAsync().ContinueWith(t =>
-        {
-            if (t.Result != null)
-                Avalonia.Threading.Dispatcher.UIThread.Post(() => _ordering?.AddLine(new OrderLineViewModel
-                {
-                    ProductId = product.Id, ProductName = product.Name, UnitName = product.UnitName,
-                    Price = product.Price + t.Result.PriceDelta, Qty = 1, SpecText = t.Result.SpecText,
-                }));
-        });
+        var resultTask = vm.WaitResultAsync();
+        await dialog.ShowDialog(_shellWindow);
+
+        var result = await resultTask;
+        if (result != null)
+            _ordering?.AddLine(new OrderLineViewModel
+            {
+                ProductId = product.Id, ProductName = product.Name, UnitName = product.UnitName,
+                Price = product.Price + result.PriceDelta, Qty = 1, SpecText = result.SpecText,
+            });
     }
 
     private async Task SubmitOrderAsync()
