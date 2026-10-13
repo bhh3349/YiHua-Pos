@@ -37,8 +37,23 @@ public interface IProductRepository
     Task<Product?> GetByIdAsync(long id, CancellationToken ct = default);
     Task<Product?> GetByBarcodeAsync(string barcode, CancellationToken ct = default);
 
-    /// <summary>按名称 / 首字母 / 编码模糊搜索</summary>
+    /// <summary>按名称 / 首字母 / 编码 / 别名模糊搜索</summary>
     Task<List<Product>> SearchAsync(string keyword, int limit = 50, CancellationToken ct = default);
+
+    /// <summary>新增或更新单个商品（Id=0 视为新增）。返回商品 Id。</summary>
+    Task<long> SaveAsync(Product product, CancellationToken ct = default);
+
+    /// <summary>删除单个商品。</summary>
+    Task DeleteAsync(long id, CancellationToken ct = default);
+
+    /// <summary>设置沽清状态（可逆，与「下架」区分）。</summary>
+    Task SetSoldOutAsync(long id, bool soldOut, DateTime? at = null, CancellationToken ct = default);
+
+    /// <summary>批量改价（按比例或固定价）。返回受影响行数。</summary>
+    Task<int> BatchUpdatePriceAsync(IEnumerable<long> ids, decimal? newPrice, decimal? rate, CancellationToken ct = default);
+
+    /// <summary>批量改上下架状态。返回受影响行数。</summary>
+    Task<int> BatchUpdateStatusAsync(IEnumerable<long> ids, int dataStatus, CancellationToken ct = default);
 
     /// <summary>批量替换（同步用）</summary>
     Task ReplaceAllAsync(IEnumerable<Product> products, CancellationToken ct = default);
@@ -48,6 +63,13 @@ public interface IProductRepository
 public interface ICategoryRepository
 {
     Task<List<ProductCategory>> GetAllAsync(CancellationToken ct = default);
+
+    /// <summary>新增或更新分类（Id=0 视为新增）。返回分类 Id。</summary>
+    Task<long> SaveAsync(ProductCategory category, CancellationToken ct = default);
+
+    /// <summary>删除分类。分类下还有商品时调用方应先处理，这里不级联删商品。</summary>
+    Task DeleteAsync(long id, CancellationToken ct = default);
+
     Task ReplaceAllAsync(IEnumerable<ProductCategory> categories, CancellationToken ct = default);
 }
 
@@ -55,6 +77,12 @@ public interface ICategoryRepository
 public interface IUnitRepository
 {
     Task<List<ProductUnit>> GetAllAsync(CancellationToken ct = default);
+
+    /// <summary>新增或更新单位（Id=0 视为新增）。返回单位 Id。</summary>
+    Task<long> SaveAsync(ProductUnit unit, CancellationToken ct = default);
+
+    Task DeleteAsync(long id, CancellationToken ct = default);
+
     Task ReplaceAllAsync(IEnumerable<ProductUnit> units, CancellationToken ct = default);
 }
 

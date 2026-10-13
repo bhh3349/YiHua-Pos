@@ -95,12 +95,17 @@ CREATE TABLE IF NOT EXISTS Product (
     PrePinYin    TEXT NOT NULL DEFAULT '',
     ImageUrl     TEXT NOT NULL DEFAULT '',
     DataStatus   INTEGER NOT NULL DEFAULT 1,
+    IsSoldOut    INTEGER NOT NULL DEFAULT 0,
+    SoldOutAt    TEXT,
+    IsMarketPrice INTEGER NOT NULL DEFAULT 0,
+    Alias        TEXT NOT NULL DEFAULT '',
     Sort         INTEGER NOT NULL DEFAULT 0,
     Version      INTEGER NOT NULL DEFAULT 1
 );
 CREATE INDEX IF NOT EXISTS IX_Product_CategoryId ON Product(CategoryId);
 CREATE INDEX IF NOT EXISTS IX_Product_Barcode    ON Product(Barcode);
 CREATE INDEX IF NOT EXISTS IX_Product_DataStatus ON Product(DataStatus);
+CREATE INDEX IF NOT EXISTS IX_Product_IsSoldOut  ON Product(IsSoldOut);
 
 -- ---------------- 商品分类 ----------------
 CREATE TABLE IF NOT EXISTS ProductCategory (

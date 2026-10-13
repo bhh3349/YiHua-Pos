@@ -212,8 +212,9 @@ public sealed class OrderEntryViewModel : ViewModelBase
     {
         if (product == null) throw new ArgumentNullException(nameof(product));
 
-        // 沽清：DataStatus != 1 不可点
-        if (!product.IsOnSale)
+        // 沽清与下架都不可点，但原因不同，提示要分开说：
+        // 沽清是「今天卖完了」，下架是「不卖了」。
+        if (!product.CanOrder)
             return AddProductAction.SoldOut;
 
         bool isWeighted = product.ProductType == 3 || product.WeightWay == 1;

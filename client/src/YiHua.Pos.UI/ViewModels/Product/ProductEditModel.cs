@@ -68,7 +68,7 @@ public class BundleItem
 }
 
 /// <summary>
-/// 商品编辑服务（UI 层契约，由 App/服务端同步层实现）。
+/// 商品编辑服务（UI 层契约，由 App 层用 IProductRepository 实现）。
 /// IProductRepository 只有查询和 ReplaceAll（同步用），缺 Save/Update/Delete。
 /// </summary>
 public interface IProductEditService
@@ -76,4 +76,10 @@ public interface IProductEditService
     Task SaveAsync(ProductEditModel model, CancellationToken ct = default);
     Task DeleteAsync(long productId, CancellationToken ct = default);
     Task SetSoldOutAsync(long productId, bool soldOut, CancellationToken ct = default);
+
+    /// <summary>保存分类（id=0 表示新增）。返回分类 Id。</summary>
+    Task<long> SaveCategoryAsync(long id, string name, int sort, CancellationToken ct = default);
+
+    /// <summary>删除分类（不级联删商品）。</summary>
+    Task DeleteCategoryAsync(long id, CancellationToken ct = default);
 }

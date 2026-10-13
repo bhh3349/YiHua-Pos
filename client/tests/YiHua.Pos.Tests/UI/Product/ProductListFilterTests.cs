@@ -19,6 +19,22 @@ public class ProductListFilterTests
             => Task.FromResult(new List<CategoryDto>());
         public Task<List<UnitDto>> GetUnitsAsync(CancellationToken ct = default)
             => Task.FromResult(new List<UnitDto>());
+
+        public Task<List<ProductDto>> SearchAsync(string keyword, int limit = 50, CancellationToken ct = default)
+            => Task.FromResult(_products.Where(p => p.Name.Contains(keyword)).Take(limit).ToList());
+
+        public Task SetSoldOutAsync(long productId, bool soldOut, CancellationToken ct = default)
+        {
+            var p = _products.FirstOrDefault(x => x.Id == productId);
+            if (p != null) p.IsSoldOut = soldOut;
+            return Task.CompletedTask;
+        }
+
+        public Task<int> BatchUpdatePriceAsync(IEnumerable<long> ids, decimal? newPrice, decimal? rate, CancellationToken ct = default)
+            => Task.FromResult(ids.Count());
+
+        public Task<int> BatchUpdateStatusAsync(IEnumerable<long> ids, int dataStatus, CancellationToken ct = default)
+            => Task.FromResult(ids.Count());
     }
 
     private static ProductListViewModel CreateVm()

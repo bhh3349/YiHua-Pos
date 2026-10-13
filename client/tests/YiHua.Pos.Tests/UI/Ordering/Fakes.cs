@@ -33,6 +33,60 @@ public sealed class FakeProductRepository : IProductRepository
     public Task<List<Product>> SearchAsync(string keyword, int limit = 50, CancellationToken ct = default)
         => Task.FromResult(Products.Where(p => p.Name.Contains(keyword)).Take(limit).ToList());
 
+    public Task<long> SaveAsync(Product product, CancellationToken ct = default)
+    {
+        if (product.Id <= 0)
+        {
+            product.Id = Products.Count == 0 ? 1 : Products.Max(p => p.Id) + 1;
+            Products.Add(product);
+        }
+        else
+        {
+            var idx = Products.FindIndex(p => p.Id == product.Id);
+            if (idx >= 0) Products[idx] = product; else Products.Add(product);
+        }
+        return Task.FromResult(product.Id);
+    }
+
+    public Task DeleteAsync(long id, CancellationToken ct = default)
+    {
+        Products.RemoveAll(p => p.Id == id);
+        return Task.CompletedTask;
+    }
+
+    public Task SetSoldOutAsync(long id, bool soldOut, DateTime? at = null, CancellationToken ct = default)
+    {
+        var p = Products.FirstOrDefault(x => x.Id == id);
+        if (p != null) { p.IsSoldOut = soldOut; p.SoldOutAt = soldOut ? (at ?? DateTime.Now) : null; }
+        return Task.CompletedTask;
+    }
+
+    public Task<int> BatchUpdatePriceAsync(IEnumerable<long> ids, decimal? newPrice, decimal? rate, CancellationToken ct = default)
+    {
+        var affected = 0;
+        foreach (var id in ids)
+        {
+            var p = Products.FirstOrDefault(x => x.Id == id);
+            if (p == null) continue;
+            p.Price = newPrice ?? Math.Round(p.Price * rate!.Value, 2, MidpointRounding.AwayFromZero);
+            affected++;
+        }
+        return Task.FromResult(affected);
+    }
+
+    public Task<int> BatchUpdateStatusAsync(IEnumerable<long> ids, int dataStatus, CancellationToken ct = default)
+    {
+        var affected = 0;
+        foreach (var id in ids)
+        {
+            var p = Products.FirstOrDefault(x => x.Id == id);
+            if (p == null) continue;
+            p.DataStatus = dataStatus;
+            affected++;
+        }
+        return Task.FromResult(affected);
+    }
+
     public Task ReplaceAllAsync(IEnumerable<Product> products, CancellationToken ct = default)
     {
         Products.Clear();
@@ -47,6 +101,27 @@ public sealed class FakeCategoryRepository : ICategoryRepository
 
     public Task<List<ProductCategory>> GetAllAsync(CancellationToken ct = default)
         => Task.FromResult(Categories.ToList());
+
+    public Task<long> SaveAsync(ProductCategory category, CancellationToken ct = default)
+    {
+        if (category.Id <= 0)
+        {
+            category.Id = Categories.Count == 0 ? 1 : Categories.Max(c => c.Id) + 1;
+            Categories.Add(category);
+        }
+        else
+        {
+            var idx = Categories.FindIndex(c => c.Id == category.Id);
+            if (idx >= 0) Categories[idx] = category; else Categories.Add(category);
+        }
+        return Task.FromResult(category.Id);
+    }
+
+    public Task DeleteAsync(long id, CancellationToken ct = default)
+    {
+        Categories.RemoveAll(c => c.Id == id);
+        return Task.CompletedTask;
+    }
 
     public Task ReplaceAllAsync(IEnumerable<ProductCategory> categories, CancellationToken ct = default)
     {
@@ -136,10 +211,18 @@ public static class OrderingTestFactory
         CategoryId = 10, ProductType = 3, WeightWay = 1, DataStatus = 1,
     };
 
+    /// <summary>沽清（今天卖完了）。注意：沽清 ≠ 下架，用 IsSoldOut 表达。</summary>
     public static Product SoldOut() => new()
     {
         Id = 4, Name = "沽清空盘", Price = 99m, UnitName = "份",
-        CategoryId = 10, ProductType = 1, DataStatus = 99, // 沽清
+        CategoryId = 10, ProductType = 1, DataStatus = 1, IsSoldOut = true,
+    };
+
+    /// <summary>下架（老板主动停售）。</summary>
+    public static Product OffShelf() => new()
+    {
+        Id = 5, Name = "已下架菜", Price = 20m, UnitName = "份",
+        CategoryId = 10, ProductType = 1, DataStatus = 99,
     };
 
     public static OrderEntryViewModel CreateVm(
@@ -148,7 +231,7 @@ public static class OrderingTestFactory
         FakeOrderRepository? orderRepo = null)
     {
         var products = new FakeProductRepository();
-        products.Products.AddRange(new[] { Noodle(), KungPao(), Seafood(), SoldOut() });
+        products.Products.AddRange(new[] { Noodle(), KungPao(), Seafood(), SoldOut(), OffShelf() });
         var cats = new FakeCategoryRepository();
         cats.Categories.Add(new ProductCategory { Id = 10, Name = "热销" });
         return new OrderEntryViewModel(

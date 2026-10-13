@@ -13,6 +13,8 @@ public class SoldOutToggleTests
         public Task SaveAsync(ProductEditModel model, CancellationToken ct = default) => Task.CompletedTask;
         public Task DeleteAsync(long productId, CancellationToken ct = default) => Task.CompletedTask;
         public Task SetSoldOutAsync(long productId, bool soldOut, CancellationToken ct = default) => Task.CompletedTask;
+        public Task<long> SaveCategoryAsync(long id, string name, int sort, CancellationToken ct = default) => Task.FromResult(id);
+        public Task DeleteCategoryAsync(long id, CancellationToken ct = default) => Task.CompletedTask;
     }
 
     [Fact]

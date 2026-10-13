@@ -39,6 +39,13 @@ public sealed class DbInitializer : IDbInitializer
         _db.Ado.ExecuteCommand("PRAGMA synchronous=NORMAL;");
 
         _db.Ado.ExecuteCommand(LoadInitSql());
+
+        // 建表之后补增量列：CREATE TABLE IF NOT EXISTS 对老库是空操作，
+        // 新加的列必须靠 ALTER 补，否则老库一升级就报 no such column。
+        var added = SchemaMigrator.Apply(_db);
+        if (added.Count > 0)
+            Console.WriteLine($"[DbInitializer] 已补列：{string.Join(", ", added)}");
+
         return Task.CompletedTask;
     }
 
