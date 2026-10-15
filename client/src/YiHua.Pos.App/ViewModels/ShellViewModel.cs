@@ -13,12 +13,14 @@ using YiHua.Pos.Domain.Interfaces;
 using YiHua.Pos.UI.Services;
 using YiHua.Pos.UI.Services.FastFood;
 using YiHua.Pos.UI.Services.HangOrder;
+using YiHua.Pos.UI.Services.FastFood;
 using YiHua.Pos.UI.Services.Ordering;
 using YiHua.Pos.UI.Services.Payment;
 using YiHua.Pos.UI.Services.Printing;
 using YiHua.Pos.UI.Services.Report;
 using YiHua.Pos.UI.ViewModels.Member;
 using YiHua.Pos.UI.Views.Cashier;
+using YiHua.Pos.UI.Views.FastFood;
 using YiHua.Pos.UI.Views.Member;
 using YiHua.Pos.UI.Services.Settings;
 using YiHua.Pos.UI.Services.Shift;
@@ -146,6 +148,7 @@ public sealed class ShellViewModel : BindableBase
             // （参考端：经营=桌台/直接点餐/接单叫号/订单/菜品/沽清/交班，管理=统计/会员/打印/设置）
             new("desk", "桌台", "开台、清台、换台", p => CreateDeskView()),
             new("cashier", "收银", "点菜、改单、收款", p => CreateCashierView()),
+            new("callnum", "叫号", "取餐号、叫号、取餐", p => CreateCallNumberView()),
             new("order", "订单", "查单、补打、退菜", p => CreateOrderListViewAsync().GetAwaiter().GetResult()),
             new("product", "菜品", "菜品、分类、沽清", p => CreateProductViewAsync().GetAwaiter().GetResult()),
             new("shift", "交班", "开班、交班、查班次", p => CreateShiftHub()),
@@ -609,12 +612,36 @@ public sealed class ShellViewModel : BindableBase
 
         view.PayRequested += async (_, kind) => await StartSettlementAsync(kind);
         view.MemberRequested += async (_, _) => await LookupMemberAsync(view);
+        view.TicketNoRequested += (_, _) => IssueTicket(view);
+
+        // 顶栏「制作中」从叫号队列实时算
+        view.SetKitchenLabel(BuildKitchenLabel());
 
         return view;
     }
 
     /// <summary>当前收银台绑定的会员（选支付方式时用余额付款）。</summary>
     private MemberEntity? _currentMember;
+
+    /// <summary>
+    /// 发取餐号。
+    ///
+    /// 号码来自叫号队列，不是收银页自己 +1 ——
+    /// 两套号的话客人拿到号在叫号页叫不到。
+    /// </summary>
+    private void IssueTicket(CashierView view)
+    {
+        var queue = Get<ITicketQueue>(_services);
+        var ticket = queue.Issue(_currentDesk?.GuestCount ?? 1);
+
+        _currentTicketNo = ticket.Number;
+        view.SetTicketNo(ticket.Number);
+        view.SetKitchenLabel(BuildKitchenLabel());
+        StatusMessage = $"取餐号 {ticket.Number}";
+    }
+
+    /// <summary>当前这一单的取餐号（结账时落到订单上）。</summary>
+    private string _currentTicketNo = string.Empty;
 
     /// <summary>
     /// 收银台查会员：刷/输卡号 → 显示姓名和余额。
@@ -1153,6 +1180,37 @@ public sealed class ShellViewModel : BindableBase
             ? $"已注销「{member.Name}」，余额 ¥{member.Balance:F2} 已退"
             : $"已注销「{member.Name}」";
         RefreshMemberPage();
+    }
+
+    /// <summary>
+    /// 叫号取餐页（参考端 C000100063/64）。
+    /// 队列是内存的（ITicketQueue），日切会重新从 A001 开始。
+    /// </summary>
+    private CallNumberView CreateCallNumberView()
+    {
+        var queue = Get<ITicketQueue>(_services);
+        var view = new CallNumberView { DataContext = new CallNumberViewModel(queue) };
+        view.StatusMessage += (_, message) => StatusMessage = message;
+        return view;
+    }
+
+    /// <summary>
+    /// 收银台顶栏的「制作中 N 份 / N 单」。
+    /// 参考端也是放在顶栏 —— 后厨积压了多少，收银员一眼要能看到。
+    /// </summary>
+    private string BuildKitchenLabel()
+    {
+        try
+        {
+            var queue = Get<ITicketQueue>(_services);
+            var called = queue.GetCalled().Count;
+            var waiting = queue.WaitingCount;
+            return $"制作中：{waiting} 份 / {called} 单";
+        }
+        catch
+        {
+            return "制作中：0 份 / 0 单";
+        }
     }
 
     private async Task<FastFoodEntryView> CreateFastFoodViewAsync()

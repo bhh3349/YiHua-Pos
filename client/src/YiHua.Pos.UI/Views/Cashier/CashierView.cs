@@ -44,12 +44,29 @@ public partial class CashierView : UserControl
     /// <summary>点「登录会员」—— 收银时要能查会员、用余额付款。</summary>
     public event EventHandler? MemberRequested;
 
+    /// <summary>点「餐牌号」—— 从取号队列发一个号。</summary>
+    public event EventHandler? TicketNoRequested;
+
     /// <summary>会员登录后显示在车头（卡号 + 余额）。</summary>
     public void SetMemberLabel(string? text)
     {
         var btn = this.FindControl<Controls.Buttons.PosButton>("MemberButton");
         if (btn != null)
             btn.Content = string.IsNullOrEmpty(text) ? "登录会员" : text;
+    }
+
+    /// <summary>顶栏「制作中 N 份 / N 单」（由 App 层从叫号队列算）。</summary>
+    public void SetKitchenLabel(string text)
+    {
+        var tb = this.FindControl<TextBlock>("KitchenLabel");
+        if (tb != null) tb.Text = text;
+    }
+
+    /// <summary>取餐号（快餐模式下单时由 App 层发号后回填）。</summary>
+    public void SetTicketNo(string ticketNo)
+    {
+        var label = this.FindControl<TextBlock>("TicketNoLabel");
+        if (label != null) label.Text = ticketNo;
     }
 
     protected override void OnLoaded(RoutedEventArgs e)
@@ -426,13 +443,9 @@ public partial class CashierView : UserControl
 
     private void OnTicketNo(object? sender, RoutedEventArgs e)
     {
-        var label = this.FindControl<TextBlock>("TicketNoLabel");
-        if (label == null) return;
-
-        // 餐牌号由 App 层从取号队列分配（参考端是取餐号）
-        var next = string.IsNullOrEmpty(label.Text) ? "1" : (int.Parse(label.Text) + 1).ToString();
-        label.Text = next;
-        StatusMessage?.Invoke(this, $"餐牌号 {next}");
+        // 餐牌号由 App 层从取号队列分配（参考端叫「餐牌号」，就是取餐号）。
+        // 不要在这里自己 +1 —— 那样和叫号页的队列是两套号，客人拿到号叫不到。
+        TicketNoRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void OnMember(object? sender, RoutedEventArgs e)

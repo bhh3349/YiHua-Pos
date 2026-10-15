@@ -140,6 +140,21 @@ public sealed class InMemoryTicketQueue : ITicketQueue
         }
     }
 
+    /// <summary>
+    /// 已叫号但还没取餐的号（收银台顶栏的「制作中」）。
+    /// 按叫号时间排序：先叫的客人等得久，取餐时也该先走。
+    /// </summary>
+    public IReadOnlyList<Ticket> GetCalled()
+    {
+        lock (_lock)
+        {
+            return _tickets
+                .Where(t => t.Status == TicketStatus.Called)
+                .OrderBy(t => t.CallTime ?? t.IssueTime)
+                .ToList();
+        }
+    }
+
     public Ticket? GetCurrent()
     {
         lock (_lock)

@@ -63,6 +63,13 @@ public interface ITicketQueue
     /// <summary>等待中的号（按顺序）</summary>
     IReadOnlyList<Ticket> GetWaiting();
 
+    /// <summary>
+    /// 已叫号但还没取餐的号。
+    /// 这批就是收银台顶栏说的「制作中」—— 饭做好了、叫了号、客人还没来拿。
+    /// GetWaiting 拿不到它们：叫过号就不再是 Waiting 了。
+    /// </summary>
+    IReadOnlyList<Ticket> GetCalled();
+
     /// <summary>当前叫号中的号</summary>
     Ticket? GetCurrent();
 

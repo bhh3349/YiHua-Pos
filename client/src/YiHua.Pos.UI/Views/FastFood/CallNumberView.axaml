@@ -1,0 +1,136 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.FastFood"
+             x:Class="YiHua.Pos.UI.Views.FastFood.CallNumberView">
+  <!--
+    叫号取餐页（参考端 C000100063/64）。
+    当前叫号占最大一块，客人在嘈杂环境里一眼要找得到。
+  -->
+  <Grid RowDefinitions="Auto,*,Auto">
+
+    <!-- 当前叫号 -->
+    <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1"
+            Padding="20,16">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <StackPanel Grid.Column="0" Spacing="6">
+          <TextBlock Text="当前叫号" FontSize="14"
+                     Foreground="{DynamicResource TextSecondaryBrush}" />
+          <TextBlock x:Name="CurrentNumberText" Text="—"
+                     FontSize="72" FontWeight="Bold"
+                     Foreground="{DynamicResource PrimaryBrush}" />
+          <TextBlock x:Name="CurrentStatusText" FontSize="14"
+                     Foreground="{DynamicResource TextSecondaryBrush}" />
+        </StackPanel>
+
+        <StackPanel Grid.Column="2" Spacing="10" VerticalAlignment="Center">
+          <btn:PosButton x:Name="CallNextButton" Content="叫下一个" Variant="Primary"
+                         Click="OnCallNext" MinHeight="64" MinWidth="200" FontSize="20" />
+          <btn:PosButton Content="再次叫号" Variant="Secondary"
+                         Click="OnCallAgain" MinHeight="52" MinWidth="200" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- 等待队列 + 已叫未取 -->
+    <Grid Grid.Row="1" RowDefinitions="Auto,Auto,*,Auto,*" Margin="20,14,20,0">
+
+      <!-- 已叫未取：叫过号但客人还没来拿的。
+           这一块必须有 —— 叫过号的从等待列表里消失了，
+           没有这块就没有地方点「取餐」，号叫出去就再也收不回来。 -->
+      <TextBlock Grid.Row="0" Text="已叫未取（制作中）" FontSize="16" FontWeight="SemiBold" />
+      <ItemsControl Grid.Row="1" x:Name="CalledList" Margin="0,8,0,12">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:TicketRowDto">
+            <Border Background="{DynamicResource PrimaryLightBrush}"
+                    BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1"
+                    CornerRadius="10" Padding="14,10" Margin="0,0,12,12"
+                    Width="180">
+              <StackPanel Spacing="6">
+                <TextBlock Text="{Binding Number}" FontSize="28" FontWeight="Bold"
+                           HorizontalAlignment="Center" />
+                <TextBlock Text="{Binding StatusText}" FontSize="12"
+                           HorizontalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                  <btn:PosButton Content="取餐" Variant="Primary"
+                                 Click="OnComplete" MinWidth="68" MinHeight="36" FontSize="13" />
+                  <btn:PosButton Content="跳号" Variant="Secondary"
+                                 Click="OnSkip" MinWidth="68" MinHeight="36" FontSize="13" />
+                </StackPanel>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <Grid Grid.Row="3" ColumnDefinitions="Auto,*,Auto">
+        <TextBlock Grid.Column="0" Text="等待队列" FontSize="16" FontWeight="SemiBold" />
+        <TextBlock Grid.Column="2" x:Name="SummaryText" FontSize="13"
+                   Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" />
+      </Grid>
+      <ScrollViewer Grid.Row="4">
+        <Panel>
+          <ItemsControl x:Name="WaitingList">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:TicketRowDto">
+                <Border Background="{DynamicResource SurfaceBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                        CornerRadius="10" Padding="14,10" Margin="0,0,12,12"
+                        Width="180">
+                  <StackPanel Spacing="6">
+                    <TextBlock Text="{Binding Number}" FontSize="28" FontWeight="Bold"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding GuestCount, StringFormat='{}{0} 人'}"
+                               FontSize="13" HorizontalAlignment="Center"
+                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                    <TextBlock Text="{Binding WaitedText}"
+                               FontSize="12" HorizontalAlignment="Center"
+                               Foreground="{DynamicResource TextDisabledBrush}" />
+                    <StackPanel Orientation="Horizontal" Spacing="6"
+                                HorizontalAlignment="Center">
+                      <btn:PosButton Content="叫号" Variant="Primary"
+                                     Click="OnCallOne" MinWidth="68" MinHeight="36" FontSize="13" />
+                      <btn:PosButton Content="提前" Variant="Secondary"
+                                     Click="OnPrioritize" MinWidth="68" MinHeight="36" FontSize="13" />
+                    </StackPanel>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <StackPanel x:Name="EmptyBox" IsVisible="False"
+                      VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10">
+            <TextBlock Text="没有等待中的号" FontSize="20" FontWeight="SemiBold"
+                       HorizontalAlignment="Center" />
+            <TextBlock Text="快餐模式下下单会自动发号，也可以点「发一个号」手动发"
+                       FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
+                       HorizontalAlignment="Center" />
+          </StackPanel>
+        </Panel>
+      </ScrollViewer>
+    </Grid>
+
+    <!-- 底部：发号 + 提示 -->
+    <Border Grid.Row="2" BorderBrush="{DynamicResource DividerBrush}"
+            BorderThickness="0,1,0,0" Padding="20,10">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <btn:PosButton Grid.Column="0" Content="发一个号" Variant="Secondary"
+                       Click="OnIssue" MinWidth="140" MinHeight="44" />
+        <TextBlock Grid.Column="1" x:Name="MessageText" Margin="16,0" FontSize="13"
+                   VerticalAlignment="Center" TextWrapping="Wrap" />
+        <TextBlock Grid.Column="2" x:Name="IssuedText" FontSize="13"
+                   Foreground="{DynamicResource TextSecondaryBrush}"
+                   VerticalAlignment="Center" />
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>
