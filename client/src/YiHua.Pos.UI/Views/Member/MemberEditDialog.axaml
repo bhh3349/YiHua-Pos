@@ -1,0 +1,45 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+        xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
+        x:Class="YiHua.Pos.UI.Views.Member.MemberEditDialog"
+        Title="会员资料"
+        Width="480" Height="560"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BackgroundBrush}">
+  <ScrollViewer>
+    <StackPanel Margin="24,20" Spacing="12">
+      <TextBlock x:Name="TitleText" Text="新增会员" FontSize="20" FontWeight="Bold" />
+
+      <TextBlock Text="卡号" Foreground="{DynamicResource TextSecondaryBrush}" />
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+        <input:TouchTextBox Grid.Column="0" x:Name="CardNoBox" Watermark="刷会员卡或手输" />
+        <btn:PosButton Grid.Column="1" Content="自动生成" Variant="Secondary"
+                       Click="OnGenerateCardNo" MinWidth="110" />
+      </Grid>
+
+      <TextBlock Text="姓名 *" Foreground="{DynamicResource TextSecondaryBrush}" />
+      <input:TouchTextBox x:Name="NameBox" Watermark="客人姓名" />
+
+      <TextBlock Text="手机号（可不填）" Foreground="{DynamicResource TextSecondaryBrush}" />
+      <input:TouchTextBox x:Name="PhoneBox" Watermark="11 位手机号" />
+
+      <TextBlock Text="等级" Foreground="{DynamicResource TextSecondaryBrush}" />
+      <ComboBox x:Name="LevelBox" MinHeight="48" HorizontalAlignment="Stretch" IsEditable="True" />
+
+      <TextBlock Text="生日（可不填）" Foreground="{DynamicResource TextSecondaryBrush}" />
+      <CalendarDatePicker x:Name="BirthdayPicker" MinHeight="48" HorizontalAlignment="Stretch" />
+
+      <TextBlock Text="备注" Foreground="{DynamicResource TextSecondaryBrush}" />
+      <input:TouchTextBox x:Name="RemarkBox" Watermark="如：老板朋友、常点微辣" />
+
+      <TextBlock x:Name="ErrorText" Foreground="{DynamicResource DangerBrush}"
+                 FontSize="14" TextWrapping="Wrap" />
+
+      <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
+        <btn:PosButton Content="取消" Variant="Secondary" Click="OnCancel" MinWidth="110" />
+        <btn:PosButton Content="保存" Variant="Primary" Click="OnConfirm" MinWidth="140" />
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</Window>

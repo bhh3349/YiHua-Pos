@@ -7,6 +7,7 @@ using Avalonia.Threading;
 using YiHua.Pos.App.Services;
 using YiHua.Pos.App.Views;
 using YiHua.Pos.Domain.Entities;
+using MemberEntity = YiHua.Pos.Domain.Entities.Member;
 using YiHua.Pos.Domain.Enums;
 using YiHua.Pos.Domain.Interfaces;
 using YiHua.Pos.UI.Services;
@@ -16,7 +17,9 @@ using YiHua.Pos.UI.Services.Ordering;
 using YiHua.Pos.UI.Services.Payment;
 using YiHua.Pos.UI.Services.Printing;
 using YiHua.Pos.UI.Services.Report;
+using YiHua.Pos.UI.ViewModels.Member;
 using YiHua.Pos.UI.Views.Cashier;
+using YiHua.Pos.UI.Views.Member;
 using YiHua.Pos.UI.Services.Settings;
 using YiHua.Pos.UI.Services.Shift;
 using YiHua.Pos.UI.Services.Refund;
@@ -147,6 +150,7 @@ public sealed class ShellViewModel : BindableBase
             new("product", "菜品", "菜品、分类、沽清", p => CreateProductViewAsync().GetAwaiter().GetResult()),
             new("shift", "交班", "开班、交班、查班次", p => CreateShiftHub()),
             new("report", "统计", "营业额、商品排行、时段", p => CreateReportViewAsync().GetAwaiter().GetResult()),
+            new("member", "会员", "办卡、充值、流水", p => CreateMemberViewAsync().GetAwaiter().GetResult()),
             new("hangorder", "挂单", "暂存、取回、拆单", p => CreateHangOrderView()),
             new("refund", "退款", "退菜、冲正", p => CreateRefundLanding()),
             new("settings", "设置", "门店、打印机、收银规则", p => CreateSettingsView()),
@@ -604,8 +608,86 @@ public sealed class ShellViewModel : BindableBase
             "加料需要独立的加料表（参考端 IngredientDto），还没建，排在菜品表之后。";
 
         view.PayRequested += async (_, kind) => await StartSettlementAsync(kind);
+        view.MemberRequested += async (_, _) => await LookupMemberAsync(view);
 
         return view;
+    }
+
+    /// <summary>当前收银台绑定的会员（选支付方式时用余额付款）。</summary>
+    private MemberEntity? _currentMember;
+
+    /// <summary>
+    /// 收银台查会员：刷/输卡号 → 显示姓名和余额。
+    /// 找不到就提示，不要静默失败 —— 收银员会以为卡刷上了。
+    /// </summary>
+    private async Task LookupMemberAsync(CashierView view)
+    {
+        var repo = Get<IMemberRepository>(_services);
+
+        var cardNo = await PromptCardNoAsync();
+        if (string.IsNullOrWhiteSpace(cardNo)) return;
+
+        var member = await repo.GetByCardNoAsync(cardNo);
+        if (member == null)
+        {
+            StatusMessage = $"没有卡号「{cardNo}」的会员。到「会员」页办一张。";
+            return;
+        }
+
+        if (!member.IsActive)
+        {
+            StatusMessage = $"「{member.Name}」的卡已经注销了，不能用。";
+            return;
+        }
+
+        _currentMember = member;
+        view.SetMemberLabel($"{member.Name} ¥{member.Balance:F2}");
+        StatusMessage = $"已登录会员：{member.CardNo} {member.Name}，余额 ¥{member.Balance:F2}，积分 {member.Points}";
+    }
+
+    /// <summary>弹一个只问卡号的小窗（收银台用，越简单越好）。</summary>
+    private async Task<string?> PromptCardNoAsync()
+    {
+        var window = new Window
+        {
+            Title = "登录会员",
+            Width = 420,
+            SizeToContent = SizeToContent.Height,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+        };
+
+        string? result = null;
+        var box = new TextBox
+        {
+            Watermark = "刷会员卡或输入卡号",
+            MinHeight = 48,
+            FontSize = 16,
+        };
+
+        var ok = new Button { Content = "确定", MinWidth = 120, MinHeight = 48 };
+        ok.Click += (_, _) => { result = box.Text?.Trim(); window.Close(); };
+
+        var cancel = new Button { Content = "取消", MinWidth = 110, MinHeight = 48 };
+        cancel.Click += (_, _) => { result = null; window.Close(); };
+
+        var buttons = new StackPanel
+        {
+            Orientation = Avalonia.Layout.Orientation.Horizontal,
+            Spacing = 12,
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+        };
+        buttons.Children.Add(cancel);
+        buttons.Children.Add(ok);
+
+        var stack = new StackPanel { Margin = new Avalonia.Thickness(24), Spacing = 12 };
+        stack.Children.Add(new TextBlock { Text = "登录会员", FontSize = 18, FontWeight = Avalonia.Media.FontWeight.SemiBold });
+        stack.Children.Add(box);
+        stack.Children.Add(buttons);
+
+        window.Content = stack;
+        await window.ShowDialog(_shellWindow);
+        return result;
     }
 
     /// <summary>
@@ -784,6 +866,293 @@ public sealed class ShellViewModel : BindableBase
             });
             (Page as CashierView)?.Refresh();
         }
+    }
+
+    /// <summary>
+    /// 会员页。列表 + 五个操作：办卡 / 编辑 / 充值 / 调整 / 流水 / 注销。
+    /// 对应参考端 C000100021 那组：vipSave / vipUpdate / vipRecharge /
+    /// vipQueryTradeRecord / vipAdjustPoints / vipDestroy。
+    /// </summary>
+    private async Task<MemberListView> CreateMemberViewAsync()
+    {
+        var repo = Get<IMemberRepository>(_services);
+        var view = new MemberListView { DataContext = new MemberListViewModel(repo) };
+
+        view.StatusMessage += (_, message) => StatusMessage = message;
+
+        view.NewMemberRequested += async (_, _) => await ShowMemberEditAsync(repo, null);
+        view.EditRequested += async (_, row) => await ShowMemberEditAsync(repo, row);
+        view.RechargeRequested += async (_, row) => await ShowMemberValueAsync(repo, row, MemberValueMode.Recharge);
+        view.AdjustRequested += async (_, row) => await ShowMemberAdjustPickerAsync(repo, row);
+        view.TransactionsRequested += async (_, row) => await ShowMemberTransactionsAsync(repo, row);
+        view.CancelRequested += async (_, row) => await CancelMemberAsync(repo, row);
+
+        await view.LoadAsync();
+        return view;
+    }
+
+    /// <summary>刷新会员页（每次操作后都刷，避免界面和库里不一致）。</summary>
+    private void RefreshMemberPage()
+    {
+        if (Page is MemberListView list)
+            _ = list.LoadAsync();
+    }
+
+    private async Task ShowMemberEditAsync(IMemberRepository repo, MemberRowDto? row)
+    {
+        var isNew = row == null;
+        var entity = isNew ? new MemberEntity() : await repo.GetByIdAsync(row!.Id);
+        if (entity == null) { StatusMessage = "会员不存在，请刷新。"; return; }
+
+        var dialog = new MemberEditDialog();
+        dialog.LoadMember(
+            isNew ? await repo.NextCardNoAsync() : entity.CardNo,
+            entity.Name, entity.Phone, entity.Level, entity.Birthday, entity.Remark, isNew);
+
+        // 「自动生成」按钮：向仓储要新号后回填
+        dialog.GenerateCardNoRequested += async (_, _) =>
+        {
+            var next = await repo.NextCardNoAsync();
+            dialog.SetCardNo(next);
+        };
+
+        dialog.Confirmed += async (_, input) =>
+        {
+            var taken = await repo.CardNoExistsAsync(input.CardNo, entity.Id);
+            var (ok, error) = MemberCalculator.ValidateProfile(input.Name, input.CardNo, input.Phone, taken);
+            if (!ok)
+            {
+                dialog.SetError(error);
+                return;
+            }
+
+            entity.CardNo = input.CardNo.Trim();
+            entity.Name = input.Name.Trim();
+            entity.Phone = input.Phone.Trim();
+            entity.Level = input.Level;
+            entity.Birthday = input.Birthday;
+            entity.Remark = input.Remark;
+
+            await repo.SaveAsync(entity);
+            dialog.Close();
+
+            StatusMessage = isNew ? $"已办卡「{entity.CardNo}」{entity.Name}" : $"已保存「{entity.Name}」的资料";
+            RefreshMemberPage();
+        };
+
+        await dialog.ShowDialog(_shellWindow);
+    }
+
+    private async Task ShowMemberValueAsync(IMemberRepository repo, MemberRowDto row, MemberValueMode mode)
+    {
+        var member = await repo.GetByIdAsync(row.Id);
+        if (member == null) { StatusMessage = "会员不存在，请刷新。"; return; }
+
+        var dialog = new MemberValueDialog();
+        dialog.Setup(mode, $"{member.CardNo}　{member.Name}", member.Balance, member.Points);
+
+        dialog.Confirmed += async (_, input) =>
+        {
+            switch (input.Mode)
+            {
+                case MemberValueMode.Recharge:
+                {
+                    var (after, tx) = MemberCalculator.Recharge(
+                        member, input.Value, input.PayTypeName, _operatorName, 1);
+                    await repo.AddTransactionAsync(tx);
+                    dialog.Close();
+                    StatusMessage = $"「{member.Name}」充值 ¥{input.Value:F2}（{input.PayTypeName}），余额 ¥{after:F2}";
+                    break;
+                }
+
+                case MemberValueMode.AdjustBalance:
+                {
+                    var (ok, error, after, tx) = MemberCalculator.AdjustBalance(
+                        member, input.Value, input.Reason, _operatorName, 1);
+                    if (!ok) { dialog.SetError(error); return; }
+                    await repo.AddTransactionAsync(tx!);
+                    dialog.Close();
+                    StatusMessage = $"「{member.Name}」余额调整为 ¥{after:F2}（{input.Reason}）";
+                    break;
+                }
+
+                case MemberValueMode.AdjustPoints:
+                {
+                    var (ok, error, after, tx) = MemberCalculator.AdjustPoints(
+                        member, (int)input.Value, input.Reason, _operatorName, 1);
+                    if (!ok) { dialog.SetError(error); return; }
+                    await repo.AddTransactionAsync(tx!);
+                    dialog.Close();
+                    StatusMessage = $"「{member.Name}」积分调整为 {after}（{input.Reason}）";
+                    break;
+                }
+            }
+
+            RefreshMemberPage();
+        };
+
+        await dialog.ShowDialog(_shellWindow);
+    }
+
+    /// <summary>调整要先选「调余额」还是「调积分」。</summary>
+    private async Task ShowMemberAdjustPickerAsync(IMemberRepository repo, MemberRowDto row)
+    {
+        var member = await repo.GetByIdAsync(row.Id);
+        if (member == null) { StatusMessage = "会员不存在，请刷新。"; return; }
+
+        var picked = await AskAdjustTargetAsync(member);
+        if (picked == null) return;
+
+        await ShowMemberValueAsync(repo, row, picked.Value);
+    }
+
+    /// <summary>
+    /// 问用户「调余额」还是「调积分」，返回 null 表示取消。
+    ///
+    /// 余额和积分是两个不同的东西，塞进同一个弹窗容易填错框。
+    /// 先问清楚再开对应的输入框，比在一个窗里放两组输入更不容易错。
+    /// </summary>
+    private async Task<MemberValueMode?> AskAdjustTargetAsync(MemberEntity member)
+    {
+        var window = new Window
+        {
+            Title = "调整什么？",
+            Width = 420,
+            SizeToContent = SizeToContent.Height,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+        };
+
+        MemberValueMode? result = null;
+
+        Button MakeButton(string text, MemberValueMode mode)
+        {
+            var b = new Button
+            {
+                Content = text,
+                MinHeight = 52,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+            };
+            b.Click += (_, _) => { result = mode; window.Close(); };
+            return b;
+        }
+
+        var stack = new StackPanel { Margin = new Avalonia.Thickness(24), Spacing = 12 };
+        stack.Children.Add(new TextBlock { Text = $"{member.CardNo}　{member.Name}", FontSize = 16 });
+        stack.Children.Add(new TextBlock
+        {
+            Text = $"当前余额 ¥{member.Balance:F2}　积分 {member.Points}",
+            FontSize = 13,
+            Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#667085")),
+        });
+        stack.Children.Add(MakeButton($"调整余额（当前 ¥{member.Balance:F2}）", MemberValueMode.AdjustBalance));
+        stack.Children.Add(MakeButton($"调整积分（当前 {member.Points}）", MemberValueMode.AdjustPoints));
+
+        var cancel = new Button
+        {
+            Content = "取消",
+            MinHeight = 48,
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+        };
+        cancel.Click += (_, _) => { result = null; window.Close(); };
+        stack.Children.Add(cancel);
+
+        window.Content = stack;
+        await window.ShowDialog(_shellWindow);
+        return result;
+    }
+
+    private async Task ShowMemberTransactionsAsync(IMemberRepository repo, MemberRowDto row)
+    {
+        var list = await repo.GetTransactionsAsync(row.Id);
+
+        var panel = new StackPanel { Margin = new Avalonia.Thickness(24), Spacing = 8 };
+        panel.Children.Add(new TextBlock
+        {
+            Text = $"{row.CardNo}　{row.Name}　余额 ¥{row.Balance:F2}　积分 {row.Points}",
+            FontSize = 16,
+        });
+
+        if (list.Count == 0)
+        {
+            panel.Children.Add(new TextBlock { Text = "这张卡还没有流水", FontSize = 14 });
+        }
+        else
+        {
+            foreach (var tx in list)
+            {
+                var amount = tx.Amount != 0m
+                    ? $"{(tx.Amount > 0 ? "+" : string.Empty)}{tx.Amount:F2}"
+                    : (tx.PointsChange != 0 ? $"{tx.PointsChange:+#;-#;0} 分" : "—");
+
+                panel.Children.Add(new TextBlock
+                {
+                    Text = $"{tx.CreatedAt:MM-dd HH:mm}　{tx.TypeName,-6}　{amount,10}　" +
+                           $"余额 {tx.BalanceAfter:F2}　{(string.IsNullOrEmpty(tx.Reason) ? tx.PayTypeName : tx.Reason)}",
+                    FontSize = 13,
+                });
+            }
+        }
+
+        var window = new Window
+        {
+            Title = "会员流水",
+            Width = 720,
+            Height = 560,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Content = new ScrollViewer { Content = panel },
+        };
+        await window.ShowDialog(_shellWindow);
+    }
+
+    private async Task CancelMemberAsync(IMemberRepository repo, MemberRowDto row)
+    {
+        var member = await repo.GetByIdAsync(row.Id);
+        if (member == null) { StatusMessage = "会员不存在，请刷新。"; return; }
+        if (!member.IsActive) { StatusMessage = "这张卡已经注销了。"; return; }
+
+        // 有余额必须先退给客人，不能带着钱注销
+        var (ok, _, _, tx) = MemberCalculator.CancelRefund(member, "现金", _operatorName, 1);
+        if (!ok) { StatusMessage = "注销失败"; return; }
+
+        var tip = member.Balance > 0m
+            ? $"「{member.Name}」卡里还有 ¥{member.Balance:F2}，注销会把这笔钱按现金退掉。确定注销吗？"
+            : $"确定注销「{member.Name}」的会员卡吗？注销后不可恢复，流水会保留。";
+
+        var confirm = new Window
+        {
+            Title = "注销会员",
+            Width = 460,
+            SizeToContent = SizeToContent.Height,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+        };
+
+        var chose = false;
+        var stack = new StackPanel { Margin = new Avalonia.Thickness(24), Spacing = 12 };
+        stack.Children.Add(new TextBlock { Text = tip, TextWrapping = Avalonia.Media.TextWrapping.Wrap });
+        var row2 = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 12, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right };
+        var no = new Button { Content = "取消", MinWidth = 110, MinHeight = 48 };
+        no.Click += (_, _) => { chose = false; confirm.Close(); };
+        var yes = new Button { Content = "确定注销", MinWidth = 130, MinHeight = 48 };
+        yes.Click += (_, _) => { chose = true; confirm.Close(); };
+        row2.Children.Add(no);
+        row2.Children.Add(yes);
+        stack.Children.Add(row2);
+        confirm.Content = stack;
+
+        await confirm.ShowDialog(_shellWindow);
+        if (!chose) return;
+
+        if (tx != null)
+            await repo.AddTransactionAsync(tx);
+        await repo.SetDataStatusAsync(member.Id, 99);
+
+        StatusMessage = member.Balance > 0m
+            ? $"已注销「{member.Name}」，余额 ¥{member.Balance:F2} 已退"
+            : $"已注销「{member.Name}」";
+        RefreshMemberPage();
     }
 
     private async Task<FastFoodEntryView> CreateFastFoodViewAsync()

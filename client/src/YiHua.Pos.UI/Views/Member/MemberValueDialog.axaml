@@ -1,0 +1,81 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+        xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
+        x:Class="YiHua.Pos.UI.Views.Member.MemberValueDialog"
+        Title="会员操作"
+        Width="480" Height="560"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BackgroundBrush}">
+  <StackPanel Margin="24,20" Spacing="12">
+    <TextBlock x:Name="TitleText" Text="会员充值" FontSize="20" FontWeight="Bold" />
+    <TextBlock x:Name="MemberText" FontSize="14"
+               Foreground="{DynamicResource TextSecondaryBrush}" />
+
+    <!-- 当前值 -->
+    <Border Background="{DynamicResource PrimaryLightBrush}" CornerRadius="8" Padding="16,12">
+      <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="当前余额"
+                   Foreground="{DynamicResource TextSecondaryBrush}" />
+        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="CurrentBalanceText"
+                   FontWeight="SemiBold" HorizontalAlignment="Right" />
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="当前积分"
+                   Foreground="{DynamicResource TextSecondaryBrush}" />
+        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="CurrentPointsText"
+                   HorizontalAlignment="Right" />
+      </Grid>
+    </Border>
+
+    <!-- 金额 / 目标值 -->
+    <TextBlock x:Name="ValueLabel" Text="充值金额（元）"
+               Foreground="{DynamicResource TextSecondaryBrush}" />
+    <input:TouchTextBox x:Name="ValueBox" Watermark="0.00" FontSize="20" TextChanged="OnValueChanged" />
+
+    <!-- 快捷金额（只有充值用） -->
+    <ItemsControl x:Name="QuickPanel">
+      <ItemsControl.ItemsPanel>
+        <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+      </ItemsControl.ItemsPanel>
+      <ItemsControl.ItemTemplate>
+        <DataTemplate>
+          <Button Content="{Binding StringFormat='+¥{0:F0}'}"
+                  Click="OnQuickAmount" Tag="{Binding}"
+                  MinWidth="88" MinHeight="44" Margin="0,0,8,8" />
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <!-- 收款方式（只有充值用） -->
+    <StackPanel x:Name="PayTypePanel" Spacing="8">
+      <TextBlock Text="收款方式" Foreground="{DynamicResource TextSecondaryBrush}" />
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Button x:Name="PayCash" Content="现金" Click="OnPayCash" MinWidth="100" MinHeight="44" />
+        <Button x:Name="PayQr" Content="扫码" Click="OnPayQr" MinWidth="100" MinHeight="44" />
+      </StackPanel>
+    </StackPanel>
+
+    <!-- 原因（只有调整用，必填） -->
+    <StackPanel x:Name="ReasonPanel" Spacing="8">
+      <TextBlock Text="调整原因 *（必填，对账时要能说清）"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+      <input:TouchTextBox x:Name="ReasonBox" Watermark="如：上月多扣、老板赠送" />
+    </StackPanel>
+
+    <!-- 结果预览 -->
+    <Grid ColumnDefinitions="*,Auto">
+      <TextBlock Grid.Column="0" Text="操作后" VerticalAlignment="Center"
+                 Foreground="{DynamicResource TextSecondaryBrush}" />
+      <TextBlock Grid.Column="1" x:Name="AfterText" FontSize="22" FontWeight="Bold"
+                 HorizontalAlignment="Right" />
+    </Grid>
+
+    <TextBlock x:Name="ErrorText" Foreground="{DynamicResource DangerBrush}"
+               FontSize="14" TextWrapping="Wrap" />
+
+    <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
+      <btn:PosButton Content="取消" Variant="Secondary" Click="OnCancel" MinWidth="110" />
+      <btn:PosButton x:Name="ConfirmButton" Content="确认充值" Variant="Primary"
+                     Click="OnConfirm" MinWidth="140" />
+    </StackPanel>
+  </StackPanel>
+</Window>

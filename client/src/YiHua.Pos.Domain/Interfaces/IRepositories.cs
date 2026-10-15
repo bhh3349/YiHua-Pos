@@ -201,3 +201,45 @@ public interface ICashRuleRepository
     Task<CashRule> GetAsync(CancellationToken ct = default);
     Task SaveAsync(CashRule rule, CancellationToken ct = default);
 }
+
+/// <summary>
+/// 会员仓储。
+/// 余额/积分的每次变动都必须同时写流水 ——
+/// 只改余额不记流水，事后对不上账时查不出是哪一笔的问题。
+/// </summary>
+public interface IMemberRepository
+{
+    /// <summary>按卡号查（精确匹配，收银台刷卡/手输用）。</summary>
+    Task<Member?> GetByCardNoAsync(string cardNo, CancellationToken ct = default);
+
+    /// <summary>按手机号查（可能多个，同号可办多张卡）。</summary>
+    Task<List<Member>> GetByPhoneAsync(string phone, CancellationToken ct = default);
+
+    Task<Member?> GetByIdAsync(long id, CancellationToken ct = default);
+
+    /// <summary>关键词搜索（卡号/手机/姓名），用于会员列表。</summary>
+    Task<List<Member>> SearchAsync(string keyword, int limit = 100, CancellationToken ct = default);
+
+    Task<List<Member>> GetAllAsync(CancellationToken ct = default);
+
+    /// <summary>新增或更新会员资料（不动余额/积分，那要走流水）。</summary>
+    Task<long> SaveAsync(Member member, CancellationToken ct = default);
+
+    /// <summary>注销会员（软删除，流水保留）。</summary>
+    Task SetDataStatusAsync(long memberId, int dataStatus, CancellationToken ct = default);
+
+    /// <summary>
+    /// 记一笔流水并同步更新会员余额/积分。
+    /// 必须在同一个事务里：流水写了余额没改，或反过来，都会让账对不上。
+    /// </summary>
+    Task<long> AddTransactionAsync(MemberTransaction tx, CancellationToken ct = default);
+
+    /// <summary>某会员的流水（按时间倒序）。</summary>
+    Task<List<MemberTransaction>> GetTransactionsAsync(long memberId, int limit = 200, CancellationToken ct = default);
+
+    /// <summary>卡号是否已存在（新增时查重）。</summary>
+    Task<bool> CardNoExistsAsync(string cardNo, long excludeId = 0, CancellationToken ct = default);
+
+    /// <summary>生成一个新卡号（按现有最大号 +1）。</summary>
+    Task<string> NextCardNoAsync(CancellationToken ct = default);
+}

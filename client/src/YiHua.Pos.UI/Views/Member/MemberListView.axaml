@@ -1,0 +1,85 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:btn="clr-namespace:YiHua.Pos.UI.Controls.Buttons"
+             xmlns:input="clr-namespace:YiHua.Pos.UI.Controls.Input"
+             xmlns:vm="clr-namespace:YiHua.Pos.UI.ViewModels.Member"
+             x:Class="YiHua.Pos.UI.Views.Member.MemberListView"
+             x:DataType="vm:MemberListViewModel">
+  <Grid RowDefinitions="Auto,Auto,*,Auto">
+
+    <!-- 工具栏 -->
+    <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="16,16,16,8">
+      <TextBlock Grid.Column="0" Text="会员" FontSize="22" FontWeight="Bold"
+                 VerticalAlignment="Center" />
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+        <btn:PosButton Content="+ 新增会员" Variant="Primary" Click="OnNew" MinWidth="140" />
+      </StackPanel>
+    </Grid>
+
+    <!-- 搜索 -->
+    <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto,*" ColumnSpacing="10" Margin="16,0,16,10">
+      <input:TouchTextBox Grid.Column="0" x:Name="SearchBox"
+                          Watermark="卡号 / 手机号 / 姓名" MinWidth="260"
+                          TextChanged="OnSearchChanged" />
+      <btn:PosButton Grid.Column="1" Content="查询" Variant="Secondary"
+                     Click="OnSearch" MinWidth="90" />
+      <TextBlock Grid.Column="2" x:Name="SummaryText" VerticalAlignment="Center"
+                 FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" />
+    </Grid>
+
+    <!-- 列表 -->
+    <ScrollViewer Grid.Row="2" Margin="16,0,16,0">
+      <Panel>
+        <ItemsControl x:Name="MemberList">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:MemberRowDto">
+              <Border Background="{DynamicResource SurfaceBrush}"
+                      BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1"
+                      Padding="12,10">
+                <Grid ColumnDefinitions="120,110,*,110,90,*,Auto" ColumnSpacing="10">
+                  <TextBlock Grid.Column="0" Text="{Binding CardNo}" FontSize="15"
+                             FontWeight="SemiBold" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="15"
+                             VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="2" Text="{Binding MaskedPhone}" FontSize="13"
+                             Foreground="{DynamicResource TextSecondaryBrush}"
+                             VerticalAlignment="Center" />
+                  <StackPanel Grid.Column="3" Spacing="2" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Balance, StringFormat='余额 ¥{0:F2}'}" FontSize="15" />
+                    <TextBlock Text="{Binding Points, StringFormat='积分 {0}'}" FontSize="12"
+                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="4" Text="{Binding StatusText}" FontSize="13"
+                             VerticalAlignment="Center"
+                             Foreground="{DynamicResource TextSecondaryBrush}" />
+                  <TextBlock Grid.Column="5" Text="{Binding Level}" FontSize="13"
+                             Foreground="{DynamicResource TextSecondaryBrush}"
+                             VerticalAlignment="Center" />
+                  <StackPanel Grid.Column="6" Orientation="Horizontal" Spacing="6">
+                    <btn:PosButton Content="充值" Variant="Primary" Click="OnRecharge" MinWidth="76" />
+                    <btn:PosButton Content="调整" Variant="Secondary" Click="OnAdjust" MinWidth="76" />
+                    <btn:PosButton Content="流水" Variant="Secondary" Click="OnTransactions" MinWidth="76" />
+                    <btn:PosButton Content="编辑" Variant="Secondary" Click="OnEdit" MinWidth="76" />
+                    <btn:PosButton Content="注销" Variant="Danger" Click="OnCancel" MinWidth="76" />
+                  </StackPanel>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <StackPanel x:Name="EmptyBox" IsVisible="False"
+                    VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10">
+          <TextBlock Text="还没有会员" FontSize="20" FontWeight="SemiBold"
+                     HorizontalAlignment="Center" />
+          <TextBlock Text="点右上角「+ 新增会员」建第一张卡"
+                     FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
+                     HorizontalAlignment="Center" />
+        </StackPanel>
+      </Panel>
+    </ScrollViewer>
+
+    <TextBlock Grid.Row="3" x:Name="ErrorText" Margin="16,8"
+               Foreground="{DynamicResource DangerBrush}" FontSize="14" TextWrapping="Wrap" />
+  </Grid>
+</UserControl>

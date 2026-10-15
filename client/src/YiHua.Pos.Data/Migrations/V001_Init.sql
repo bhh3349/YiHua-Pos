@@ -197,3 +197,45 @@ CREATE TABLE IF NOT EXISTS DictEntry (
     UpdatedAt TEXT NOT NULL DEFAULT ''
 );
 CREATE UNIQUE INDEX IF NOT EXISTS UX_DictEntry_Key ON DictEntry(Key);
+
+-- ============================================================================
+--  会员（参考端 C000100021：新增/编辑/充值/交易记录/调整积分/注销）
+--  单店模式：卡号本店唯一。余额与积分只通过流水变动，保证可对账。
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS "Member" (
+    Id           INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    CardNo       TEXT    NOT NULL DEFAULT '',
+    Phone        TEXT    NOT NULL DEFAULT '',
+    Name         TEXT    NOT NULL DEFAULT '',
+    Level        TEXT    NOT NULL DEFAULT '普通',
+    Balance      TEXT    NOT NULL DEFAULT '0',
+    Points       INTEGER NOT NULL DEFAULT 0,
+    Birthday     TEXT    DEFAULT NULL,
+    Remark       TEXT    NOT NULL DEFAULT '',
+    DataStatus   INTEGER NOT NULL DEFAULT 1,   -- 1正常 99注销
+    CreatedAt    TEXT    NOT NULL DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime')),
+    UpdatedAt    TEXT    NOT NULL DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime'))
+);
+CREATE UNIQUE INDEX IF NOT EXISTS IX_Member_CardNo ON "Member"(CardNo);
+CREATE INDEX IF NOT EXISTS IX_Member_Phone ON "Member"(Phone);
+CREATE INDEX IF NOT EXISTS IX_Member_DataStatus ON "Member"(DataStatus);
+
+CREATE TABLE IF NOT EXISTS MemberTransaction (
+    Id            INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    MemberId      INTEGER NOT NULL DEFAULT 0,
+    CardNo        TEXT    NOT NULL DEFAULT '',
+    MemberName    TEXT    NOT NULL DEFAULT '',
+    Type          INTEGER NOT NULL DEFAULT 0,   -- 1充值 2消费 3退款 4余额调整 5积分调整 6注销退款
+    Amount        TEXT    NOT NULL DEFAULT '0',
+    PointsChange  INTEGER NOT NULL DEFAULT 0,
+    BalanceAfter  TEXT    NOT NULL DEFAULT '0',
+    PointsAfter   INTEGER NOT NULL DEFAULT 0,
+    PayTypeName   TEXT    NOT NULL DEFAULT '',
+    Reason        TEXT    NOT NULL DEFAULT '',
+    OrderNo       TEXT    NOT NULL DEFAULT '',
+    OperatorId    INTEGER NOT NULL DEFAULT 0,
+    OperatorName  TEXT    NOT NULL DEFAULT '',
+    CreatedAt     TEXT    NOT NULL DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime'))
+);
+CREATE INDEX IF NOT EXISTS IX_MemberTransaction_MemberId ON MemberTransaction(MemberId);
+CREATE INDEX IF NOT EXISTS IX_MemberTransaction_CreatedAt ON MemberTransaction(CreatedAt);

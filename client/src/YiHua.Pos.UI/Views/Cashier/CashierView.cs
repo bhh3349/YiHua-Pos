@@ -41,6 +41,17 @@ public partial class CashierView : UserControl
     public event EventHandler<ProductEntity>? IngredientRequested;
     public event EventHandler<string>? StatusMessage;
 
+    /// <summary>点「登录会员」—— 收银时要能查会员、用余额付款。</summary>
+    public event EventHandler? MemberRequested;
+
+    /// <summary>会员登录后显示在车头（卡号 + 余额）。</summary>
+    public void SetMemberLabel(string? text)
+    {
+        var btn = this.FindControl<Controls.Buttons.PosButton>("MemberButton");
+        if (btn != null)
+            btn.Content = string.IsNullOrEmpty(text) ? "登录会员" : text;
+    }
+
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
@@ -425,7 +436,7 @@ public partial class CashierView : UserControl
     }
 
     private void OnMember(object? sender, RoutedEventArgs e)
-        => StatusMessage?.Invoke(this, "会员功能还没接（会员管理排在报表之后）。");
+        => MemberRequested?.Invoke(this, EventArgs.Empty);
 
     private void OnTakeOrder(object? sender, RoutedEventArgs e)
         => StatusMessage?.Invoke(this, "取单请到「挂单」页。");

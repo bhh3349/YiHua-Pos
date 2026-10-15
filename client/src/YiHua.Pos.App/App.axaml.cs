@@ -100,6 +100,10 @@ public partial class App : PrismApplication
         containerRegistry.RegisterSingleton<IUnitRepository>(_ => new UnitRepository(ctx.Value.Db));
         containerRegistry.RegisterSingleton<IDeskRepository>(_ => new DeskRepository(ctx.Value.Db));
         containerRegistry.RegisterSingleton<IOrderRepository>(_ => new OrderRepository(ctx.Value.Db));
+        // 会员仓储：和其它仓储一样用显式工厂。
+        // 写成 RegisterSingleton<IMemberRepository, MemberRepository>() 会在解析时炸 ——
+        // DryIoc 自动装配需要 ISqlSugarClient 已注册，而这里只注册了 PosDbContext。
+        containerRegistry.RegisterSingleton<IMemberRepository>(_ => new MemberRepository(ctx.Value.Db));
         containerRegistry.RegisterSingleton<IShiftRepository>(_ => new ShiftRepository(ctx.Value.Db));
         containerRegistry.RegisterSingleton<IOutboxRepository>(_ => new OutboxRepository(ctx.Value.Db));
         containerRegistry.RegisterSingleton<IDictionaryRepository>(_ => new DictionaryRepository(ctx.Value.Db));
